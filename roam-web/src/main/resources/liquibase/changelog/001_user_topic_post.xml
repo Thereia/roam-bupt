@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="001-user-topic-post" author="thereia">
+        <comment>P0 基线表：user / topic / post / post_topic / post_media</comment>
+        <sql>
+            CREATE TABLE `user` (
+                id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+                username     VARCHAR(32)     NOT NULL COMMENT '登录名',
+                password     VARCHAR(100)    NOT NULL COMMENT 'BCrypt 密文',
+                nickname     VARCHAR(32)     NOT NULL COMMENT '昵称',
+                avatar       VARCHAR(255)             DEFAULT NULL COMMENT '头像',
+                role         VARCHAR(16)     NOT NULL DEFAULT 'USER' COMMENT 'USER / ADMIN',
+                status       TINYINT         NOT NULL DEFAULT 1 COMMENT '1 正常，0 禁用',
+                created_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY uk_user_username (username)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户';
+
+            CREATE TABLE topic (
+                id              BIGINT UNSIGNED NOT NULL COMMENT 'PLACE 用地点原号，CATEGORY 从 1001 起',
+                type            VARCHAR(16)     NOT NULL COMMENT 'PLACE / CATEGORY',
+                name            VARCHAR(100)    NOT NULL COMMENT '主题名',
+                category        VARCHAR(32)              DEFAULT NULL COMMENT '展示分类：食堂/自习/住宿/运动/教学楼/服务/地标',
+                source_category VARCHAR(32)              DEFAULT NULL COMMENT '原始 POI 类型，仅地点有',
+                node_id         BIGINT                   DEFAULT NULL COMMENT '导航图入口节点',
+                source_ref      VARCHAR(64)              DEFAULT NULL COMMENT '来源编号，便于回溯',
+                cover           VARCHAR(255)             DEFAULT NULL COMMENT '封面',
+                description     VARCHAR(500)             DEFAULT NULL COMMENT '简介',
+                heat            INT             NOT NULL DEFAULT 0 COMMENT '热度',
+                enabled         TINYINT         NOT NULL DEFAULT 1 COMMENT '1 可见，0 隐藏',
+                created_time    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY idx_topic_type (type),
+                KEY idx_topic_category (category)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '主题：地点或分类';
+
+            CREATE TABLE post (
+                id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                user_id      BIGINT UNSIGNED NOT NULL COMMENT '作者',
+                title        VARCHAR(100)    NOT NULL,
+                content      TEXT            NOT NULL COMMENT '正文，可含 Markdown',
+                status       VARCHAR(16)     NOT NULL DEFAULT 'PENDING' COMMENT 'DRAFT / PENDING / ONLINE / DELETED',
+                heat         INT             NOT NULL DEFAULT 0,
+                deleted      TINYINT         NOT NULL DEFAULT 0,
+                created_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY idx_post_user (user_id),
+                KEY idx_post_status_time (status, created_time),
+                KEY idx_post_heat (heat)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '帖子';
+
+            CREATE TABLE post_topic (
+                post_id  BIGINT UNSIGNED NOT NULL,
+                topic_id BIGINT UNSIGNED NOT NULL,
+                sort_no  INT             NOT NULL DEFAULT 0 COMMENT '地点主题的顺序，用于生成路线',
+                PRIMARY KEY (post_id, topic_id),
+                KEY idx_post_topic_topic (topic_id, post_id)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '帖子-主题关联';
+
+            CREATE TABLE post_media (
+                id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                post_id      BIGINT UNSIGNED NOT NULL,
+                media_type   VARCHAR(16)     NOT NULL COMMENT 'IMAGE / VIDEO',
+                url          VARCHAR(1024)   NOT NULL,
+                sort_no      INT             NOT NULL DEFAULT 0,
+                created_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY idx_post_media_post (post_id, sort_no)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '帖子媒体';
+        </sql>
+        <rollback>
+            <sql>
+                DROP TABLE IF EXISTS post_media;
+                DROP TABLE IF EXISTS post_topic;
+                DROP TABLE IF EXISTS post;
+                DROP TABLE IF EXISTS topic;
+                DROP TABLE IF EXISTS `user`;
+            </sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- 按阶段追加，已执行的文件不再回头改 -->
+    <include file="liquibase/changelog/001_user_topic_post.xml"/>
+    <include file="liquibase/changelog/010_seed_topic_place.xml"/>
+</databaseChangeLog>

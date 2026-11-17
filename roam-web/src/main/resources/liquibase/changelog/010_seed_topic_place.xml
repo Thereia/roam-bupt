@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="010-seed-topic-place" author="thereia">
+        <comment>
+            地点与分类主题共 152 条：145 个地点（教室 66 + 卫生间 12 置 enabled=0） + 7 个分类。
+            数据来源见 docs/数据导出说明.md。
+        </comment>
+        <loadData tableName="topic"
+                  file="liquibase/data/topic_place.csv"
+                  encoding="UTF-8"
+                  separator=",">
+            <column name="id" type="NUMERIC"/>
+            <column name="type" type="STRING"/>
+            <column name="name" type="STRING"/>
+            <column name="category" type="STRING"/>
+            <column name="source_category" type="STRING"/>
+            <column name="node_id" type="NUMERIC"/>
+            <column name="source_ref" type="STRING"/>
+            <column name="cover" type="STRING"/>
+            <column name="description" type="STRING"/>
+            <column name="heat" type="NUMERIC"/>
+            <column name="enabled" type="NUMERIC"/>
+        </loadData>
+        <sql>
+            UPDATE topic SET cover = NULL WHERE cover = '';
+            UPDATE topic SET description = NULL WHERE description = '';
+            UPDATE topic SET category = NULL WHERE category = '';
+            UPDATE topic SET source_category = NULL WHERE source_category = '';
+            UPDATE topic SET source_ref = NULL WHERE source_ref = '';
+            UPDATE topic SET node_id = NULL WHERE node_id = 0;
+        </sql>
+        <rollback>
+            <delete tableName="topic"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>
