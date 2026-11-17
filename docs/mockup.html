@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>roam-bupt · 界面示意</title>
+<style>
+  :root{
+    --paper:#f7f6f2;
+    --card:#ffffff;
+    --ink:#23221f;
+    --muted:#726e66;
+    --line:#e4e0d7;
+    --accent:#2f5d50;
+    --accent-weak:#e9eeea;
+    --warn:#b0722c;
+    --danger:#a33a2c;
+    --ok:#4f7a5f;
+    --radius:8px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font:14px/1.6 -apple-system,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+  /* ---------- 演示外壳 ---------- */
+  .board{max-width:1240px;margin:0 auto;padding:28px 24px 80px}
+  .board-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+  .board-title{font-size:22px;font-weight:600;letter-spacing:-.2px}
+  .board-note{font-size:12px;color:var(--muted)}
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:18px 0 24px}
+  .tabs button{
+    padding:9px 14px;font-size:14px;color:var(--muted);
+    border-bottom:2px solid transparent;margin-bottom:-1px;
+  }
+  .tabs button.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+
+  .screen{display:none}
+  .screen.on{display:block}
+
+  /* ---------- 应用通用 ---------- */
+  .app{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .topbar{display:flex;align-items:center;gap:28px;height:56px;padding:0 24px;background:var(--card);border-bottom:1px solid var(--line)}
+  .wordmark{font-size:16px;font-weight:700;letter-spacing:-.3px}
+  .wordmark span{color:var(--accent)}
+  .topnav{display:flex;gap:20px;font-size:14px}
+  .topnav a{color:var(--muted)}
+  .topnav a.on{color:var(--ink);font-weight:600}
+  .topright{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:14px;color:var(--muted)}
+  .avatar{width:28px;height:28px;border-radius:50%;background:var(--accent-weak);color:var(--accent);display:grid;place-items:center;font-size:12px;font-weight:600}
+
+  .page{display:grid;gap:24px;padding:24px}
+  .page.three{grid-template-columns:184px minmax(0,1fr) 272px}
+  .page.two{grid-template-columns:minmax(0,1fr) 300px}
+  .page.one{grid-template-columns:minmax(0,760px);justify-content:center}
+
+  .rail h3,.side h3{font-size:12px;font-weight:600;color:var(--muted);margin:0 0 10px;letter-spacing:.04em}
+  .rail ul{list-style:none;margin:0 0 22px;padding:0}
+  .rail li{padding:6px 0;font-size:14px;color:var(--muted)}
+  .rail li.on{color:var(--ink);font-weight:600}
+  .rail li .n{float:right;font-size:12px;color:var(--muted);font-weight:400}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .card+.card{margin-top:14px}
+
+  .feed-head{display:flex;align-items:center;gap:18px;margin-bottom:14px}
+  .feed-head button{font-size:14px;color:var(--muted);padding-bottom:6px;border-bottom:2px solid transparent}
+  .feed-head button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--accent)}
+
+  .post{padding:18px 0;border-bottom:1px solid var(--line)}
+  .post:last-child{border-bottom:none;padding-bottom:4px}
+  .post h2{font-size:16px;line-height:1.45;margin:0 0 8px;font-weight:600}
+  .meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);margin-bottom:10px}
+  .meta .dot{width:2px;height:2px;background:var(--muted);border-radius:50%}
+  .excerpt{margin:0 0 12px;color:#3c3a35}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 7px;background:var(--card)}
+  .chip.solid{background:var(--accent-weak);border-color:transparent;color:var(--accent)}
+
+  .thumb{width:100%;height:132px;border-radius:6px;background:#eceae3;margin:12px 0;position:relative}
+  .thumb::after{content:"图片";position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:#a7a49b}
+  .thumb.tall{height:200px}
+
+  .row{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--muted)}
+  .row .act{margin-left:auto;display:flex;gap:14px}
+  .row .act span{padding:2px 0}
+
+  .side .card{padding:16px}
+  .hot{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:14px}
+  .hot .rank{width:16px;color:var(--muted);font-size:12px}
+  .hot .bar{flex:1;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+  .hot .bar i{display:block;height:100%;background:var(--accent)}
+  .hot .val{font-size:12px;color:var(--muted);width:34px;text-align:right}
+
+  .route-line{list-style:none;margin:0;padding:0;font-size:14px;color:var(--muted)}
+  .route-line li{position:relative;padding:0 0 14px 18px}
+  .route-line li::before{content:"";position:absolute;left:0;top:5px;width:7px;height:7px;border:1.5px solid var(--accent);border-radius:50%;background:var(--card)}
+  .route-line li::after{content:"";position:absolute;left:3px;top:12px;bottom:0;width:1px;background:var(--line)}
+  .route-line li:last-child{padding-bottom:0}
+  .route-line li:last-child::after{display:none}
+  .route-line b{display:block;color:var(--ink);font-weight:600}
+
+  .btn{display:inline-block;padding:8px 14px;border-radius:5px;font-size:14px;border:1px solid var(--line);background:var(--card)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.ghost{background:transparent}
+
+  /* ---------- 主题页 ---------- */
+  .cover{height:150px;background:#3d5a4d;color:#fff;display:flex;align-items:flex-end;padding:22px 26px;position:relative}
+  .cover h1{font-size:22px;margin:0;font-weight:600;letter-spacing:-.2px}
+  .cover .sub{font-size:12px;opacity:.78;margin-top:4px}
+  .topicbar{display:flex;align-items:center;gap:16px;padding:16px 26px;background:var(--card);border-bottom:1px solid var(--line)}
+  .score{font-size:22px;font-weight:600;color:var(--accent)}
+  .score small{font-size:12px;color:var(--muted);font-weight:400;margin-left:4px}
+  .divider{width:1px;height:26px;background:var(--line)}
+  .topicbar .right{margin-left:auto;display:flex;gap:8px}
+  .facts{display:flex;gap:26px;font-size:14px;color:var(--muted);padding:14px 26px 0}
+  .facts b{color:var(--ink);font-weight:600}
+
+  /* ---------- 帖子详情 ---------- */
+  .article h1{font-size:22px;line-height:1.4;margin:4px 0 14px;font-weight:600}
+  .article p{font-size:14px;line-height:1.85;color:#33312c;margin:0 0 14px}
+  .author{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .author .name{font-size:14px;font-weight:600}
+  .author .t{font-size:12px;color:var(--muted)}
+  .author .follow{margin-left:auto;font-size:12px;color:var(--accent);border:1px solid var(--accent-weak);background:var(--accent-weak);padding:4px 10px;border-radius:4px}
+  .actions{display:flex;gap:22px;font-size:14px;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 0;margin:20px 0}
+  .comments h3{font-size:14px;margin:0 0 14px}
+  .comment{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .comment:last-child{border-bottom:none}
+  .comment .body{font-size:14px;color:#33312c}
+  .comment .who{font-size:12px;color:var(--muted);margin-bottom:3px}
+  .comment .who b{color:var(--ink);font-weight:600}
+
+  /* ---------- 导航 ---------- */
+  .navwrap{display:grid;grid-template-columns:352px minmax(0,1fr);gap:20px;padding:20px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+  .field .value{border:1px solid var(--line);border-radius:4px;padding:8px 10px;font-size:14px;background:#fbfaf7}
+  .seg{display:flex;gap:0;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .seg span{flex:1;text-align:center;font-size:12px;padding:7px 0;color:var(--muted)}
+  .seg span.on{background:var(--accent-weak);color:var(--accent);font-weight:600}
+  .result{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}
+  .result .big{font-size:22px;font-weight:600;letter-spacing:-.2px}
+  .result .big small{font-size:12px;color:var(--muted);font-weight:400;margin-left:6px}
+  .seg-bar{display:flex;gap:2px;margin:10px 0 6px}
+  .seg-bar i{height:4px;border-radius:2px;flex:1}
+  .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:8px}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .legend i{width:8px;height:8px;border-radius:2px;display:inline-block}
+  .alt{border-top:1px solid var(--line);margin-top:16px;padding-top:12px;font-size:14px;color:var(--muted)}
+  .alt div{display:flex;justify-content:between;padding:6px 0}
+  .alt b{color:var(--ink);font-weight:600}
+
+  .mapbox{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;position:relative}
+  .mapbox svg{display:block;width:100%;height:auto}
+
+  /* ---------- 发布 ---------- */
+  .form label{display:block;font-size:12px;color:var(--muted);margin:18px 0 6px}
+  .form input,.form textarea{width:100%;border:1px solid var(--line);border-radius:5px;padding:10px 12px;font:inherit;background:#fbfaf7;color:var(--ink)}
+  .form textarea{min-height:160px;resize:vertical}
+  .form .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .uploads{display:flex;gap:10px;margin-top:8px}
+  .upload{width:84px;height:84px;border:1px dashed var(--line);border-radius:5px;display:grid;place-items:center;font-size:12px;color:var(--muted);background:#fbfaf7}
+  .picker{border:1px solid var(--line);border-radius:5px;padding:8px 10px;font-size:14px;color:var(--muted);background:#fbfaf7;margin-top:8px}
+  .form-foot{display:flex;align-items:center;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
+  .form-foot .right{margin-left:auto;display:flex;gap:10px}
+
+  /* ---------- 后台 ---------- */
+  .admin{display:grid;grid-template-columns:176px minmax(0,1fr);min-height:520px}
+  .admin-side{background:var(--card);border-right:1px solid var(--line);padding:18px 14px}
+  .admin-side div{font-size:14px;padding:8px 10px;border-radius:4px;color:var(--muted)}
+  .admin-side div.on{background:var(--accent-weak);color:var(--accent);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line)}
+  td{padding:12px;border-bottom:1px solid var(--line);color:#33312c}
+  td .link{color:var(--accent)}
+  .state{font-size:12px;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--muted)}
+  .state.wait{color:var(--warn);border-color:#e6d5bf;background:#fbf4ea}
+  .state.ok{color:var(--ok);border-color:#cfdcd3;background:#eef3ef}
+  .op{font-size:12px;color:var(--accent);margin-right:10px}
+  .op.no{color:var(--danger)}
+
+  @media (max-width:900px){
+    .page.three,.page.two{grid-template-columns:minmax(0,1fr)}
+    .rail,.side{display:none}
+    .navwrap{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="board">
+  <div class="board-head">
+    <div class="board-title">roam-bupt · 界面示意</div>
+    <div class="board-note">静态稿，无接口，只用来确认产品形态</div>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button class="on" data-t="home">首页</button>
+    <button data-t="topic">主题页（地点）</button>
+    <button data-t="post">帖子详情</button>
+    <button data-t="nav">导航</button>
+    <button data-t="publish">发布</button>
+    <button data-t="admin">后台</button>
+  </nav>
+
+  <!-- ================= 首页 ================= -->
+  <section class="screen on" data-s="home">
+    <div class="app">
+      <div class="topbar">
+        <div class="wordmark">roam<span>.bupt</span></div>
+        <div class="topnav">
+          <a class="on">首页</a><a>地点</a><a>路线</a><a>搜索</a><a>发布</a>
+        </div>
+        <div class="topright"><a>通知 3</a><div class="avatar">林</div></div>
+      </div>
+      <div class="page three">
+        <aside class="rail">
+          <h3>逛什么</h3>
+          <ul>
+            <li class="on">全部<span class="n">412</span></li>
+            <li>食堂<span class="n">68</span></li>
+            <li>自习<span class="n">93</span></li>
+            <li>住宿<span class="n">57</span></li>
+            <li>运动<span class="n">34</span></li>
+            <li>教学楼<span class="n">81</span></li>
+          </ul>
+          <h3>我关注的</h3>
+          <ul>
+            <li>第三教学楼</li>
+            <li>图书馆</li>
+            <li>学一食堂</li>
+          </ul>
+        </aside>
+
+        <main>
+          <div class="feed-head">
+            <button class="on">推荐</button>
+            <button>最新</button>
+            <button>关注</button>
+          </div>
+
+          <article class="post">
+            <h2>教三四楼靠窗那排插座，晚上七点以后基本没位子</h2>
+            <div class="meta"><span>林知远</span><i class="dot"></i><span>2 小时前</span></div>
+            <p class="excerpt">连着蹲了一周，四楼东侧靠窗一共 32 个座位，19:00 之前到基本能坐满一半。想安静写代码的话，五楼走廊尽头那两张桌子反而没人抢。</p>
+            <div class="chips">
+              <span class="chip solid">第三教学楼</span><span class="chip">自习</span>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <span>28 赞 · 12 评论</span>
+              <span class="act"><span>收藏</span><span>分享</span></span>
+            </div>
+          </article>
+
+          <article class="post">
+            <h2>从学十走到图书馆，我摸出一条下雨天不用跑的路</h2>
+            <div class="meta"><span>陈默</span><i class="dot"></i><span>昨天</span></div>
+            <p class="excerpt">平时五分钟的路，下雨天从教二后门绕，全程有屋檐或者连廊，多走一百多米但不淋。</p>
+            <div class="thumb"></div>
+            <div class="chips">
+              <span class="chip solid">图书馆</span><span class="chip solid">学十宿舍</span><span class="chip solid">教二</span><span class="chip">路线</span>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <span>64 赞 · 31 评论</span>
+              <span class="act"><span>按这个顺序走</span><span>收藏</span></span>
+            </div>
+          </article>
+
+          <article class="post">
+            <h2>新生第一周：这五个地方先认全，剩下慢慢来</h2>
+            <div class="meta"><span>阿糖</span><i class="dot"></i><span>2 天前</span></div>
+            <p class="excerpt">报到、体检、领卡、开网、找教室，五件事对应五个地方。附件里是我画的一条走完的顺序，照着走大概四十分钟。</p>
+            <div class="chips">
+              <span class="chip solid">主楼</span><span class="chip">新生</span><span class="chip">路线</span>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <span>112 赞 · 47 评论</span>
+              <span class="act"><span>按这个顺序走</span><span>收藏</span></span>
+            </div>
+          </article>
+        </main>
+
+        <aside class="side">
+          <div class="card">
+            <h3>这周人多的地方</h3>
+            <div class="hot"><span class="rank">1</span><span>学一食堂</span><span class="bar"><i style="width:88%"></i></span><span class="val">88</span></div>
+            <div class="hot"><span class="rank">2</span><span>第三教学楼</span><span class="bar"><i style="width:74%"></i></span><span class="val">74</span></div>
+            <div class="hot"><span class="rank">3</span><span>图书馆</span><span class="bar"><i style="width:61%"></i></span><span class="val">61</span></div>
+            <div class="hot"><span class="rank">4</span><span>操场</span><span class="bar"><i style="width:39%"></i></span><span class="val">39</span></div>
+          </div>
+          <div class="card">
+            <h3>今天的路线</h3>
+            <ul class="route-line">
+              <li><b>主楼</b>报到 · 领材料</li>
+              <li><b>学一食堂</b>办卡</li>
+              <li><b>宿舍</b>放行李</li>
+              <li><b>图书馆</b>开网</li>
+            </ul>
+            <a class="btn" style="width:100%;text-align:center;margin-top:14px">按这条走</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 主题页 ================= -->
+  <section class="screen" data-s="topic">
+    <div class="app">
+      <div class="topbar">
+        <div class="wordmark">roam<span>.bupt</span></div>
+        <div class="topnav"><a>首页</a><a class="on">地点</a><a>路线</a><a>搜索</a><a>发布</a></div>
+        <div class="topright"><a>通知 3</a><div class="avatar">林</div></div>
+      </div>
+
+      <div class="cover">
+        <div>
+          <h1>第三教学楼</h1>
+          <div class="sub">教学楼 · 5 层 · 自习位 420</div>
+        </div>
+      </div>
+      <div class="topicbar">
+        <div class="score">4.2<small>37 人评分</small></div>
+        <div class="divider"></div>
+        <div class="facts" style="padding:0">
+          <span><b>81</b> 条内容</span>
+          <span><b>今日 74</b> 人问路</span>
+        </div>
+        <div class="right">
+          <a class="btn">打分</a>
+          <a class="btn primary">到这里怎么走</a>
+        </div>
+      </div>
+
+      <div class="page two">
+        <main>
+          <div class="feed-head">
+            <button class="on">广场</button>
+            <button>评分</button>
+          </div>
+
+          <article class="post">
+            <h2>教三四楼靠窗那排插座，晚上七点以后基本没位子</h2>
+            <div class="meta"><span>林知远</span><i class="dot"></i><span>2 小时前</span><i class="dot"></i><span>28 赞</span></div>
+            <p class="excerpt">连着蹲了一周，四楼东侧靠窗一共 32 个座位，19:00 之前到基本能坐满一半。想安静写代码的话，五楼走廊尽头那两张桌子反而没人抢。</p>
+            <div class="chips"><span class="chip">自习</span><span class="chip">插座</span></div>
+          </article>
+
+          <article class="post">
+            <h2>四楼饮水机在哪一层换过滤芯，终于有准信了</h2>
+            <div class="meta"><span>周予安</span><i class="dot"></i><span>3 小时前</span><i class="dot"></i><span>15 赞</span></div>
+            <p class="excerpt">后勤的老师说三层和五层是两周一次，四层是一周一次，因为人最多。水房门口贴了表。</p>
+            <div class="thumb"></div>
+            <div class="chips"><span class="chip">设施</span></div>
+          </article>
+
+          <article class="post">
+            <h2>晚上十点半以后还有哪间教室开着灯</h2>
+            <div class="meta"><span>陈默</span><i class="dot"></i><span>昨天</span><i class="dot"></i><span>41 赞</span></div>
+            <p class="excerpt">一层东侧 101、102 是不关的，但十点半后保安会巡一次。二层往上十点二十就开始赶人。</p>
+            <div class="chips"><span class="chip">自习</span><span class="chip">时间</span></div>
+          </article>
+        </main>
+
+        <aside class="side">
+          <div class="card">
+            <h3>地点信息</h3>
+            <div style="font-size:14px;color:var(--muted);line-height:2">
+              开放时间 <b style="color:var(--ink)">07:00 – 23:00</b><br>
+              楼层 <b style="color:var(--ink)">1 – 5 层</b><br>
+              骑行 <b style="color:var(--ink)">允许</b><br>
+              分类 <b style="color:var(--ink)">教学楼</b>
+            </div>
+          </div>
+          <div class="card">
+            <h3>附近的地点</h3>
+            <div class="hot"><span class="rank">·</span><span>教二</span><span class="bar"><i style="width:52%"></i></span><span class="val">120m</span></div>
+            <div class="hot"><span class="rank">·</span><span>学一食堂</span><span class="bar"><i style="width:78%"></i></span><span class="val">310m</span></div>
+            <div class="hot"><span class="rank">·</span><span>图书馆</span><span class="bar"><i style="width:64%"></i></span><span class="val">480m</span></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 帖子详情 ================= -->
+  <section class="screen" data-s="post">
+    <div class="app">
+      <div class="topbar">
+        <div class="wordmark">roam<span>.bupt</span></div>
+        <div class="topnav"><a>首页</a><a>地点</a><a>路线</a><a>搜索</a><a>发布</a></div>
+        <div class="topright"><a>通知 3</a><div class="avatar">林</div></div>
+      </div>
+
+      <div class="page two">
+        <main class="card">
+          <div class="article">
+            <h1>从学十走到图书馆，我摸出一条下雨天不用跑的路</h1>
+            <div class="author">
+              <div class="avatar">陈</div>
+              <div>
+                <div class="name">陈默</div>
+                <div class="t">昨天 21:40 · 浏览 1.2k</div>
+              </div>
+              <a class="follow">关注</a>
+            </div>
+
+            <p>平时从学十到图书馆五分钟，但一下雨就只能举着书包跑。这学期我试了几条，最后定下来这一条：出宿舍往教二方向，从教二后门进去，走二层连廊到东侧，再从侧门下到图书馆北门。</p>
+            <p>全程要么在屋檐下，要么在连廊里，只有两处十几米是露天的。代价是多走一百多米，慢一分钟。</p>
+            <div class="thumb tall"></div>
+            <p>连廊这一段晚上十点会锁，别走太晚。另外雨天路滑，教二后门那截台阶有青苔。</p>
+
+            <div class="chips" style="margin-bottom:4px">
+              <span class="chip solid">图书馆</span>
+              <span class="chip solid">学十宿舍</span>
+              <span class="chip solid">教二</span>
+              <span class="chip">雨天</span>
+            </div>
+
+            <div class="actions">
+              <span>点赞 64</span><span>收藏 38</span><span>评论 31</span><span>分享</span>
+            </div>
+
+            <div class="comments">
+              <h3>评论</h3>
+              <div class="comment">
+                <div class="avatar" style="width:26px;height:26px;font-size:11px">周</div>
+                <div class="body">
+                  <div class="who"><b>周予安</b> · 3 小时前</div>
+                  教二后门那段确实滑，我去年摔过一次，现在宁可绕正门。
+                </div>
+              </div>
+              <div class="comment">
+                <div class="avatar" style="width:26px;height:26px;font-size:11px">林</div>
+                <div class="body">
+                  <div class="who"><b>林知远</b> · 2 小时前</div>
+                  收藏了。顺便问下连廊是十点锁还是十点半？上次去好像还开着。
+                </div>
+              </div>
+              <div class="comment">
+                <div class="avatar" style="width:26px;height:26px;font-size:11px">陈</div>
+                <div class="body">
+                  <div class="who"><b>陈默</b> · 1 小时前</div>
+                  十点锁，十点半那次可能是保安还没巡到。
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <aside class="side">
+          <div class="card">
+            <h3>这篇帖子串了 3 个地点</h3>
+            <ul class="route-line">
+              <li><b>学十宿舍</b>起点</li>
+              <li><b>教二</b>连廊</li>
+              <li><b>图书馆</b>终点</li>
+            </ul>
+            <div style="font-size:12px;color:var(--muted);margin:12px 0 10px">全程 620 米 · 约 8 分钟</div>
+            <a class="btn primary" style="display:block;text-align:center">按这个顺序走</a>
+          </div>
+          <div class="card">
+            <h3>同类内容</h3>
+            <div class="hot"><span class="rank">·</span><span>雨天从教二到食堂怎么走</span></div>
+            <div class="hot"><span class="rank">·</span><span>图书馆北门的近路</span></div>
+            <div class="hot"><span class="rank">·</span><span>晚上十点以后还能去哪自习</span></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 导航 ================= -->
+  <section class="screen" data-s="nav">
+    <div class="app">
+      <div class="topbar">
+        <div class="wordmark">roam<span>.bupt</span></div>
+        <div class="topnav"><a>首页</a><a>地点</a><a class="on">路线</a><a>搜索</a><a>发布</a></div>
+        <div class="topright"><a>通知 3</a><div class="avatar">林</div></div>
+      </div>
+
+      <div class="navwrap">
+        <div>
+          <div class="panel">
+            <div class="field">
+              <label>起点</label>
+              <div class="value">学十宿舍</div>
+            </div>
+            <div class="field">
+              <label>终点</label>
+              <div class="value">第三教学楼</div>
+            </div>
+            <div class="field">
+              <label>方式</label>
+              <div class="seg"><span class="on">步行</span><span>骑行</span><span>混合</span></div>
+            </div>
+
+            <div class="result">
+              <div class="big">480 米<small>约 6 分钟</small></div>
+              <div class="seg-bar">
+                <i style="background:#4f7a5f"></i>
+                <i style="background:#4f7a5f"></i>
+                <i style="background:#b0722c"></i>
+                <i style="background:#a33a2c"></i>
+                <i style="background:#4f7a5f"></i>
+                <i style="background:#4f7a5f"></i>
+              </div>
+              <div class="legend">
+                <span><i style="background:#4f7a5f"></i>畅通</span>
+                <span><i style="background:#b0722c"></i>缓行</span>
+                <span><i style="background:#a33a2c"></i>拥挤</span>
+              </div>
+              <div style="font-size:12px;color:var(--muted);margin-top:8px">途经 6 段，其中 1 段拥挤、1 段缓行，已绕开食堂正门</div>
+            </div>
+
+            <div class="alt">
+              <div style="display:flex"><span>方案二 · 绕操场</span><b style="margin-left:auto">520 米 / 7 分钟</b></div>
+              <div style="display:flex"><span>方案三 · 经教二连廊</span><b style="margin-left:auto">610 米 / 8 分钟</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mapbox">
+          <svg viewBox="0 0 760 520" role="img" aria-label="校园示意图">
+            <rect width="760" height="520" fill="#f3f1ea"/>
+
+            <!-- 道路 -->
+            <g stroke="#ded9cb" stroke-width="9" stroke-linecap="square">
+              <path d="M40 240 H720"/>
+              <path d="M135 150 V330"/>
+              <path d="M385 150 V330"/>
+              <path d="M635 160 V330"/>
+            </g>
+
+            <!-- 建筑 -->
+            <g fill="#e2ded2">
+              <rect x="60" y="60" width="150" height="90" rx="4"/>
+              <rect x="300" y="55" width="170" height="95" rx="4"/>
+              <rect x="560" y="70" width="140" height="90" rx="4" fill="#dfe6da"/>
+              <rect x="60" y="330" width="150" height="95" rx="4"/>
+              <rect x="300" y="330" width="160" height="95" rx="4"/>
+              <rect x="560" y="330" width="150" height="95" rx="4"/>
+            </g>
+            <g font-size="12" fill="#8b877c" text-anchor="middle"
+               font-family="-apple-system,PingFang SC,Microsoft YaHei,sans-serif">
+              <text x="135" y="109">教二</text>
+              <text x="385" y="107">第三教学楼</text>
+              <text x="630" y="119">操场</text>
+              <text x="135" y="381">学十宿舍</text>
+              <text x="380" y="381">学一食堂</text>
+              <text x="635" y="381">图书馆</text>
+            </g>
+
+            <!-- 路线 -->
+            <g fill="none" stroke-linecap="round" stroke-width="5">
+              <path d="M135 318 V240" stroke="#4f7a5f"/>
+              <path d="M135 240 H270" stroke="#4f7a5f"/>
+              <path d="M270 240 H330" stroke="#b0722c"/>
+              <path d="M330 240 H360" stroke="#a33a2c"/>
+              <path d="M360 240 H385" stroke="#4f7a5f"/>
+              <path d="M385 240 V150" stroke="#4f7a5f"/>
+            </g>
+
+            <!-- 拥堵标记 -->
+            <rect x="286" y="204" width="76" height="20" rx="3" fill="#fff" stroke="#e6d5bf"/>
+            <text x="324" y="218" font-size="11" fill="#b0722c" text-anchor="middle"
+                  font-family="-apple-system,PingFang SC,Microsoft YaHei,sans-serif">食堂路口</text>
+
+            <!-- 起终点 -->
+            <g font-family="-apple-system,PingFang SC,Microsoft YaHei,sans-serif" font-size="12">
+              <circle cx="135" cy="318" r="9" fill="#2f5d50"/>
+              <text x="135" y="322" fill="#fff" text-anchor="middle" font-size="11">A</text>
+              <text x="150" y="323" fill="#2f5d50">起点</text>
+
+              <circle cx="385" cy="150" r="9" fill="#a33a2c"/>
+              <text x="385" y="154" fill="#fff" text-anchor="middle" font-size="11">B</text>
+              <text x="402" y="155" fill="#a33a2c">终点</text>
+            </g>
+
+            <text x="60" y="495" font-size="11" fill="#a7a49b"
+                  font-family="-apple-system,PingFang SC,Microsoft YaHei,sans-serif">示意图 · 数据来自校园路网 372 个节点 / 446 条边</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 发布 ================= -->
+  <section class="screen" data-s="publish">
+    <div class="app">
+      <div class="topbar">
+        <div class="wordmark">roam<span>.bupt</span></div>
+        <div class="topnav"><a>首页</a><a>地点</a><a>路线</a><a>搜索</a><a class="on">发布</a></div>
+        <div class="topright"><a>通知 3</a><div class="avatar">林</div></div>
+      </div>
+
+      <div class="page one">
+        <div class="card form">
+          <h1 style="font-size:22px;margin:0;font-weight:600">写点什么</h1>
+          <label>标题</label>
+          <input value="教三五楼最里面那间教室，晚上几乎没人">
+          <label>正文</label>
+          <textarea>五楼东侧走到头是 508，只有两个班在这儿排过课，晚上基本空着。插座有六个，暖气比楼下足，缺点是离厕所远。</textarea>
+          <label>图片</label>
+          <div class="uploads">
+            <div class="upload">+ 添加</div><div class="upload">+ 添加</div><div class="upload">+ 添加</div>
+          </div>
+          <label>挂在哪些主题上</label>
+          <div class="picker">搜索地点，比如「教三」「图书馆」</div>
+          <div class="chips" style="margin-top:8px">
+            <span class="chip solid">第三教学楼</span>
+            <span class="chip">自习</span>
+          </div>
+          <div class="hint">地点和分类都可以挂，一条帖子可以挂多个。挂了多个地点时，可以拖动调整顺序。</div>
+
+          <div class="form-foot">
+            <span style="font-size:12px;color:var(--muted)">发布后所有人都能看到</span>
+            <div class="right">
+              <a class="btn">存草稿</a>
+              <a class="btn primary">发布</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 后台 ================= -->
+  <section class="screen" data-s="admin">
+    <div class="app">
+      <div class="topbar">
+        <div class="wordmark">roam<span>.bupt</span></div>
+        <div class="topnav" style="color:var(--muted)">管理后台</div>
+        <div class="topright"><span>管理员</span><div class="avatar" style="background:#e8e4d8;color:#6b665c">管</div></div>
+      </div>
+
+      <div class="admin">
+        <aside class="admin-side">
+          <div class="on">内容审核</div>
+          <div>用户管理</div>
+          <div>敏感词</div>
+          <div>地点数据</div>
+        </aside>
+        <main style="padding:22px">
+          <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px">
+            <h1 style="font-size:16px;margin:0;font-weight:600">待审核帖子</h1>
+            <span style="font-size:12px;color:var(--muted)">共 7 条</span>
+          </div>
+          <table>
+            <tr><th>标题</th><th>作者</th><th>挂载主题</th><th>提交时间</th><th>状态</th><th>操作</th></tr>
+            <tr>
+              <td>教三五楼最里面那间教室，晚上几乎没人</td><td>林知远</td><td>第三教学楼</td><td>10 分钟前</td>
+              <td><span class="state wait">待审核</span></td>
+              <td><a class="op">通过</a><a class="op no">驳回</a></td>
+            </tr>
+            <tr>
+              <td>出一台显示器，九成新</td><td>匿名</td><td>学十宿舍</td><td>32 分钟前</td>
+              <td><span class="state wait">待审核</span></td>
+              <td><a class="op">通过</a><a class="op no">驳回</a></td>
+            </tr>
+            <tr>
+              <td>食堂三楼新窗口测评</td><td>周予安</td><td>学一食堂</td><td>1 小时前</td>
+              <td><span class="state wait">待审核</span></td>
+              <td><a class="op">通过</a><a class="op no">驳回</a></td>
+            </tr>
+            <tr>
+              <td>雨天从教二到食堂怎么走</td><td>陈默</td><td>教二 · 学一食堂</td><td>昨天</td>
+              <td><span class="state ok">已通过</span></td>
+              <td><a class="op">下线</a></td>
+            </tr>
+          </table>
+        </main>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const tabs = document.getElementById('tabs');
+  function select(name) {
+    const b = tabs.querySelector(`button[data-t="${name}"]`);
+    if (!b) return;
+    tabs.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.screen').forEach(s => {
+      s.classList.toggle('on', s.dataset.s === name);
+    });
+  }
+  tabs.addEventListener('click', e => {
+    const b = e.target.closest('button[data-t]');
+    if (b) { select(b.dataset.t); history.replaceState(null, '', '#' + b.dataset.t); }
+  });
+  if (location.hash) select(location.hash.slice(1));
+</script>
+</body>
+</html>
