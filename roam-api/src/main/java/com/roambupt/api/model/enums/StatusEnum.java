@@ -14,6 +14,8 @@ public enum StatusEnum {
     FORBIDDEN(403, "没有权限"),
     NOT_FOUND(404, "内容不存在"),
     CONFLICT(409, "状态冲突"),
+    RATE_LIMITED(429, "请求过于频繁"),
+    SERVICE_UNAVAILABLE(503, "依赖服务不可用，请稍后重试"),
     INTERNAL_ERROR(500, "服务器开小差了");
 
     private final Integer code;

@@ -53,6 +53,6 @@ mvn -pl roam-web spring-boot:run
 
 - [x] P0-1 多模块骨架
 - [x] P0-2 Liquibase 基线表与地点 seed（152 个主题，74 个可见）
-- [ ] P0-3 注册登录与 JWT 会话
+- [x] P0-3 注册登录与 JWT 会话（10 条测试）
 - [ ] P0-4 发帖与地点页最小链路
 - [ ] P0-5 前端骨架与联调
