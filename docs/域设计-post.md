@@ -35,6 +35,13 @@ TopicReadService
 
 依赖方向保持 `web → service → core → api`；post 不直接读 `topic` 表，topic 不直接读 `post` 表。
 
+## 1.5 鉴权口径（P0 补）
+
+- `POST /posts` 必须登录（`✓`）。
+- `GET /posts`、`GET /posts/{id}`、`GET /topics`、`GET /topics/{id}`、`GET /topics/{id}/posts` 走**可选登录**：带 token 就解析，无 token 或失效按游客处理，不返回 401。
+- 实现：新增 `@OptionalAuth` 注解，拦截器识别后进入可选模式；未登录时 `myLiked/myCollected` 返回 `null`。
+- 游客访问非 `ONLINE` 帖子 → `404`（不区分“不存在”和“无权限”）。
+
 ## 2. 接口
 
 ```java

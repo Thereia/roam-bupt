@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.io.IOException;
@@ -61,16 +62,17 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        boolean optional = isOptional(handler);
         String token = resolveToken(request);
         if (token == null) {
-            return reject(response, 401, "未登录");
+            return optional || reject(response, 401, "未登录");
         }
 
         ParsedToken parsed;
         try {
             parsed = jwtSupport.parse(token);
         } catch (InvalidTokenException e) {
-            return reject(response, 401, "登录已失效，请重新登录");
+            return optional || reject(response, 401, "登录已失效，请重新登录");
         }
 
         SessionStatus status = sessionStore.check(parsed.jti());
@@ -82,12 +84,12 @@ public class AuthInterceptor implements HandlerInterceptor {
             return reject(response, 503, "依赖服务不可用，请稍后重试");
         }
         if (status == SessionStatus.ABSENT) {
-            return reject(response, 401, "登录已失效，请重新登录");
+            return optional || reject(response, 401, "登录已失效，请重新登录");
         }
 
         Optional<UserAccount> account = userQueryService.findAccountById(parsed.uid());
         if (account.isEmpty() || account.get().status() == null || account.get().status() != 1) {
-            return reject(response, 401, "账号不可用");
+            return optional || reject(response, 401, "账号不可用");
         }
 
         CurrentUserContext.set(new ReqInfo(parsed.uid(), account.get().role(), parsed.jti()));
@@ -98,6 +100,14 @@ public class AuthInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
                                 Object handler, Exception ex) {
         CurrentUserContext.clear();
+    }
+
+    private boolean isOptional(Object handler) {
+        if (handler instanceof HandlerMethod method) {
+            return method.hasMethodAnnotation(OptionalAuth.class)
+                    || method.getBeanType().isAnnotationPresent(OptionalAuth.class);
+        }
+        return false;
     }
 
     private String resolveToken(HttpServletRequest request) {

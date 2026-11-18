@@ -21,3 +21,8 @@ mybatis-plus:
 logging:
   level:
     com.roambupt: info
+
+roam:
+  post:
+    # 本地开发直接上线，省掉审核步骤；生产默认进 PENDING
+    auto-approve: ${ROAM_POST_AUTO_APPROVE:true}

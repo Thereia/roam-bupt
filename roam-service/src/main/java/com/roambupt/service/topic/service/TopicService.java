@@ -1,0 +1,23 @@
+package com.roambupt.service.topic.service;
+
+import com.roambupt.api.model.dto.TopicQuery;
+import com.roambupt.api.model.vo.PageResult;
+import com.roambupt.api.model.vo.TopicBriefVO;
+import com.roambupt.api.model.vo.TopicVO;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+/** 主题读服务。其他域只通过它拿主题信息，不碰 topic 表。 */
+public interface TopicService {
+
+    TopicVO detail(long topicId);
+
+    PageResult<TopicVO> list(TopicQuery query);
+
+    List<TopicBriefVO> findBriefs(Collection<Long> ids);
+
+    /** 过滤出「存在、可见、且是地点」的主题 id。 */
+    Set<Long> findEnabledPlaceIds(Collection<Long> ids);
+}
