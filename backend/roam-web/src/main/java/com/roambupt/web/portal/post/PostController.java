@@ -1,4 +1,4 @@
-package com.roambupt.web.front.post;
+package com.roambupt.web.portal.post;
 
 import com.roambupt.api.model.dto.FeedQuery;
 import com.roambupt.api.model.dto.PostCreateCommand;

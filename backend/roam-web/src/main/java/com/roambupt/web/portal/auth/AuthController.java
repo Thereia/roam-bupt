@@ -1,4 +1,4 @@
-package com.roambupt.web.front.auth;
+package com.roambupt.web.portal.auth;
 
 import com.roambupt.api.model.dto.LoginCommand;
 import com.roambupt.api.model.dto.RegisterCommand;

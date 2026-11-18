@@ -1,4 +1,4 @@
-package com.roambupt.web.front.topic;
+package com.roambupt.web.portal.topic;
 
 import com.roambupt.api.model.dto.TopicQuery;
 import com.roambupt.api.model.vo.PageResult;
