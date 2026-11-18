@@ -1,0 +1,58 @@
+# AGENTS.md — roam-bupt
+
+> 给在本仓库工作的 agent。规则只在这里写一份，别处的文档只做指针。
+
+## 项目一句话
+
+校园地点社区：帖子挂多个地点主题，地点页聚合内容与评分，按帖子里的地点顺序生成路线。
+Spring Boot 3.5.16 / Java 17，四模块 `roam-api → roam-core → roam-service → roam-web`。
+
+## 开工流程（按顺序，别跳）
+
+1. **域设计先行**。每个域动代码前，先写 `docs/域设计-<domain>.md`，只写三样：
+   - 调用关系：谁调谁，画成缩进树；
+   - 接口：接口名 + 方法签名 + 入参/出参类型名；
+   - 失败语义：每种失败返回什么码、为什么。
+
+   **完成判据**：文件里三节都有内容，用户确认后才写第一行业务代码。
+
+2. **契约先行**。改接口先改 `docs/API-契约.md`；改分层/错误码/事务/失败语义先改 `docs/代码级设计基线.md`。
+
+3. **TDD 切片**。一个切片 = 一条失败测试 + 最小实现 + 通过。接缝固定三个：HTTP（MockMvc）、service（真 DB + 假 SessionStore）、建表（Liquibase）。
+   **完成判据**：新测试先红后绿，`mvn -pl roam-web -am -DskipTests compile` 通过。
+
+4. **一刀一提交**：`<type>(<scope>): <subject>`，scope 用域名（auth/post/topic/space）。
+
+5. **出现第二个实现才抽接口**。只有一个实现的接口不算扩展点，算负担。
+
+## 写代码时的固定规则
+
+- 方法签名、字段顺序在 TDD 切片里定；域设计文档不预先猜它们。
+- 跨域调用只走对方的 `*QueryService` / `*CommandService`，不 import 对方的 `repository.*`。
+- 事务方法里先写库；发事件、写 Redis、调 MQ 一律放到 `AFTER_COMMIT`。
+- 所有 Redis key 带 TTL；TTL 写进接口签名（`SessionStore` / `CounterStore` / `TtlCache`）。
+- 认证依赖不可用返回 **503**；token 本身无效才是 **401**。
+- 日志只打 `uid`、业务 id、`jti` 前 8 位；密码与完整 token 不出现在任何日志里。
+
+## 环境
+
+- `JAVA_HOME=E:\develop\java`（17.0.12）；Maven `E:\develop\apache-maven-3.9.11`；本地仓库 `E:\develop\maven-rep`
+- 编译：`mvn -pl roam-web -am -DskipTests compile`
+- 起服务：`mvn -pl roam-web -am -DskipTests install` 然后 `mvn -pl roam-web spring-boot:run`
+- MySQL：`roam_bupt`（localhost:3306，root/123456）
+- Redis：`192.168.153.129:7001`，密码 `123456`
+
+## 文档索引（按需读，不要全读）
+
+| 要解决什么 | 读哪份 |
+|---|---|
+| 产品定位、范围、不做清单 | `docs/项目章程.md` |
+| 分层、错误码、事务、失败语义、扩展点 | `docs/代码级设计基线.md` |
+| 接口路径、入参出参、状态机 | `docs/API-契约.md` |
+| 模块与包结构、提交顺序 | `docs/骨架规划.md` |
+| 从 taco 搬哪些文件、怎么改 | `docs/复用清单.md` |
+| 地点/路网数据从哪来 | `docs/数据导出说明.md` |
+
+## 评审
+
+跨域或结构性变更（新增域、改分层、改扩展点）开工前开一轮多 agent 评审；单域设计自己写，不必多 agent。
