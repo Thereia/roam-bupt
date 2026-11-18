@@ -10,6 +10,14 @@ function hoursAgo(hours) {
   return formatTime(new Date(NOW - hours * 60 * 60 * 1000))
 }
 
+// 固定到某天某个时刻，详情页要显示「昨天 21:40」
+function daysAgoAt(days, hour, minute) {
+  const date = new Date(NOW)
+  date.setDate(date.getDate() - days)
+  date.setHours(hour, minute, 0, 0)
+  return formatTime(date)
+}
+
 const authorLin = { id: 1, nickname: '林知远', avatar: null, followed: false }
 const authorZhou = { id: 2, nickname: '周予安', avatar: null, followed: false }
 const authorChen = { id: 3, nickname: '陈默', avatar: null, followed: false }
@@ -28,7 +36,7 @@ export const posts = [
       { id: 201, type: 'CATEGORY', name: '自习', sortNo: 0 },
     ],
     media: [],
-    counts: { like: 28, collect: 12, comment: 31, view: 420 },
+    counts: { like: 28, collect: 12, comment: 12, view: 420 },
     myLiked: null,
     myCollected: null,
     createdTime: hoursAgo(2),
@@ -41,17 +49,17 @@ export const posts = [
     status: 'ONLINE',
     author: authorChen,
     topics: [
+      { id: 114, type: 'PLACE', name: '图书馆', sortNo: 2 },
       { id: 118, type: 'PLACE', name: '学十宿舍', sortNo: 0 },
       { id: 117, type: 'PLACE', name: '教二', sortNo: 1 },
-      { id: 114, type: 'PLACE', name: '图书馆', sortNo: 2 },
       { id: 206, type: 'CATEGORY', name: '雨天', sortNo: 0 },
     ],
     media: [],
     counts: { like: 64, collect: 38, comment: 31, view: 1200 },
     myLiked: null,
     myCollected: null,
-    createdTime: hoursAgo(25),
-    updatedTime: hoursAgo(25),
+    createdTime: daysAgoAt(1, 21, 40),
+    updatedTime: daysAgoAt(1, 21, 40),
   },
   {
     id: 3,
@@ -97,6 +105,7 @@ export const posts = [
     topics: [
       { id: 113, type: 'PLACE', name: '第三教学楼', sortNo: 0 },
       { id: 201, type: 'CATEGORY', name: '自习', sortNo: 0 },
+      { id: 210, type: 'CATEGORY', name: '时间', sortNo: 0 },
     ],
     media: [],
     counts: { like: 41, collect: 9, comment: 18, view: 760 },

@@ -4,6 +4,12 @@ import { isLoggedIn } from '../store/user'
 const routes = [
   { path: '/', name: 'home', component: () => import('../views/HomeView.vue') },
   {
+    path: '/topics',
+    name: 'topics',
+    component: () => import('../views/PlaceholderView.vue'),
+    meta: { title: '地点' },
+  },
+  {
     path: '/topics/:id',
     name: 'topic',
     component: () => import('../views/TopicView.vue'),

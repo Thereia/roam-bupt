@@ -33,6 +33,8 @@ const byNewest = (a, b) => b.createdTime.localeCompare(a.createdTime)
 const byHot = (a, b) => b.counts.like - a.counts.like
 
 export function listPosts({ page = 1, pageSize = 10, feed = 'recommend' } = {}) {
+  // P0 没有关注关系数据，following 返回空列表，由页面提示登录/空态
+  if (feed === 'following') return pageOf([], page, pageSize)
   const online = posts.filter((post) => post.status === 'ONLINE')
   // recommend 保持 fixture 的编排顺序，latest 才按时间倒序
   const list = [...online]
@@ -50,7 +52,7 @@ export function listComments(postId, { page = 1, pageSize = 10 } = {}) {
   return pageOf(commentsByPost[Number(postId)] || [], page, pageSize)
 }
 
-export function listTopics({ type = 'PLACE', category, q, sort = 'heat', page = 1, pageSize = 50 } = {}) {
+export function listTopics({ type = 'PLACE', category, q, sort, page = 1, pageSize = 50 } = {}) {
   const sorters = {
     heat: (a, b) => b.heat - a.heat,
     rating: (a, b) => b.rating.displayAvg - a.rating.displayAvg,
@@ -60,7 +62,8 @@ export function listTopics({ type = 'PLACE', category, q, sort = 'heat', page = 
   if (category) list = list.filter((topic) => topic.category === category)
   const keyword = (q || '').trim()
   if (keyword) list = list.filter((topic) => topic.name.includes(keyword))
-  list = [...list].sort(sorters[sort] || sorters.heat)
+  // 不传 sort 时保留 fixture 顺序，和 GET /topics 的默认顺序一致
+  if (sort && sorters[sort]) list = [...list].sort(sorters[sort])
   return pageOf(list, page, pageSize)
 }
 

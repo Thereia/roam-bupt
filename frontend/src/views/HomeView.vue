@@ -4,21 +4,31 @@ import { getPosts } from '../api/post'
 import { getTopics } from '../api/topic'
 import PostCard from '../components/PostCard.vue'
 import StateBlock from '../components/StateBlock.vue'
+import { categoryTotal, dailyRoute, followedPlaces } from '../mock/display'
+import { isLoggedIn } from '../store/user'
 
 const feeds = [
   { key: 'recommend', label: '推荐' },
   { key: 'latest', label: '最新' },
+  { key: 'following', label: '关注' },
 ]
 
 const feed = ref('recommend')
 const posts = ref([])
-const topics = ref([])
+const categories = ref([])
+const places = ref([])
 const loading = ref(true)
 const error = ref('')
 
 async function loadPosts() {
   loading.value = true
   error.value = ''
+  // 关注流要登录，游客直接给登录入口，不发请求
+  if (feed.value === 'following' && !isLoggedIn()) {
+    posts.value = []
+    loading.value = false
+    return
+  }
   try {
     const data = await getPosts({ feed: feed.value, pageSize: 10 })
     posts.value = data.list
@@ -31,10 +41,14 @@ async function loadPosts() {
 
 async function loadTopics() {
   try {
-    const data = await getTopics({ type: 'PLACE', sort: 'postCount' })
-    topics.value = data.list
+    const [categoryPage, placePage] = await Promise.all([
+      getTopics({ type: 'CATEGORY' }),
+      getTopics({ type: 'PLACE' }),
+    ])
+    categories.value = categoryPage.list
+    places.value = placePage.list
   } catch {
-    // 侧栏失败不该挡住信息流，状态码提示已在请求层统一弹出
+    // 侧栏失败不挡信息流，请求层已经统一提示
   }
 }
 
@@ -44,9 +58,7 @@ function switchFeed(key) {
   loadPosts()
 }
 
-const rail = computed(() => [...topics.value].sort((a, b) => b.postCount - a.postCount))
-const hottest = computed(() => [...topics.value].sort((a, b) => b.heat - a.heat).slice(0, 4))
-const maxHeat = computed(() => Math.max(1, ...hottest.value.map((topic) => topic.heat)))
+const hottest = computed(() => [...places.value].sort((a, b) => b.heat - a.heat).slice(0, 4))
 
 onMounted(() => {
   loadPosts()
@@ -57,13 +69,22 @@ onMounted(() => {
 <template>
   <div class="page page-three">
     <aside class="rail">
-      <h3>地点</h3>
-      <ul class="rail-list">
-        <li v-for="topic in rail" :key="topic.id">
-          <RouterLink :to="`/topics/${topic.id}`">
-            <span>{{ topic.name }}</span>
-            <span class="count">{{ topic.postCount }}</span>
-          </RouterLink>
+      <h3>逛什么</h3>
+      <ul>
+        <li class="on">
+          <span>全部</span>
+          <span class="n">{{ categoryTotal }}</span>
+        </li>
+        <li v-for="category in categories" :key="category.id">
+          <span>{{ category.name }}</span>
+          <span class="n">{{ category.postCount }}</span>
+        </li>
+      </ul>
+
+      <h3>我关注的</h3>
+      <ul>
+        <li v-for="place in followedPlaces" :key="place.id">
+          <span>{{ place.name }}</span>
         </li>
       </ul>
     </aside>
@@ -83,22 +104,37 @@ onMounted(() => {
 
       <StateBlock v-if="loading" text="正在加载" />
       <StateBlock v-else-if="error" :text="error" action="重新加载" @action="loadPosts" />
-      <StateBlock v-else-if="!posts.length" text="这里还没有帖子。" />
+      <StateBlock v-else-if="feed === 'following' && !isLoggedIn()" text="登录后可以看关注的人发的帖子。">
+        <RouterLink to="/login" class="btn">登录</RouterLink>
+      </StateBlock>
+      <StateBlock
+        v-else-if="!posts.length"
+        :text="feed === 'following' ? '还没有关注的人发帖。' : '这里还没有帖子。'"
+      />
       <div v-else>
-        <PostCard v-for="post in posts" :key="post.id" :post="post" />
+        <PostCard v-for="post in posts" :key="post.id" :post="post" variant="home" />
       </div>
     </main>
 
     <aside class="side">
       <section class="card">
-        <h3>热度排行</h3>
-        <div v-for="(topic, index) in hottest" :key="topic.id" class="hot-row">
+        <h3>这周人多的地方</h3>
+        <div v-for="(place, index) in hottest" :key="place.id" class="hot">
           <span class="rank">{{ index + 1 }}</span>
-          <RouterLink class="hot-name" :to="`/topics/${topic.id}`">{{ topic.name }}</RouterLink>
-          <span class="bar"><i :style="{ width: `${Math.round((topic.heat / maxHeat) * 100)}%` }"></i></span>
-          <span class="val">{{ topic.heat }}</span>
+          <span>{{ place.name }}</span>
+          <span class="bar"><i :style="{ width: `${Math.min(100, place.heat)}%` }"></i></span>
+          <span class="val">{{ place.heat }}</span>
         </div>
-        <p v-if="!hottest.length" class="muted-text">还没有热度数据。</p>
+      </section>
+
+      <section class="card">
+        <h3>今天的路线</h3>
+        <ul class="route-line">
+          <li v-for="step in dailyRoute.steps" :key="step.place">
+            <b>{{ step.place }}</b>{{ step.note }}
+          </li>
+        </ul>
+        <button type="button" class="btn block" disabled title="P1 上线">按这条走</button>
       </section>
     </aside>
   </div>

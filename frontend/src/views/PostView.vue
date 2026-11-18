@@ -4,7 +4,9 @@ import { useRoute } from 'vue-router'
 import { getComments, getPost } from '../api/post'
 import StateBlock from '../components/StateBlock.vue'
 import TopicChip from '../components/TopicChip.vue'
-import { formatRelativeTime } from '../utils/time'
+import { postDisplay } from '../mock/display'
+import { formatCount } from '../utils/number'
+import { formatDayTime, formatRelativeTime } from '../utils/time'
 
 const route = useRoute()
 const post = ref(null)
@@ -37,6 +39,8 @@ async function load() {
   }
 }
 
+const display = computed(() => postDisplay[post.value?.id] || {})
+
 const paragraphs = computed(() =>
   String(post.value?.content || '')
     .split(/\n+/)
@@ -50,9 +54,11 @@ const places = computed(() =>
     .sort((a, b) => a.sortNo - b.sortNo),
 )
 
+const related = computed(() => display.value.related || [])
 const authorInitial = computed(() => (post.value?.author?.nickname || '?').slice(0, 1))
 
-function placeLabel(index) {
+function stopLabel(index) {
+  if (display.value.stopLabels?.[index]) return display.value.stopLabels[index]
   if (places.value.length === 1) return '地点'
   if (index === 0) return '起点'
   if (index === places.value.length - 1) return '终点'
@@ -75,53 +81,67 @@ watch(() => route.params.id, load)
   </section>
 
   <div v-else-if="post" class="page page-two">
-    <main>
-      <article class="card article">
-        <h1>{{ post.title }}</h1>
+    <main class="card article">
+      <h1>{{ post.title }}</h1>
 
-        <div class="author">
-          <span class="avatar">{{ authorInitial }}</span>
-          <div class="author-info">
-            <span class="name">{{ post.author.nickname }}</span>
-            <span class="t">{{ formatRelativeTime(post.createdTime) }} · 浏览 {{ post.counts.view }}</span>
+      <div class="author">
+        <span class="avatar">{{ authorInitial }}</span>
+        <div class="author-info">
+          <span class="name">{{ post.author.nickname }}</span>
+          <span class="t">{{ formatDayTime(post.createdTime) }} · 浏览 {{ formatCount(post.counts.view) }}</span>
+        </div>
+        <button type="button" class="follow" disabled title="P1 上线">关注</button>
+      </div>
+
+      <template v-for="(paragraph, index) in paragraphs" :key="index">
+        <p>{{ paragraph }}</p>
+        <div v-if="display.tallImage && index === 1" class="thumb tall">图片</div>
+      </template>
+
+      <div class="chips">
+        <TopicChip v-for="topic in post.topics" :key="topic.id" :topic="topic" />
+      </div>
+
+      <div class="actions">
+        <button type="button" disabled title="P1 上线">点赞 {{ post.counts.like }}</button>
+        <button type="button" disabled title="P1 上线">收藏 {{ post.counts.collect }}</button>
+        <button type="button" disabled title="P1 上线">评论 {{ post.counts.comment }}</button>
+        <button type="button" disabled title="P1 上线">分享</button>
+      </div>
+
+      <section class="comments">
+        <h2 class="comments-title">评论</h2>
+        <p v-if="!comments.length" class="muted-text">还没有评论。</p>
+        <div v-for="comment in comments" :key="comment.id" class="comment">
+          <span class="avatar small">{{ comment.author.nickname.slice(0, 1) }}</span>
+          <div class="comment-body">
+            <p class="who"><b>{{ comment.author.nickname }}</b> · {{ formatRelativeTime(comment.createdTime) }}</p>
+            <p>{{ comment.content }}</p>
           </div>
         </div>
-
-        <p v-for="(paragraph, index) in paragraphs" :key="index">{{ paragraph }}</p>
-
-        <div class="chips">
-          <TopicChip v-for="topic in post.topics" :key="topic.id" :topic="topic" />
-        </div>
-
-        <div class="actions">
-          <span>点赞 {{ post.counts.like }}</span>
-          <span>收藏 {{ post.counts.collect }}</span>
-          <span>评论 {{ post.counts.comment }}</span>
-        </div>
-
-        <section class="comments">
-          <h2 class="section-title">评论</h2>
-          <p v-if="!comments.length" class="muted-text">还没有评论。</p>
-          <div v-for="comment in comments" :key="comment.id" class="comment">
-            <span class="avatar small">{{ comment.author.nickname.slice(0, 1) }}</span>
-            <div class="comment-body">
-              <p class="who"><b>{{ comment.author.nickname }}</b> · {{ formatRelativeTime(comment.createdTime) }}</p>
-              <p>{{ comment.content }}</p>
-            </div>
-          </div>
-        </section>
-      </article>
+      </section>
     </main>
 
     <aside class="side">
       <section v-if="places.length" class="card">
-        <h3>帖子里的地点顺序</h3>
-        <ol class="route-line">
+        <h3>这篇帖子串了 {{ places.length }} 个地点</h3>
+        <ul class="route-line">
           <li v-for="(place, index) in places" :key="place.id">
-            <b>{{ place.name }}</b>
-            <span class="stop">{{ placeLabel(index) }}</span>
+            <b>{{ place.name }}</b>{{ stopLabel(index) }}
           </li>
-        </ol>
+        </ul>
+        <template v-if="display.routeSummary">
+          <p class="route-summary">{{ display.routeSummary }}</p>
+          <button type="button" class="btn primary block" disabled title="P1 上线">按这个顺序走</button>
+        </template>
+      </section>
+
+      <section v-if="related.length" class="card">
+        <h3>同类内容</h3>
+        <div v-for="title in related" :key="title" class="related-row">
+          <span class="rank">·</span>
+          <span>{{ title }}</span>
+        </div>
       </section>
     </aside>
   </div>

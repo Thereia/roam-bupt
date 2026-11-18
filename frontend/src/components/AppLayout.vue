@@ -12,8 +12,9 @@ const initial = computed(() => nickname.value.slice(0, 1) || '游')
 const activeSection = computed(() => {
   const path = route.path
   if (path === '/') return 'home'
-  if (path.startsWith('/search')) return 'search'
+  if (path === '/topics' || path.startsWith('/topics/')) return 'topics'
   if (path.startsWith('/nav')) return 'nav'
+  if (path.startsWith('/search')) return 'search'
   if (path.startsWith('/publish')) return 'publish'
   return ''
 })
@@ -35,8 +36,9 @@ async function handleLogout() {
       <RouterLink to="/" class="wordmark">roam<span class="accent">.bupt</span></RouterLink>
       <nav class="topnav">
         <RouterLink to="/" :class="{ on: activeSection === 'home' }">首页</RouterLink>
-        <RouterLink to="/search" :class="{ on: activeSection === 'search' }">搜索</RouterLink>
+        <RouterLink to="/topics" :class="{ on: activeSection === 'topics' }">地点</RouterLink>
         <RouterLink to="/nav" :class="{ on: activeSection === 'nav' }">路线</RouterLink>
+        <RouterLink to="/search" :class="{ on: activeSection === 'search' }">搜索</RouterLink>
         <RouterLink to="/publish" :class="{ on: activeSection === 'publish' }">发布</RouterLink>
       </nav>
       <div class="topright">
