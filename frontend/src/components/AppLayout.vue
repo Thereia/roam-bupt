@@ -32,9 +32,10 @@ async function handleLogout() {
 
 <template>
   <div class="app-shell">
-    <header class="topbar">
+    <header class="site-header">
+      <div class="site-header-inner">
       <RouterLink to="/" class="wordmark">roam<span class="accent">.bupt</span></RouterLink>
-      <nav class="topnav">
+      <nav class="site-tabs">
         <RouterLink to="/" :class="{ on: activeSection === 'home' }">首页</RouterLink>
         <RouterLink to="/topics" :class="{ on: activeSection === 'topics' }">地点</RouterLink>
         <RouterLink to="/nav" :class="{ on: activeSection === 'nav' }">路线</RouterLink>
@@ -49,6 +50,7 @@ async function handleLogout() {
           <RouterLink :to="`/users/${userStore.user?.id ?? ''}`" class="avatar" :title="nickname">{{ initial }}</RouterLink>
         </template>
         <RouterLink v-else to="/login" class="link-button">登录</RouterLink>
+      </div>
       </div>
     </header>
     <main class="shell">
