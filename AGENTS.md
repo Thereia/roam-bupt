@@ -5,7 +5,7 @@
 ## 项目一句话
 
 校园地点社区：帖子挂多个地点主题，地点页聚合内容与评分，按帖子里的地点顺序生成路线。
-Spring Boot 3.5.16 / Java 17，四模块 `roam-api → roam-core → roam-service → roam-web`。
+后端在 `backend/`（Spring Boot 3.5.16 / Java 17，四模块 `roam-api → roam-core → roam-service → roam-web`），前端在 `frontend/`（Vue 3 + Vite），两边平级、互不嵌套。
 
 ## 开工流程（按顺序，别跳）
 
@@ -19,7 +19,7 @@ Spring Boot 3.5.16 / Java 17，四模块 `roam-api → roam-core → roam-servic
 2. **契约先行**。改接口先改 `docs/API-契约.md`；改分层/错误码/事务/失败语义先改 `docs/代码级设计基线.md`。
 
 3. **TDD 切片**。一个切片 = 一条失败测试 + 最小实现 + 通过。接缝固定三个：HTTP（MockMvc）、service（真 DB + 假 SessionStore）、建表（Liquibase）。
-   **完成判据**：新测试先红后绿，`mvn -pl roam-web -am -DskipTests compile` 通过。
+   **完成判据**：新测试先红后绿，后端 `mvn -pl roam-web -am -DskipTests compile` 通过。
 
 4. **一刀一提交**：`<type>(<scope>): <subject>`，scope 用域名（auth/post/topic/space）。
 
@@ -37,8 +37,10 @@ Spring Boot 3.5.16 / Java 17，四模块 `roam-api → roam-core → roam-servic
 ## 环境
 
 - `JAVA_HOME=E:\develop\java`（17.0.12）；Maven `E:\develop\apache-maven-3.9.11`；本地仓库 `E:\develop\maven-rep`
-- 编译：`mvn -pl roam-web -am -DskipTests compile`
-- 起服务：`mvn -pl roam-web -am -DskipTests install` 然后 `mvn -pl roam-web spring-boot:run`
+- 后端命令都要先 `cd backend`：
+  - 编译：`mvn -pl roam-web -am -DskipTests compile`
+  - 起服务：`mvn -pl roam-web -am -DskipTests install` 然后 `mvn -pl roam-web spring-boot:run`
+- 前端在 `frontend/`：`npm install`、`npm run dev`、`npm run build`；连真实后端用 `VITE_USE_MOCK=false`
 - MySQL：`roam_bupt`（localhost:3306，root/123456）
 - Redis：`192.168.153.129:7001`，密码 `123456`
 
@@ -50,10 +52,10 @@ Spring Boot 3.5.16 / Java 17，四模块 `roam-api → roam-core → roam-servic
 | 分层、错误码、事务、失败语义、扩展点 | `docs/代码级设计基线.md` |
 | 接口路径、入参出参、状态机 | `docs/API-契约.md` |
 | 模块与包结构、提交顺序 | `docs/骨架规划.md` |
-| 从 taco 搬哪些文件、怎么改 | `docs/复用清单.md` |
-| 地点/路网数据从哪来 | `docs/数据导出说明.md` |
 | 前端技术栈、目录、mock 策略 | `docs/前端约定.md` |
 | 某个域的调用关系与失败语义 | `docs/域设计-<domain>.md` |
+| 从 taco 搬哪些文件、怎么改 | `docs/复用清单.md` |
+| 地点/路网数据从哪来 | `docs/数据导出说明.md` |
 
 ## 评审
 
