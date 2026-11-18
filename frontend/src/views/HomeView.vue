@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { getPosts } from '../api/post'
-import { getTopics } from '../api/topic'
+import { getTopicStats, getTopics } from '../api/topic'
 import PostCard from '../components/PostCard.vue'
 import StateBlock from '../components/StateBlock.vue'
 import { categoryTotal, dailyRoute, followedPlaces } from '../mock/display'
@@ -15,6 +15,8 @@ const feeds = [
 
 const feed = ref('recommend')
 const posts = ref([])
+const postTotal = ref(0)
+const categoryCounts = ref({})
 const categories = ref([])
 const places = ref([])
 const loading = ref(true)
@@ -32,6 +34,7 @@ async function loadPosts() {
   try {
     const data = await getPosts({ feed: feed.value, pageSize: 10 })
     posts.value = data.list
+    postTotal.value = data.total
   } catch (err) {
     error.value = err.message || '加载失败'
   } finally {
@@ -41,12 +44,14 @@ async function loadPosts() {
 
 async function loadTopics() {
   try {
-    const [categoryPage, placePage] = await Promise.all([
+    const [categoryPage, placePage, stats] = await Promise.all([
       getTopics({ type: 'CATEGORY' }),
       getTopics({ type: 'PLACE' }),
+      getTopicStats(),
     ])
     categories.value = categoryPage.list
     places.value = placePage.list
+    categoryCounts.value = Object.fromEntries((stats || []).map((item) => [item.category, item.count]))
   } catch {
     // 侧栏失败不挡信息流，请求层已经统一提示
   }
@@ -57,6 +62,11 @@ function switchFeed(key) {
   feed.value = key
   loadPosts()
 }
+
+const placeTotal = computed(() => {
+  const values = Object.values(categoryCounts.value)
+  return values.length ? values.reduce((sum, value) => sum + value, 0) : categoryTotal
+})
 
 const hottest = computed(() => [...places.value].sort((a, b) => b.heat - a.heat).slice(0, 4))
 
@@ -73,11 +83,11 @@ onMounted(() => {
       <ul>
         <li class="on">
           <span>全部</span>
-          <span class="n">{{ categoryTotal }}</span>
+          <span class="n">{{ placeTotal }}</span>
         </li>
         <li v-for="category in categories" :key="category.id">
           <span>{{ category.name }}</span>
-          <span class="n">{{ category.postCount }}</span>
+          <span class="n">{{ categoryCounts[category.name] ?? category.postCount }}</span>
         </li>
       </ul>
 

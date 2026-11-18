@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getComments, getPost } from '../api/post'
+import { COMMENTS_READY, getComments, getPost } from '../api/post'
 import StateBlock from '../components/StateBlock.vue'
 import TopicChip from '../components/TopicChip.vue'
 import { postDisplay } from '../mock/display'
@@ -23,7 +23,7 @@ async function load() {
   comments.value = []
   try {
     post.value = await getPost(requestedId)
-    getComments(requestedId, { pageSize: 20 })
+    if (COMMENTS_READY) getComments(requestedId, { pageSize: 20 })
       .then((data) => {
         // 页面已经切到别的帖子时丢掉旧响应
         if (route.params.id === requestedId) comments.value = data.list
@@ -111,7 +111,7 @@ watch(() => route.params.id, load)
 
       <section class="comments">
         <h2 class="comments-title">评论</h2>
-        <p v-if="!comments.length" class="muted-text">还没有评论。</p>
+        <p v-if="!comments.length" class="muted-text">评论功能 P1 上线，这里先空着。</p>
         <div v-for="comment in comments" :key="comment.id" class="comment">
           <span class="avatar small">{{ comment.author.nickname.slice(0, 1) }}</span>
           <div class="comment-body">

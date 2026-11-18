@@ -1,6 +1,7 @@
 package com.roambupt.web.portal.topic;
 
 import com.roambupt.api.model.dto.TopicQuery;
+import com.roambupt.api.model.vo.CategoryCountVO;
 import com.roambupt.api.model.vo.PageResult;
 import com.roambupt.api.model.vo.PostVO;
 import com.roambupt.api.model.vo.ResVo;
@@ -35,6 +36,12 @@ public class TopicController {
                                            @RequestParam(defaultValue = "1") int page,
                                            @RequestParam(defaultValue = "10") int pageSize) {
         return ResVo.ok(topicService.list(new TopicQuery(type, category, q, page, pageSize)));
+    }
+
+    @OptionalAuth
+    @GetMapping("/stats")
+    public ResVo<java.util.List<CategoryCountVO>> stats() {
+        return ResVo.ok(topicService.stats());
     }
 
     @OptionalAuth

@@ -13,6 +13,7 @@ import com.roambupt.service.post.repository.mapper.PostTopicMapper;
 import com.roambupt.service.post.service.PostCreateValidator;
 import com.roambupt.service.post.service.PostWriteService;
 import com.roambupt.service.post.service.ValidatedPost;
+import com.roambupt.service.topic.service.TopicCommandService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -38,17 +39,20 @@ public class PostWriteServiceImpl implements PostWriteService {
     private final PostTopicMapper postTopicMapper;
     private final PostMediaMapper postMediaMapper;
     private final PostCreateValidator validator;
+    private final TopicCommandService topicCommandService;
     private final ApplicationEventPublisher eventPublisher;
 
     public PostWriteServiceImpl(PostMapper postMapper,
                                 PostTopicMapper postTopicMapper,
                                 PostMediaMapper postMediaMapper,
                                 PostCreateValidator validator,
+                                TopicCommandService topicCommandService,
                                 ApplicationEventPublisher eventPublisher) {
         this.postMapper = postMapper;
         this.postTopicMapper = postTopicMapper;
         this.postMediaMapper = postMediaMapper;
         this.validator = validator;
+        this.topicCommandService = topicCommandService;
         this.eventPublisher = eventPublisher;
     }
 
@@ -59,6 +63,7 @@ public class PostWriteServiceImpl implements PostWriteService {
         PostDO post = insertPost(input, uid);
         bindTopics(post.getId(), input);
         bindMedia(post.getId(), input);
+        topicCommandService.addHeat(input.placeIds());
         publishAfterCommit(post.getId(), uid);
         return new PostCreatedVO(post.getId(), input.status());
     }

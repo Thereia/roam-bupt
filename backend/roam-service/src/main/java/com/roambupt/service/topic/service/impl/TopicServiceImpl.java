@@ -15,8 +15,12 @@ import com.roambupt.service.topic.service.TopicService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import com.roambupt.api.model.vo.CategoryCountVO;
+
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -77,6 +81,20 @@ public class TopicServiceImpl implements TopicService {
                         .in(TopicDO::getId, ids)
                         .eq(TopicDO::getEnabled, 1))
                 .stream().map(t -> TopicConverter.toBrief(t, null)).toList();
+    }
+
+    @Override
+    public List<CategoryCountVO> stats() {
+        List<TopicDO> places = topicMapper.selectList(Wrappers.<TopicDO>lambdaQuery()
+                .eq(TopicDO::getEnabled, 1)
+                .eq(TopicDO::getType, "PLACE"));
+        Map<String, Long> grouped = places.stream()
+                .filter(topic -> topic.getCategory() != null)
+                .collect(Collectors.groupingBy(TopicDO::getCategory, Collectors.counting()));
+        return grouped.entrySet().stream()
+                .map(entry -> new CategoryCountVO(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparingLong(CategoryCountVO::count).reversed())
+                .toList();
     }
 
     @Override

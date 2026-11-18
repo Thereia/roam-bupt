@@ -3,6 +3,7 @@ package com.roambupt.service.topic.service;
 import com.roambupt.api.model.dto.TopicQuery;
 import com.roambupt.api.model.vo.PageResult;
 import com.roambupt.api.model.vo.TopicBriefVO;
+import com.roambupt.api.model.vo.CategoryCountVO;
 import com.roambupt.api.model.vo.TopicVO;
 
 import java.util.Collection;
@@ -20,4 +21,7 @@ public interface TopicService {
 
     /** 过滤出「存在、可见、且是地点」的主题 id。 */
     Set<Long> findEnabledPlaceIds(Collection<Long> ids);
+
+    /** 按分类统计可见地点数量，供首页左栏使用。 */
+    List<CategoryCountVO> stats();
 }
