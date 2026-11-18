@@ -2,22 +2,21 @@ spring:
   datasource:
     url: jdbc:mysql://${ROAM_DB_HOST:localhost}:${ROAM_DB_PORT:3306}/${ROAM_DB_NAME:roam_bupt}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: ${ROAM_DB_USER:root}
+    # 仅本地开发默认值；生产必须走环境变量
     password: ${ROAM_DB_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   data:
     redis:
-      host: ${ROAM_REDIS_HOST:localhost}
-      port: ${ROAM_REDIS_PORT:6379}
-      password: ${ROAM_REDIS_PASSWORD:}
+      host: ${ROAM_REDIS_HOST:192.168.153.129}
+      port: ${ROAM_REDIS_PORT:7001}
+      # 仅本地开发默认值；生产必须走环境变量
+      password: ${ROAM_REDIS_PASSWORD:123456}
+      connect-timeout: 1s
+      timeout: 500ms
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
-  global-config:
-    db-config:
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
 
 logging:
   level:

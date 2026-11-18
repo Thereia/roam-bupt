@@ -10,7 +10,7 @@
             地点与分类主题共 152 条：145 个地点（教室 66 + 卫生间 12 置 enabled=0） + 7 个分类。
             数据来源见 docs/数据导出说明.md。
         </comment>
-        <loadData tableName="topic"
+        <loadUpdateData tableName="topic" primaryKey="id"
                   file="liquibase/data/topic_place.csv"
                   encoding="UTF-8"
                   separator=",">
@@ -25,7 +25,7 @@
             <column name="description" type="STRING"/>
             <column name="heat" type="NUMERIC"/>
             <column name="enabled" type="NUMERIC"/>
-        </loadData>
+        </loadUpdateData>
         <sql>
             UPDATE topic SET cover = NULL WHERE cover = '';
             UPDATE topic SET description = NULL WHERE description = '';
@@ -33,6 +33,7 @@
             UPDATE topic SET source_category = NULL WHERE source_category = '';
             UPDATE topic SET source_ref = NULL WHERE source_ref = '';
             UPDATE topic SET node_id = NULL WHERE node_id = 0;
+            UPDATE topic SET heat = 0 WHERE enabled = 0;
         </sql>
         <rollback>
             <delete tableName="topic"/>

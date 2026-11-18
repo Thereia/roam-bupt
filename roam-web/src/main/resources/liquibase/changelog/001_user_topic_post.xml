@@ -14,6 +14,7 @@
                 password     VARCHAR(100)    NOT NULL COMMENT 'BCrypt 密文',
                 nickname     VARCHAR(32)     NOT NULL COMMENT '昵称',
                 avatar       VARCHAR(255)             DEFAULT NULL COMMENT '头像',
+                bio          VARCHAR(200)             DEFAULT NULL COMMENT '简介',
                 role         VARCHAR(16)     NOT NULL DEFAULT 'USER' COMMENT 'USER / ADMIN',
                 status       TINYINT         NOT NULL DEFAULT 1 COMMENT '1 正常，0 禁用',
                 created_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -35,19 +36,20 @@
                 heat            INT             NOT NULL DEFAULT 0 COMMENT '热度',
                 enabled         TINYINT         NOT NULL DEFAULT 1 COMMENT '1 可见，0 隐藏',
                 created_time    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_time    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (id),
                 KEY idx_topic_type (type),
-                KEY idx_topic_category (category)
+                KEY idx_topic_category (category),
+                KEY idx_topic_enabled_category (enabled, category)
             ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '主题：地点或分类';
 
             CREATE TABLE post (
                 id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                 user_id      BIGINT UNSIGNED NOT NULL COMMENT '作者',
                 title        VARCHAR(100)    NOT NULL,
-                content      TEXT            NOT NULL COMMENT '正文，可含 Markdown',
+                content      MEDIUMTEXT      NOT NULL COMMENT '正文，可含 Markdown（上限 16MB，按字节校验 48KB）',
                 status       VARCHAR(16)     NOT NULL DEFAULT 'PENDING' COMMENT 'DRAFT / PENDING / ONLINE / DELETED',
                 heat         INT             NOT NULL DEFAULT 0,
-                deleted      TINYINT         NOT NULL DEFAULT 0,
                 created_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (id),

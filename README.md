@@ -9,7 +9,7 @@
 | 模块 | 职责 | 依赖 |
 |---|---|---|
 | `roam-api` | VO / DTO / 枚举 / 异常 / 上下文（零外部依赖） | — |
-| `roam-core` | Redis、工具、权限、敏感词、JWT | api |
+| `roam-core` | 会话、计数、缓存、工具、JWT、敏感词接口 | api |
 | `roam-service` | 领域包、DAO、Mapper XML | core |
 | `roam-web` | 入口、Controller、全局配置、Liquibase | service |
 | `roam-vue` | 前端（Vue 3 + Vite） | — |
