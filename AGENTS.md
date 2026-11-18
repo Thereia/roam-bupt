@@ -52,6 +52,8 @@ Spring Boot 3.5.16 / Java 17，四模块 `roam-api → roam-core → roam-servic
 | 模块与包结构、提交顺序 | `docs/骨架规划.md` |
 | 从 taco 搬哪些文件、怎么改 | `docs/复用清单.md` |
 | 地点/路网数据从哪来 | `docs/数据导出说明.md` |
+| 前端技术栈、目录、mock 策略 | `docs/前端约定.md` |
+| 某个域的调用关系与失败语义 | `docs/域设计-<domain>.md` |
 
 ## 评审
 
