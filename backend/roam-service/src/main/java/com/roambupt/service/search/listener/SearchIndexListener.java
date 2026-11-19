@@ -1,6 +1,7 @@
 package com.roambupt.service.search.listener;
 
 import com.roambupt.api.model.event.PostCreatedEvent;
+import com.roambupt.api.model.event.PostStatusChangedEvent;
 import com.roambupt.service.search.index.SearchIndexService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,16 @@ public class SearchIndexListener {
             searchIndexService.index(event.postId());
         } catch (Exception e) {
             log.warn("search.sync.failed postId={} reason={}", event.postId(), e.getMessage());
+        }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onPostStatusChanged(PostStatusChangedEvent event) {
+        try {
+            // index() 对非 ONLINE 帖子会自动删除索引
+            searchIndexService.index(event.postId());
+        } catch (Exception e) {
+            log.warn("search.sync.status.failed postId={} reason={}", event.postId(), e.getMessage());
         }
     }
 

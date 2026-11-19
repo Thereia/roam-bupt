@@ -66,4 +66,11 @@ public interface PostMapper extends BaseMapper<PostDO> {
     @Select("<script>SELECT COUNT(*) FROM post WHERE status = 'ONLINE' AND user_id IN "
             + "<foreach collection='uids' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
     long countByUserIds(@Param("uids") java.util.Collection<Long> uids);
+
+    @Select("SELECT * FROM post WHERE status = #{status} ORDER BY created_time DESC LIMIT #{offset}, #{size}")
+    List<PostDO> pageByStatus(@Param("status") String status, @Param("offset") int offset,
+                              @Param("size") int size);
+
+    @Select("SELECT COUNT(*) FROM post WHERE status = #{status}")
+    long countByStatus(@Param("status") String status);
 }

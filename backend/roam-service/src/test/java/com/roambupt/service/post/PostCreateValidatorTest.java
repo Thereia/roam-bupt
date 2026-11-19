@@ -39,7 +39,7 @@ class PostCreateValidatorTest {
         topicService = mock(TopicService.class);
         when(topicService.findEnabledPlaceIds(any())).thenReturn(Set.of(PLACE_ID));
         validator = new PostCreateValidator(topicService, new PostProperties(true),
-                new UploadProperties("./uploads", "/files/", 5));
+                new UploadProperties("./uploads", "/files/", 5), text -> false);
     }
 
     private PostCreateCommand command(String title, String content, List<TopicRef> topics) {

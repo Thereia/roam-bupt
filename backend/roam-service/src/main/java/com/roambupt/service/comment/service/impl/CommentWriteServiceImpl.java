@@ -9,6 +9,7 @@ import com.roambupt.api.model.vo.CommentCreatedVO;
 import com.roambupt.service.comment.repository.entity.CommentDO;
 import com.roambupt.service.comment.repository.mapper.CommentMapper;
 import com.roambupt.service.comment.service.CommentWriteService;
+import com.roambupt.core.sensitive.SensitiveWordFilter;
 import com.roambupt.service.post.service.PostQueryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,13 +30,16 @@ public class CommentWriteServiceImpl implements CommentWriteService {
     private final CommentMapper commentMapper;
     private final PostQueryService postQueryService;
     private final ApplicationEventPublisher eventPublisher;
+    private final SensitiveWordFilter sensitiveWordFilter;
 
     public CommentWriteServiceImpl(CommentMapper commentMapper,
                                    PostQueryService postQueryService,
-                                   ApplicationEventPublisher eventPublisher) {
+                                   ApplicationEventPublisher eventPublisher,
+                                   SensitiveWordFilter sensitiveWordFilter) {
         this.commentMapper = commentMapper;
         this.postQueryService = postQueryService;
         this.eventPublisher = eventPublisher;
+        this.sensitiveWordFilter = sensitiveWordFilter;
     }
 
     @Override
@@ -45,6 +49,9 @@ public class CommentWriteServiceImpl implements CommentWriteService {
             throw new BusinessException(StatusEnum.NOT_FOUND, "帖子不存在");
         }
         String content = command.content().trim();
+        if (sensitiveWordFilter.hit(content)) {
+            throw new BusinessException(StatusEnum.PARAM_ERROR, "内容包含敏感词");
+        }
         long parentId = command.parentId() == null ? 0L : command.parentId();
         long topId = 0L;
 

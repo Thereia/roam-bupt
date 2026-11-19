@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="006-sensitive-word" author="thereia">
+        <comment>P1：敏感词表</comment>
+        <sql>
+            CREATE TABLE sensitive_word (
+                id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                word         VARCHAR(64)     NOT NULL,
+                enabled      TINYINT         NOT NULL DEFAULT 1,
+                created_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY uk_sensitive_word (word)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '敏感词';
+        </sql>
+        <rollback>
+            <sql>DROP TABLE IF EXISTS sensitive_word;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

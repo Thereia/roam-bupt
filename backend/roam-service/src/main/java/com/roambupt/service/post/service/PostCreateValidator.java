@@ -6,6 +6,7 @@ import com.roambupt.api.model.dto.TopicRef;
 import com.roambupt.api.model.enums.StatusEnum;
 import com.roambupt.api.model.exception.BusinessException;
 import com.roambupt.service.config.PostProperties;
+import com.roambupt.core.sensitive.SensitiveWordFilter;
 import com.roambupt.service.storage.UploadProperties;
 import com.roambupt.service.topic.service.TopicService;
 import org.springframework.stereotype.Component;
@@ -35,12 +36,15 @@ public class PostCreateValidator {
     private final TopicService topicService;
     private final PostProperties postProperties;
     private final UploadProperties uploadProperties;
+    private final SensitiveWordFilter sensitiveWordFilter;
 
     public PostCreateValidator(TopicService topicService, PostProperties postProperties,
-                               UploadProperties uploadProperties) {
+                               UploadProperties uploadProperties,
+                               SensitiveWordFilter sensitiveWordFilter) {
         this.topicService = topicService;
         this.postProperties = postProperties;
         this.uploadProperties = uploadProperties;
+        this.sensitiveWordFilter = sensitiveWordFilter;
     }
 
     public ValidatedPost validate(PostCreateCommand command, long uid) {
@@ -49,6 +53,8 @@ public class PostCreateValidator {
         }
 
         String content = command.content();
+        require(!sensitiveWordFilter.hit(command.title()) && !sensitiveWordFilter.hit(content),
+                "内容包含敏感词");
         require(content.getBytes(StandardCharsets.UTF_8).length <= MAX_CONTENT_BYTES, "正文超过 48KB");
 
         List<TopicRef> refs = command.topics() == null ? List.of() : command.topics();

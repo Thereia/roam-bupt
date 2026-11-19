@@ -8,6 +8,7 @@ import com.roambupt.core.config.AuthProperties;
 import com.roambupt.core.context.CurrentUserContext;
 import com.roambupt.core.jwt.InvalidTokenException;
 import com.roambupt.core.jwt.JwtSupport;
+import com.roambupt.core.permission.Permission;
 import com.roambupt.core.jwt.ParsedToken;
 import com.roambupt.core.session.SessionStatus;
 import com.roambupt.core.session.SessionStore;
@@ -92,6 +93,11 @@ public class AuthInterceptor implements HandlerInterceptor {
             return optional || reject(response, 401, "账号不可用");
         }
 
+        Permission permission = resolvePermission(handler);
+        if (permission != null && !permission.value().equalsIgnoreCase(account.get().role())) {
+            return reject(response, 403, "没有权限");
+        }
+
         CurrentUserContext.set(new ReqInfo(parsed.uid(), account.get().role(), parsed.jti()));
         return true;
     }
@@ -100,6 +106,14 @@ public class AuthInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
                                 Object handler, Exception ex) {
         CurrentUserContext.clear();
+    }
+
+    private Permission resolvePermission(Object handler) {
+        if (handler instanceof HandlerMethod method) {
+            Permission onMethod = method.getMethodAnnotation(Permission.class);
+            return onMethod != null ? onMethod : method.getBeanType().getAnnotation(Permission.class);
+        }
+        return null;
     }
 
     private boolean isOptional(Object handler) {

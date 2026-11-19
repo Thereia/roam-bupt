@@ -134,6 +134,19 @@ public class PostReadServiceImpl implements PostReadService {
     }
 
     @Override
+    public List<PostVO> assembleAll(List<PostDO> posts, Long viewerUid) {
+        if (posts == null || posts.isEmpty()) {
+            return List.of();
+        }
+        List<Long> ids = posts.stream().map(PostDO::getId).toList();
+        Map<Long, Long> comments = commentCountProvider.countByPosts(ids);
+        var summary = interactionCountProvider.summarize(ids, viewerUid);
+        return posts.stream()
+                .map(p -> assemble(p, false, comments.getOrDefault(p.getId(), 0L), summary, viewerUid))
+                .toList();
+    }
+
+    @Override
     public PageResult<PostVO> byUser(long uid, Long viewerUid, int page, int pageSize) {
         int pageNo = Math.max(1, page);
         int size = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);

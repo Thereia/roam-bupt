@@ -13,6 +13,10 @@ public interface PostReadService {
 
     PageResult<PostVO> byTopic(long topicId, String sort, int page, int pageSize);
 
+    /** 后台列表用：把一批 DO 组装成 VO（不做可见性过滤）。 */
+    java.util.List<PostVO> assembleAll(java.util.List<com.roambupt.service.post.repository.entity.PostDO> posts,
+                                       Long viewerUid);
+
     /** 某个用户的帖子；本人可见 PENDING/DRAFT，他人只看 ONLINE。 */
     PageResult<PostVO> byUser(long uid, Long viewerUid, int page, int pageSize);
 
