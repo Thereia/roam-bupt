@@ -13,16 +13,14 @@ import java.util.List;
 public final class PostConverter {
 
     private static final int EXCERPT_LENGTH = 80;
-    private static final CountsVO EMPTY_COUNTS = new CountsVO(0, 0, 0, 0);
-
     private PostConverter() {
     }
 
     public static PostVO toVO(PostDO post, UserBriefVO author, List<TopicBriefVO> topics,
-                              List<MediaVO> media, boolean withContent) {
+                              List<MediaVO> media, CountsVO counts, boolean withContent) {
         return new PostVO(post.getId(), post.getTitle(), excerpt(post.getContent()),
                 withContent ? post.getContent() : null, post.getStatus(),
-                author, topics, media, EMPTY_COUNTS, null, null,
+                author, topics, media, counts, null, null,
                 post.getCreatedTime(), post.getUpdatedTime());
     }
 

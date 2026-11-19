@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002-comment" author="thereia">
+        <comment>P1：评论表（两级结构）</comment>
+        <sql>
+            CREATE TABLE comment (
+                id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                post_id      BIGINT UNSIGNED NOT NULL,
+                user_id      BIGINT UNSIGNED NOT NULL,
+                content      VARCHAR(1000)   NOT NULL,
+                parent_id    BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '一级评论为 0',
+                top_id       BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '所属一级评论',
+                reply_count  INT             NOT NULL DEFAULT 0 COMMENT '一级评论的回复数',
+                deleted      TINYINT         NOT NULL DEFAULT 0,
+                created_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY idx_comment_post (post_id, top_id, created_time),
+                KEY idx_comment_top (top_id, created_time),
+                KEY idx_comment_user (user_id)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '评论';
+        </sql>
+        <rollback>
+            <sql>DROP TABLE IF EXISTS comment;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

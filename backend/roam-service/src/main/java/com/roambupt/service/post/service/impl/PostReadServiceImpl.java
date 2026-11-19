@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roambupt.api.model.dto.FeedQuery;
 import com.roambupt.api.model.enums.StatusEnum;
 import com.roambupt.api.model.exception.BusinessException;
+import com.roambupt.api.model.vo.CountsVO;
 import com.roambupt.api.model.vo.MediaVO;
 import com.roambupt.api.model.vo.PageResult;
 import com.roambupt.api.model.vo.PostVO;
@@ -16,6 +17,7 @@ import com.roambupt.service.post.repository.entity.PostTopicDO;
 import com.roambupt.service.post.repository.mapper.PostMapper;
 import com.roambupt.service.post.repository.mapper.PostMediaMapper;
 import com.roambupt.service.post.repository.mapper.PostTopicMapper;
+import com.roambupt.service.comment.service.CommentCountProvider;
 import com.roambupt.service.post.service.PostReadService;
 import com.roambupt.service.topic.service.TopicService;
 import com.roambupt.service.user.service.UserQueryService;
@@ -41,17 +43,20 @@ public class PostReadServiceImpl implements PostReadService {
     private final PostMediaMapper postMediaMapper;
     private final TopicService topicService;
     private final UserQueryService userQueryService;
+    private final CommentCountProvider commentCountProvider;
 
     public PostReadServiceImpl(PostMapper postMapper,
                                PostTopicMapper postTopicMapper,
                                PostMediaMapper postMediaMapper,
                                TopicService topicService,
-                               UserQueryService userQueryService) {
+                               UserQueryService userQueryService,
+                               CommentCountProvider commentCountProvider) {
         this.postMapper = postMapper;
         this.postTopicMapper = postTopicMapper;
         this.postMediaMapper = postMediaMapper;
         this.topicService = topicService;
         this.userQueryService = userQueryService;
+        this.commentCountProvider = commentCountProvider;
     }
 
     @Override
@@ -60,7 +65,7 @@ public class PostReadServiceImpl implements PostReadService {
         if (post == null || !visible(post, viewerUid, viewerRole)) {
             throw new BusinessException(StatusEnum.NOT_FOUND, "帖子不存在");
         }
-        return assemble(post, true);
+        return assemble(post, true, commentCountProvider.countByPost(post.getId()));
     }
 
     @Override
@@ -81,7 +86,11 @@ public class PostReadServiceImpl implements PostReadService {
                 ? postMapper.pageOnlineHot(offset, size)
                 : postMapper.pageOnline(offset, size);
         long total = postMapper.countOnline();
-        return PageResult.of(total, page, size, posts.stream().map(p -> assemble(p, false)).toList());
+        Map<Long, Long> commentCounts = commentCountProvider.countByPosts(
+                posts.stream().map(PostDO::getId).toList());
+        return PageResult.of(total, page, size, posts.stream()
+                .map(p -> assemble(p, false, commentCounts.getOrDefault(p.getId(), 0L)))
+                .toList());
     }
 
     @Override
@@ -96,7 +105,11 @@ public class PostReadServiceImpl implements PostReadService {
                 ? postMapper.pageByTopicHot(topicId, offset, size)
                 : postMapper.pageByTopic(topicId, offset, size);
         long total = postMapper.countByTopic(topicId);
-        return PageResult.of(total, pageNo, size, posts.stream().map(p -> assemble(p, false)).toList());
+        Map<Long, Long> commentCounts = commentCountProvider.countByPosts(
+                posts.stream().map(PostDO::getId).toList());
+        return PageResult.of(total, pageNo, size, posts.stream()
+                .map(p -> assemble(p, false, commentCounts.getOrDefault(p.getId(), 0L)))
+                .toList());
     }
 
     private boolean visible(PostDO post, Long viewerUid, String viewerRole) {
@@ -107,7 +120,7 @@ public class PostReadServiceImpl implements PostReadService {
                 && (viewerUid.equals(post.getUserId()) || ROLE_ADMIN.equals(viewerRole));
     }
 
-    private PostVO assemble(PostDO post, boolean withContent) {
+    private PostVO assemble(PostDO post, boolean withContent, long commentCount) {
         List<PostTopicDO> relations = postTopicMapper.selectList(Wrappers.<PostTopicDO>lambdaQuery()
                 .eq(PostTopicDO::getPostId, post.getId())
                 .orderByAsc(PostTopicDO::getSortNo));
@@ -136,6 +149,7 @@ public class PostReadServiceImpl implements PostReadService {
                 .map(u -> new UserBriefVO(u.id(), u.nickname(), u.avatar(), null))
                 .orElse(null);
 
-        return PostConverter.toVO(post, author, topics, media, withContent);
+        return PostConverter.toVO(post, author, topics, media,
+                new CountsVO(0, 0, commentCount, 0), withContent);
     }
 }

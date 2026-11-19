@@ -111,7 +111,7 @@ watch(() => route.params.id, load)
 
       <section class="comments">
         <h2 class="comments-title">评论</h2>
-        <p v-if="!comments.length" class="muted-text">评论功能 P1 上线，这里先空着。</p>
+        <p v-if="!comments.length" class="muted-text">还没有评论，说点什么？</p>
         <div v-for="comment in comments" :key="comment.id" class="comment">
           <span class="avatar small">{{ comment.author.nickname.slice(0, 1) }}</span>
           <div class="comment-body">

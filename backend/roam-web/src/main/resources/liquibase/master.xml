@@ -7,5 +7,6 @@
 
     <!-- 按阶段追加，已执行的文件不再回头改 -->
     <include file="liquibase/changelog/001_user_topic_post.xml"/>
+    <include file="liquibase/changelog/002_comment.xml"/>
     <include file="liquibase/changelog/010_seed_topic_place.xml"/>
 </databaseChangeLog>
