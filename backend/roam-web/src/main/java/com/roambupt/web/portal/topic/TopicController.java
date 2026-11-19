@@ -39,6 +39,14 @@ public class TopicController {
     }
 
     @OptionalAuth
+    @GetMapping("/suggest")
+    public ResVo<java.util.List<com.roambupt.api.model.vo.TopicBriefVO>> suggest(
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResVo.ok(topicService.suggest(q, limit));
+    }
+
+    @OptionalAuth
     @GetMapping("/stats")
     public ResVo<java.util.List<CategoryCountVO>> stats() {
         return ResVo.ok(topicService.stats());

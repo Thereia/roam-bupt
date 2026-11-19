@@ -25,3 +25,6 @@ hs_err_pid*.log
 .env
 .env.local
 application-local.yml
+
+# 本地上传目录
+uploads/

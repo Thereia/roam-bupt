@@ -6,6 +6,7 @@ import com.roambupt.api.model.dto.TopicRef;
 import com.roambupt.api.model.enums.StatusEnum;
 import com.roambupt.api.model.exception.BusinessException;
 import com.roambupt.service.config.PostProperties;
+import com.roambupt.service.storage.UploadProperties;
 import com.roambupt.service.topic.service.TopicService;
 import org.springframework.stereotype.Component;
 
@@ -33,10 +34,13 @@ public class PostCreateValidator {
 
     private final TopicService topicService;
     private final PostProperties postProperties;
+    private final UploadProperties uploadProperties;
 
-    public PostCreateValidator(TopicService topicService, PostProperties postProperties) {
+    public PostCreateValidator(TopicService topicService, PostProperties postProperties,
+                               UploadProperties uploadProperties) {
         this.topicService = topicService;
         this.postProperties = postProperties;
+        this.uploadProperties = uploadProperties;
     }
 
     public ValidatedPost validate(PostCreateCommand command, long uid) {
@@ -59,7 +63,9 @@ public class PostCreateValidator {
 
         List<MediaRef> media = command.media() == null ? List.of() : command.media();
         require(media.size() <= MAX_MEDIA, "媒体最多 9 个");
-        require(media.stream().allMatch(item -> MEDIA_IMAGE.equalsIgnoreCase(item.type())), "P0 只支持图片");
+        require(media.stream().allMatch(item -> MEDIA_IMAGE.equalsIgnoreCase(item.type())), "只支持图片");
+        require(media.stream().allMatch(item -> item.url() != null
+                        && item.url().startsWith(uploadProperties.allowedPrefix())), "图片地址不合法");
 
         return new ValidatedPost(command.title().trim(), content, resolveStatus(command.status()),
                 topicIds, placeIds, media);

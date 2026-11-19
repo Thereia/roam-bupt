@@ -8,6 +8,7 @@ import com.roambupt.api.model.exception.BusinessException;
 import com.roambupt.service.config.PostProperties;
 import com.roambupt.service.post.service.PostCreateValidator;
 import com.roambupt.service.post.service.ValidatedPost;
+import com.roambupt.service.storage.UploadProperties;
 import com.roambupt.service.topic.service.TopicService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,8 @@ class PostCreateValidatorTest {
     void setUp() {
         topicService = mock(TopicService.class);
         when(topicService.findEnabledPlaceIds(any())).thenReturn(Set.of(PLACE_ID));
-        validator = new PostCreateValidator(topicService, new PostProperties(true));
+        validator = new PostCreateValidator(topicService, new PostProperties(true),
+                new UploadProperties("./uploads", "/files/", 5));
     }
 
     private PostCreateCommand command(String title, String content, List<TopicRef> topics) {
@@ -92,7 +94,7 @@ class PostCreateValidatorTest {
 
         assertThatThrownBy(() -> validator.validate(cmd, 1L))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("P0 只支持图片");
+                .hasMessage("只支持图片");
     }
 
     @Test

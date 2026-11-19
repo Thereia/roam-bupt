@@ -1031,3 +1031,136 @@ ol {
 .search-results {
   padding-top: 8px;
 }
+
+/* ---------- 发布 ---------- */
+
+.form-title {
+  font-size: var(--fs-xl);
+  margin: 0 0 8px;
+}
+
+.form label {
+  display: block;
+  margin: 16px 0 6px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.form input[type="text"],
+.form input:not([type]),
+.form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--ink);
+  background: #fbfaf7;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.form textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+.uploads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.upload-preview {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.upload-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-remove {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  font-size: var(--fs-sm);
+  color: #fff;
+  background: rgba(35, 34, 31, 0.72);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.upload-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  background: #fbfaf7;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.suggest-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.suggest-item {
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+}
+
+.chip-remove {
+  margin-left: 4px;
+  color: var(--accent);
+}
+
+.form-hint {
+  margin-top: 8px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.form-error {
+  margin-top: 12px;
+  font-size: var(--fs-sm);
+  color: var(--danger);
+}
+
+.form-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.btn-primary {
+  margin-left: auto;
+  padding: 9px 20px;
+  font-size: var(--fs-md);
+  color: #fff;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+}

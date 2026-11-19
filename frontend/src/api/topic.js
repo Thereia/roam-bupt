@@ -8,6 +8,10 @@ export function getTopics(params = {}) {
   return withMock(() => listTopics(params))
 }
 
+export function getTopicSuggest(params = {}) {
+  return http.get('/topics/suggest', { params })
+}
+
 export function getTopicStats() {
   if (!USE_MOCK) return http.get('/topics/stats')
   return withMock(() => [])

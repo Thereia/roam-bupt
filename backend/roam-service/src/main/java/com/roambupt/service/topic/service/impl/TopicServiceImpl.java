@@ -98,6 +98,20 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public List<TopicBriefVO> suggest(String keyword, int limit) {
+        int size = Math.min(Math.max(1, limit), 10);
+        if (StringUtils.isBlank(keyword)) {
+            return List.of();
+        }
+        return topicMapper.selectList(Wrappers.<TopicDO>lambdaQuery()
+                        .eq(TopicDO::getEnabled, 1)
+                        .like(TopicDO::getName, keyword)
+                        .orderByDesc(TopicDO::getHeat)
+                        .last("LIMIT " + size))
+                .stream().map(t -> TopicConverter.toBrief(t, null)).toList();
+    }
+
+    @Override
     public Set<Long> findEnabledPlaceIds(Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return Set.of();

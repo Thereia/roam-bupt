@@ -30,7 +30,7 @@ const routes = [
   {
     path: '/publish',
     name: 'publish',
-    component: () => import('../views/PlaceholderView.vue'),
+    component: () => import('../views/PublishView.vue'),
     meta: { title: '发布', requiresAuth: true },
   },
   {

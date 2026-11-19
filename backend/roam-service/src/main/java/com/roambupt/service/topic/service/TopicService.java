@@ -24,4 +24,7 @@ public interface TopicService {
 
     /** 按分类统计可见地点数量，供首页左栏使用。 */
     List<CategoryCountVO> stats();
+
+    /** 发布页主题联想：按名字模糊匹配，最多 limit 条。 */
+    List<TopicBriefVO> suggest(String keyword, int limit);
 }

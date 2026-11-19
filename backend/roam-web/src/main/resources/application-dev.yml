@@ -27,6 +27,11 @@ roam:
     # 本地开发直接上线，省掉审核步骤；生产默认进 PENDING
     auto-approve: ${ROAM_POST_AUTO_APPROVE:true}
 
+  upload:
+    dir: ./uploads
+    allowed-prefix: /files/
+    max-size-mb: 5
+
   search:
     enabled: ${ROAM_SEARCH_ENABLED:true}
     host: ${ROAM_ES_HOST:192.168.153.129}
