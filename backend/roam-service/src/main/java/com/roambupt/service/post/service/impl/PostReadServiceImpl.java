@@ -119,6 +119,29 @@ public class PostReadServiceImpl implements PostReadService {
                 .toList());
     }
 
+    @Override
+    public List<PostVO> byIds(List<Long> ids, Long viewerUid) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, PostDO> byId = postMapper.selectBatchIds(ids).stream()
+                .collect(Collectors.toMap(PostDO::getId, p -> p, (a, b) -> a));
+        List<PostDO> ordered = ids.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
+                .filter(post -> STATUS_ONLINE.equals(post.getStatus()))
+                .toList();
+        if (ordered.isEmpty()) {
+            return List.of();
+        }
+        List<Long> presentIds = ordered.stream().map(PostDO::getId).toList();
+        Map<Long, Long> commentCounts = commentCountProvider.countByPosts(presentIds);
+        var summary = interactionCountProvider.summarize(presentIds, viewerUid);
+        return ordered.stream()
+                .map(p -> assemble(p, false, commentCounts.getOrDefault(p.getId(), 0L), summary, viewerUid))
+                .toList();
+    }
+
     private boolean visible(PostDO post, Long viewerUid, String viewerRole) {
         if (STATUS_ONLINE.equals(post.getStatus())) {
             return true;

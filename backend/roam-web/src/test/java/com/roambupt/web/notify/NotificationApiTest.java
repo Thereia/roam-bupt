@@ -26,7 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = {
         "roam.auth.login-limit-per-minute=1000",
         "roam.jwt.secret=test-secret-must-be-long-enough-32bytes",
-        "roam.post.auto-approve=true"
+        "roam.post.auto-approve=true",
+        "roam.search.enabled=false"
 })
 @AutoConfigureMockMvc
 @Transactional

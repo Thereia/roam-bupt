@@ -26,3 +26,11 @@ roam:
   post:
     # 本地开发直接上线，省掉审核步骤；生产默认进 PENDING
     auto-approve: ${ROAM_POST_AUTO_APPROVE:true}
+
+  search:
+    enabled: ${ROAM_SEARCH_ENABLED:true}
+    host: ${ROAM_ES_HOST:192.168.153.129}
+    port: ${ROAM_ES_PORT:9200}
+    index: roam_post_v1
+    connect-timeout-ms: 1000
+    socket-timeout-ms: 2000

@@ -33,4 +33,17 @@ public interface PostMapper extends BaseMapper<PostDO> {
             + "WHERE pt.topic_id = #{topicId} AND p.status = 'ONLINE' "
             + "ORDER BY p.heat DESC, p.created_time DESC LIMIT #{offset}, #{size}")
     List<PostDO> pageByTopicHot(@Param("topicId") long topicId, @Param("offset") int offset, @Param("size") int size);
+
+    @Select("<script>SELECT id FROM post WHERE status = 'ONLINE' "
+            + "AND (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%')) "
+            + "<if test='topicId != null'>AND id IN (SELECT post_id FROM post_topic WHERE topic_id = #{topicId}) </if>"
+            + "ORDER BY created_time DESC LIMIT #{offset}, #{size}</script>")
+    List<Long> searchIds(@Param("keyword") String keyword, @Param("topicId") Long topicId,
+                         @Param("offset") int offset, @Param("size") int size);
+
+    @Select("<script>SELECT COUNT(*) FROM post WHERE status = 'ONLINE' "
+            + "AND (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%')) "
+            + "<if test='topicId != null'>AND id IN (SELECT post_id FROM post_topic WHERE topic_id = #{topicId}) </if>"
+            + "</script>")
+    long countSearch(@Param("keyword") String keyword, @Param("topicId") Long topicId);
 }

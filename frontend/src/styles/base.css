@@ -1001,3 +1001,33 @@ ol {
   color: var(--muted);
   white-space: nowrap;
 }
+
+/* ---------- 搜索 ---------- */
+
+.search-form {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.search-input {
+  flex: 1;
+  padding: 9px 12px;
+  font: inherit;
+  color: var(--ink);
+  background: #fbfaf7;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.search-button {
+  padding: 9px 18px;
+  color: #fff;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+.search-results {
+  padding-top: 8px;
+}
