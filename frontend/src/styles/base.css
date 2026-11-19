@@ -1387,3 +1387,16 @@ ol {
     align-items: center;
   }
 }
+
+/* ---------- 帖子图片 ---------- */
+
+.post-media {
+  margin: 14px 0;
+}
+
+.post-media img {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+}

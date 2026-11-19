@@ -127,8 +127,11 @@ watch(() => route.params.id, load)
 
       <template v-for="(paragraph, index) in paragraphs" :key="index">
         <p>{{ paragraph }}</p>
-        <div v-if="display.tallImage && index === 1" class="thumb tall">图片</div>
       </template>
+
+      <figure v-for="image in post.media || []" :key="image.url" class="post-media">
+        <img :src="image.url" :alt="post.title" />
+      </figure>
 
       <div class="chips">
         <TopicChip v-for="topic in post.topics" :key="topic.id" :topic="topic" />
