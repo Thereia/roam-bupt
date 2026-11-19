@@ -46,4 +46,24 @@ public interface PostMapper extends BaseMapper<PostDO> {
             + "<if test='topicId != null'>AND id IN (SELECT post_id FROM post_topic WHERE topic_id = #{topicId}) </if>"
             + "</script>")
     long countSearch(@Param("keyword") String keyword, @Param("topicId") Long topicId);
+
+    @Select("<script>SELECT * FROM post WHERE user_id = #{uid} "
+            + "<if test='!includeAll'>AND status = 'ONLINE' </if>"
+            + "ORDER BY created_time DESC LIMIT #{offset}, #{size}</script>")
+    List<PostDO> pageByUser(@Param("uid") long uid, @Param("includeAll") boolean includeAll,
+                            @Param("offset") int offset, @Param("size") int size);
+
+    @Select("<script>SELECT COUNT(*) FROM post WHERE user_id = #{uid} "
+            + "<if test='!includeAll'>AND status = 'ONLINE' </if></script>")
+    long countByUser(@Param("uid") long uid, @Param("includeAll") boolean includeAll);
+
+    @Select("<script>SELECT * FROM post WHERE status = 'ONLINE' AND user_id IN "
+            + "<foreach collection='uids' item='id' open='(' separator=',' close=')'>#{id}</foreach> "
+            + "ORDER BY created_time DESC LIMIT #{offset}, #{size}</script>")
+    List<PostDO> pageByUserIds(@Param("uids") java.util.Collection<Long> uids,
+                               @Param("offset") int offset, @Param("size") int size);
+
+    @Select("<script>SELECT COUNT(*) FROM post WHERE status = 'ONLINE' AND user_id IN "
+            + "<foreach collection='uids' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
+    long countByUserIds(@Param("uids") java.util.Collection<Long> uids);
 }

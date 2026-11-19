@@ -38,4 +38,9 @@ public class PostQueryServiceImpl implements PostQueryService {
     public long countSearch(String keyword, Long topicId) {
         return postMapper.countSearch(keyword, topicId);
     }
+
+    @Override
+    public long countOnlineByUser(long uid) {
+        return postMapper.countByUser(uid, false);
+    }
 }

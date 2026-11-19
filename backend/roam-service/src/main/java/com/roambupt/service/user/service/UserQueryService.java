@@ -3,6 +3,7 @@ package com.roambupt.service.user.service;
 import com.roambupt.api.model.dto.UserAccount;
 import com.roambupt.api.model.vo.UserVO;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -15,4 +16,7 @@ public interface UserQueryService {
     Optional<UserVO> getById(long uid);
 
     Optional<UserAccount> findAccountById(long uid);
+
+    /** 我关注了谁，供关注流使用。 */
+    List<Long> findFollowingIds(long uid);
 }

@@ -80,8 +80,22 @@ public class PostReadServiceImpl implements PostReadService {
             if (viewerUid == null) {
                 throw new BusinessException(StatusEnum.UNAUTHORIZED);
             }
-            // P1 接关注流，P0 返回空页而不是假装有数据
-            return PageResult.of(0, 1, 10, List.of());
+            List<Long> followingIds = userQueryService.findFollowingIds(viewerUid);
+            int followingPage = Math.max(1, query.page());
+            int followingSize = Math.min(Math.max(1, query.pageSize()), MAX_PAGE_SIZE);
+            if (followingIds.isEmpty()) {
+                return PageResult.of(0, followingPage, followingSize, List.of());
+            }
+            List<PostDO> followingPosts = postMapper.pageByUserIds(followingIds,
+                    (followingPage - 1) * followingSize, followingSize);
+            long followingTotal = postMapper.countByUserIds(followingIds);
+            List<Long> followingPostIds = followingPosts.stream().map(PostDO::getId).toList();
+            Map<Long, Long> followingComments = commentCountProvider.countByPosts(followingPostIds);
+            var followingSummary = interactionCountProvider.summarize(followingPostIds, viewerUid);
+            return PageResult.of(followingTotal, followingPage, followingSize, followingPosts.stream()
+                    .map(p -> assemble(p, false, followingComments.getOrDefault(p.getId(), 0L),
+                            followingSummary, viewerUid))
+                    .toList());
         }
         int page = Math.max(1, query.page());
         int size = Math.min(Math.max(1, query.pageSize()), MAX_PAGE_SIZE);
@@ -116,6 +130,21 @@ public class PostReadServiceImpl implements PostReadService {
         var summary = interactionCountProvider.summarize(ids, null);
         return PageResult.of(total, pageNo, size, posts.stream()
                 .map(p -> assemble(p, false, commentCounts.getOrDefault(p.getId(), 0L), summary, null))
+                .toList());
+    }
+
+    @Override
+    public PageResult<PostVO> byUser(long uid, Long viewerUid, int page, int pageSize) {
+        int pageNo = Math.max(1, page);
+        int size = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);
+        boolean includeAll = viewerUid != null && viewerUid == uid;
+        List<PostDO> posts = postMapper.pageByUser(uid, includeAll, (pageNo - 1) * size, size);
+        long total = postMapper.countByUser(uid, includeAll);
+        List<Long> ids = posts.stream().map(PostDO::getId).toList();
+        Map<Long, Long> comments = commentCountProvider.countByPosts(ids);
+        var summary = interactionCountProvider.summarize(ids, viewerUid);
+        return PageResult.of(total, pageNo, size, posts.stream()
+                .map(p -> assemble(p, false, comments.getOrDefault(p.getId(), 0L), summary, viewerUid))
                 .toList());
     }
 

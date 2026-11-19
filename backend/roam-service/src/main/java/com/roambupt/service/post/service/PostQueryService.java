@@ -14,4 +14,7 @@ public interface PostQueryService {
     List<Long> searchIds(String keyword, Long topicId, int offset, int size);
 
     long countSearch(String keyword, Long topicId);
+
+    /** 用户在线帖子数。 */
+    long countOnlineByUser(long uid);
 }

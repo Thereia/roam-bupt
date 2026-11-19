@@ -5,10 +5,12 @@ import com.roambupt.api.model.dto.UserAccount;
 import com.roambupt.api.model.vo.UserVO;
 import com.roambupt.service.user.converter.UserConverter;
 import com.roambupt.service.user.repository.entity.UserDO;
+import com.roambupt.service.user.repository.mapper.FollowMapper;
 import com.roambupt.service.user.repository.mapper.UserMapper;
 import com.roambupt.service.user.service.UserQueryService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -18,9 +20,11 @@ import java.util.Optional;
 public class UserQueryServiceImpl implements UserQueryService {
 
     private final UserMapper userMapper;
+    private final FollowMapper followMapper;
 
-    public UserQueryServiceImpl(UserMapper userMapper) {
+    public UserQueryServiceImpl(UserMapper userMapper, FollowMapper followMapper) {
         this.userMapper = userMapper;
+        this.followMapper = followMapper;
     }
 
     @Override
@@ -33,6 +37,11 @@ public class UserQueryServiceImpl implements UserQueryService {
     public Optional<UserVO> getById(long uid) {
         UserDO user = userMapper.selectById(uid);
         return Optional.ofNullable(user).map(UserConverter::toVO);
+    }
+
+    @Override
+    public List<Long> findFollowingIds(long uid) {
+        return followMapper.findFollowingIds(uid);
     }
 
     @Override

@@ -10,5 +10,6 @@
     <include file="liquibase/changelog/002_comment.xml"/>
     <include file="liquibase/changelog/003_interaction.xml"/>
     <include file="liquibase/changelog/004_notification.xml"/>
+    <include file="liquibase/changelog/005_follow.xml"/>
     <include file="liquibase/changelog/010_seed_topic_place.xml"/>
 </databaseChangeLog>

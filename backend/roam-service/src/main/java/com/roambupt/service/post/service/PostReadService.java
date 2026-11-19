@@ -13,6 +13,9 @@ public interface PostReadService {
 
     PageResult<PostVO> byTopic(long topicId, String sort, int page, int pageSize);
 
+    /** 某个用户的帖子；本人可见 PENDING/DRAFT，他人只看 ONLINE。 */
+    PageResult<PostVO> byUser(long uid, Long viewerUid, int page, int pageSize);
+
     /** 按 id 批量取（搜索结果回读），保持传入顺序。 */
     java.util.List<PostVO> byIds(java.util.List<Long> ids, Long viewerUid);
 }

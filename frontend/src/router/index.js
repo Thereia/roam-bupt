@@ -54,7 +54,7 @@ const routes = [
   {
     path: '/users/:id',
     name: 'user',
-    component: () => import('../views/PlaceholderView.vue'),
+    component: () => import('../views/UserView.vue'),
     meta: { title: '个人主页' },
   },
   {
