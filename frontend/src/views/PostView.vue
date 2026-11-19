@@ -1,19 +1,51 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { COMMENTS_READY, getComments, getPost } from '../api/post'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  COMMENTS_READY, collectPost, getComments, getPost, likePost, uncollectPost, unlikePost,
+} from '../api/post'
 import StateBlock from '../components/StateBlock.vue'
 import TopicChip from '../components/TopicChip.vue'
 import { postDisplay } from '../mock/display'
+import { isLoggedIn } from '../store/user'
 import { formatCount } from '../utils/number'
 import { formatDayTime, formatRelativeTime } from '../utils/time'
 
 const route = useRoute()
+const router = useRouter()
 const post = ref(null)
 const comments = ref([])
 const loading = ref(true)
 const error = ref('')
 const missing = ref(false)
+
+async function toggleLike() {
+  if (!isLoggedIn()) {
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+  const id = post.value.id
+  const result = post.value.myLiked ? await unlikePost(id) : await likePost(id)
+  post.value = {
+    ...post.value,
+    myLiked: result.active,
+    counts: { ...post.value.counts, like: result.count },
+  }
+}
+
+async function toggleCollect() {
+  if (!isLoggedIn()) {
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+  const id = post.value.id
+  const result = post.value.myCollected ? await uncollectPost(id) : await collectPost(id)
+  post.value = {
+    ...post.value,
+    myCollected: result.active,
+    counts: { ...post.value.counts, collect: result.count },
+  }
+}
 
 async function load() {
   const requestedId = route.params.id
@@ -103,10 +135,14 @@ watch(() => route.params.id, load)
       </div>
 
       <div class="actions">
-        <button type="button" disabled title="P1 上线">点赞 {{ post.counts.like }}</button>
-        <button type="button" disabled title="P1 上线">收藏 {{ post.counts.collect }}</button>
-        <button type="button" disabled title="P1 上线">评论 {{ post.counts.comment }}</button>
-        <button type="button" disabled title="P1 上线">分享</button>
+        <button type="button" :class="{ on: post.myLiked }" @click="toggleLike">
+          {{ post.myLiked ? '已赞' : '点赞' }} {{ post.counts.like }}
+        </button>
+        <button type="button" :class="{ on: post.myCollected }" @click="toggleCollect">
+          {{ post.myCollected ? '已收藏' : '收藏' }} {{ post.counts.collect }}
+        </button>
+        <button type="button" disabled title="评论输入待做">评论 {{ post.counts.comment }}</button>
+        <button type="button" disabled title="分享待做">分享</button>
       </div>
 
       <section class="comments">

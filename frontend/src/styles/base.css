@@ -597,6 +597,11 @@ ol {
   line-height: 1.85;
 }
 
+.actions button.on {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

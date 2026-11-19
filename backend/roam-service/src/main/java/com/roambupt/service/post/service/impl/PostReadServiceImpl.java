@@ -18,6 +18,7 @@ import com.roambupt.service.post.repository.mapper.PostMapper;
 import com.roambupt.service.post.repository.mapper.PostMediaMapper;
 import com.roambupt.service.post.repository.mapper.PostTopicMapper;
 import com.roambupt.service.comment.service.CommentCountProvider;
+import com.roambupt.service.post.service.InteractionCountProvider;
 import com.roambupt.service.post.service.PostReadService;
 import com.roambupt.service.topic.service.TopicService;
 import com.roambupt.service.user.service.UserQueryService;
@@ -44,19 +45,22 @@ public class PostReadServiceImpl implements PostReadService {
     private final TopicService topicService;
     private final UserQueryService userQueryService;
     private final CommentCountProvider commentCountProvider;
+    private final InteractionCountProvider interactionCountProvider;
 
     public PostReadServiceImpl(PostMapper postMapper,
                                PostTopicMapper postTopicMapper,
                                PostMediaMapper postMediaMapper,
                                TopicService topicService,
                                UserQueryService userQueryService,
-                               CommentCountProvider commentCountProvider) {
+                               CommentCountProvider commentCountProvider,
+                               InteractionCountProvider interactionCountProvider) {
         this.postMapper = postMapper;
         this.postTopicMapper = postTopicMapper;
         this.postMediaMapper = postMediaMapper;
         this.topicService = topicService;
         this.userQueryService = userQueryService;
         this.commentCountProvider = commentCountProvider;
+        this.interactionCountProvider = interactionCountProvider;
     }
 
     @Override
@@ -65,7 +69,8 @@ public class PostReadServiceImpl implements PostReadService {
         if (post == null || !visible(post, viewerUid, viewerRole)) {
             throw new BusinessException(StatusEnum.NOT_FOUND, "帖子不存在");
         }
-        return assemble(post, true, commentCountProvider.countByPost(post.getId()));
+        var summary = interactionCountProvider.summarize(List.of(post.getId()), viewerUid);
+        return assemble(post, true, commentCountProvider.countByPost(post.getId()), summary, viewerUid);
     }
 
     @Override
@@ -86,10 +91,11 @@ public class PostReadServiceImpl implements PostReadService {
                 ? postMapper.pageOnlineHot(offset, size)
                 : postMapper.pageOnline(offset, size);
         long total = postMapper.countOnline();
-        Map<Long, Long> commentCounts = commentCountProvider.countByPosts(
-                posts.stream().map(PostDO::getId).toList());
+        List<Long> ids = posts.stream().map(PostDO::getId).toList();
+        Map<Long, Long> commentCounts = commentCountProvider.countByPosts(ids);
+        var summary = interactionCountProvider.summarize(ids, viewerUid);
         return PageResult.of(total, page, size, posts.stream()
-                .map(p -> assemble(p, false, commentCounts.getOrDefault(p.getId(), 0L)))
+                .map(p -> assemble(p, false, commentCounts.getOrDefault(p.getId(), 0L), summary, viewerUid))
                 .toList());
     }
 
@@ -105,10 +111,11 @@ public class PostReadServiceImpl implements PostReadService {
                 ? postMapper.pageByTopicHot(topicId, offset, size)
                 : postMapper.pageByTopic(topicId, offset, size);
         long total = postMapper.countByTopic(topicId);
-        Map<Long, Long> commentCounts = commentCountProvider.countByPosts(
-                posts.stream().map(PostDO::getId).toList());
+        List<Long> ids = posts.stream().map(PostDO::getId).toList();
+        Map<Long, Long> commentCounts = commentCountProvider.countByPosts(ids);
+        var summary = interactionCountProvider.summarize(ids, null);
         return PageResult.of(total, pageNo, size, posts.stream()
-                .map(p -> assemble(p, false, commentCounts.getOrDefault(p.getId(), 0L)))
+                .map(p -> assemble(p, false, commentCounts.getOrDefault(p.getId(), 0L), summary, null))
                 .toList());
     }
 
@@ -120,7 +127,8 @@ public class PostReadServiceImpl implements PostReadService {
                 && (viewerUid.equals(post.getUserId()) || ROLE_ADMIN.equals(viewerRole));
     }
 
-    private PostVO assemble(PostDO post, boolean withContent, long commentCount) {
+    private PostVO assemble(PostDO post, boolean withContent, long commentCount,
+                            InteractionCountProvider.Summary summary, Long viewerUid) {
         List<PostTopicDO> relations = postTopicMapper.selectList(Wrappers.<PostTopicDO>lambdaQuery()
                 .eq(PostTopicDO::getPostId, post.getId())
                 .orderByAsc(PostTopicDO::getSortNo));
@@ -149,7 +157,11 @@ public class PostReadServiceImpl implements PostReadService {
                 .map(u -> new UserBriefVO(u.id(), u.nickname(), u.avatar(), null))
                 .orElse(null);
 
+        long likes = summary.likes().getOrDefault(post.getId(), 0L);
+        long collects = summary.collects().getOrDefault(post.getId(), 0L);
+        Boolean myLiked = viewerUid == null ? null : summary.likedByViewer().contains(post.getId());
+        Boolean myCollected = viewerUid == null ? null : summary.collectedByViewer().contains(post.getId());
         return PostConverter.toVO(post, author, topics, media,
-                new CountsVO(0, 0, commentCount, 0), withContent);
+                new CountsVO(likes, collects, commentCount, 0), withContent, myLiked, myCollected);
     }
 }

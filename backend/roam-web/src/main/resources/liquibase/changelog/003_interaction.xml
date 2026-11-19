@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="003-interaction" author="thereia">
+        <comment>P1：点赞/收藏（user_foot）</comment>
+        <sql>
+            CREATE TABLE user_foot (
+                id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                user_id      BIGINT UNSIGNED NOT NULL,
+                post_id      BIGINT UNSIGNED NOT NULL,
+                action       VARCHAR(16)     NOT NULL COMMENT 'LIKE / COLLECT',
+                created_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY uk_user_foot (user_id, post_id, action),
+                KEY idx_user_foot_post (post_id, action)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户足迹：点赞/收藏';
+        </sql>
+        <rollback>
+            <sql>DROP TABLE IF EXISTS user_foot;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

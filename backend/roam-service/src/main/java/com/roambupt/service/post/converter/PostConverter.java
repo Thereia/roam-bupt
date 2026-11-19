@@ -17,10 +17,11 @@ public final class PostConverter {
     }
 
     public static PostVO toVO(PostDO post, UserBriefVO author, List<TopicBriefVO> topics,
-                              List<MediaVO> media, CountsVO counts, boolean withContent) {
+                              List<MediaVO> media, CountsVO counts, boolean withContent,
+                              Boolean myLiked, Boolean myCollected) {
         return new PostVO(post.getId(), post.getTitle(), excerpt(post.getContent()),
                 withContent ? post.getContent() : null, post.getStatus(),
-                author, topics, media, counts, null, null,
+                author, topics, media, counts, myLiked, myCollected,
                 post.getCreatedTime(), post.getUpdatedTime());
     }
 

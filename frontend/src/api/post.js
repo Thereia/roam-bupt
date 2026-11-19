@@ -17,6 +17,26 @@ export function getPost(id) {
   return withMock(() => getPostDetail(id))
 }
 
+export function likePost(id) {
+  if (!USE_MOCK) return http.post(`/posts/${id}/like`)
+  return withMock(() => ({ active: true, count: 1 }))
+}
+
+export function unlikePost(id) {
+  if (!USE_MOCK) return http.delete(`/posts/${id}/like`)
+  return withMock(() => ({ active: false, count: 0 }))
+}
+
+export function collectPost(id) {
+  if (!USE_MOCK) return http.post(`/posts/${id}/collect`)
+  return withMock(() => ({ active: true, count: 1 }))
+}
+
+export function uncollectPost(id) {
+  if (!USE_MOCK) return http.delete(`/posts/${id}/collect`)
+  return withMock(() => ({ active: false, count: 0 }))
+}
+
 export function getComments(postId, params = {}) {
   if (!USE_MOCK) return http.get(`/posts/${postId}/comments`, { params })
   return withMock(() => listComments(postId, params))
