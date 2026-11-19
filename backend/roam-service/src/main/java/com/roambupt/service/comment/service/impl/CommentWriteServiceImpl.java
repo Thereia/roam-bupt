@@ -15,8 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 
@@ -75,7 +73,8 @@ public class CommentWriteServiceImpl implements CommentWriteService {
         comment.setCreatedTime(LocalDateTime.now());
         commentMapper.insert(comment);
 
-        publishAfterCommit(new CommentCreatedEvent(postId, comment.getId(), uid,
+        // 与点赞事件一致：同步发布，消费方若需要 AFTER_COMMIT 自己加注解
+        eventPublisher.publishEvent(new CommentCreatedEvent(postId, comment.getId(), uid,
                 parentId == 0 ? null : parentId));
         return new CommentCreatedVO(comment.getId());
     }
@@ -100,20 +99,6 @@ public class CommentWriteServiceImpl implements CommentWriteService {
             commentMapper.update(null, Wrappers.<CommentDO>lambdaUpdate()
                     .eq(CommentDO::getTopId, commentId)
                     .set(CommentDO::getDeleted, DELETED));
-        }
-    }
-
-    private void publishAfterCommit(CommentCreatedEvent event) {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    eventPublisher.publishEvent(event);
-                }
-            });
-        } else {
-            log.warn("comment.created.event.published_without_tx commentId={}", event.commentId());
-            eventPublisher.publishEvent(event);
         }
     }
 }

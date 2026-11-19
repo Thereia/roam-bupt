@@ -20,4 +20,10 @@ public class PostQueryServiceImpl implements PostQueryService {
         PostDO post = postMapper.selectById(postId);
         return post != null && "ONLINE".equals(post.getStatus());
     }
+
+    @Override
+    public Long findAuthorId(long postId) {
+        PostDO post = postMapper.selectById(postId);
+        return post == null ? null : post.getUserId();
+    }
 }

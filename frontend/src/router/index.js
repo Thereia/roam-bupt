@@ -48,7 +48,7 @@ const routes = [
   {
     path: '/notifications',
     name: 'notifications',
-    component: () => import('../views/PlaceholderView.vue'),
+    component: () => import('../views/NotificationsView.vue'),
     meta: { title: '通知', requiresAuth: true },
   },
   {

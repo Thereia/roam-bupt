@@ -85,7 +85,7 @@ comment(
 
 - 删除用 `deleted = 1`，**这张表只有这一个删除真相**，不引入 status。
 - 发表回复时对一级评论 `reply_count + 1`，同一个事务内完成。
-- 事件 `CommentCreatedEvent(postId, commentId, uid, parentId)` 在提交后发布。
+- 事件 `CommentCreatedEvent(postId, commentId, uid, parentId)` 同步发布；需要 AFTER_COMMIT 的消费方自己加注解（与点赞事件一致）。
 
 ## 5. 测试接缝与用例
 

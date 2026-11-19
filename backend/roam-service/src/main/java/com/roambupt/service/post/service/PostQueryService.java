@@ -4,4 +4,7 @@ package com.roambupt.service.post.service;
 public interface PostQueryService {
 
     boolean existsOnline(long postId);
+
+    /** 帖子作者；帖子不存在或已删返回 null。 */
+    Long findAuthorId(long postId);
 }

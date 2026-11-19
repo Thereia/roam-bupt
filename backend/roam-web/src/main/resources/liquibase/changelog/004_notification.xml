@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="004-notification" author="thereia">
+        <comment>P1：站内通知</comment>
+        <sql>
+            CREATE TABLE notification (
+                id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                user_id      BIGINT UNSIGNED NOT NULL COMMENT '收件人',
+                actor_id     BIGINT UNSIGNED NOT NULL COMMENT '触发者',
+                type         VARCHAR(16)     NOT NULL COMMENT 'COMMENT/REPLY/LIKE/COLLECT/SYSTEM',
+                source_type  VARCHAR(16)     NOT NULL COMMENT 'POST/COMMENT',
+                source_id    BIGINT UNSIGNED NOT NULL,
+                post_id      BIGINT UNSIGNED DEFAULT NULL,
+                content      VARCHAR(100)    NOT NULL,
+                read_flag    TINYINT         NOT NULL DEFAULT 0,
+                created_time DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY uk_notify (user_id, type, source_id, actor_id),
+                KEY idx_notify_user (user_id, read_flag, created_time)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '站内通知';
+        </sql>
+        <rollback>
+            <sql>DROP TABLE IF EXISTS notification;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>
