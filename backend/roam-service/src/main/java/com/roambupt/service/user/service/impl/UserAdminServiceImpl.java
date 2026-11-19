@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roambupt.api.model.enums.StatusEnum;
 import com.roambupt.api.model.exception.BusinessException;
 import com.roambupt.api.model.vo.PageResult;
-import com.roambupt.api.model.vo.UserProfileVO;
+import com.roambupt.api.model.vo.AdminUserVO;
 import com.roambupt.core.session.SessionStore;
 import com.roambupt.service.post.service.PostQueryService;
 import com.roambupt.service.user.repository.entity.UserDO;
@@ -39,7 +39,7 @@ public class UserAdminServiceImpl implements UserAdminService {
     }
 
     @Override
-    public PageResult<UserProfileVO> page(String keyword, int page, int pageSize) {
+    public PageResult<AdminUserVO> page(String keyword, int page, int pageSize) {
         int pageNo = Math.max(1, page);
         int size = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);
         var wrapper = Wrappers.<UserDO>lambdaQuery()
@@ -50,13 +50,12 @@ public class UserAdminServiceImpl implements UserAdminService {
                 .orderByDesc(UserDO::getId)
                 .last("LIMIT " + ((pageNo - 1) * size) + ", " + size);
 
-        List<UserProfileVO> list = userMapper.selectList(wrapper).stream()
-                .map(user -> new UserProfileVO(user.getId(), user.getUsername(), user.getNickname(),
-                        user.getAvatar(), user.getBio(),
+        List<AdminUserVO> list = userMapper.selectList(wrapper).stream()
+                .map(user -> new AdminUserVO(user.getId(), user.getUsername(), user.getNickname(),
+                        user.getStatus() == null ? 1 : user.getStatus(),
                         postQueryService.countOnlineByUser(user.getId()),
                         followService.countFollowers(user.getId()),
-                        followService.countFollowing(user.getId()),
-                        null))
+                        followService.countFollowing(user.getId())))
                 .toList();
         long total = userMapper.selectCount(Wrappers.<UserDO>lambdaQuery()
                 .and(StringUtils.isNotBlank(keyword), w -> w

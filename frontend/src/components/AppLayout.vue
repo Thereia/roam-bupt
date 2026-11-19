@@ -41,6 +41,7 @@ async function handleLogout() {
         <RouterLink to="/nav" :class="{ on: activeSection === 'nav' }">路线</RouterLink>
         <RouterLink to="/search" :class="{ on: activeSection === 'search' }">搜索</RouterLink>
         <RouterLink to="/publish" :class="{ on: activeSection === 'publish' }">发布</RouterLink>
+        <RouterLink v-if="userStore.user?.role === 'ADMIN'" to="/admin">后台</RouterLink>
       </nav>
       <div class="topright">
         <template v-if="userStore.token">

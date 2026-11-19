@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { isLoggedIn } from '../store/user'
+import { isLoggedIn, userStore } from '../store/user'
 
 const routes = [
   { path: '/', name: 'home', component: () => import('../views/HomeView.vue') },
@@ -59,9 +59,14 @@ const routes = [
   },
   {
     path: '/admin',
-    name: 'admin',
-    component: () => import('../views/PlaceholderView.vue'),
-    meta: { title: '管理后台' },
+    component: () => import('../views/admin/AdminLayout.vue'),
+    meta: { title: '管理后台', requiresAuth: true, requiresAdmin: true },
+    children: [
+      { path: '', redirect: '/admin/posts' },
+      { path: 'posts', name: 'adminPosts', component: () => import('../views/admin/AdminPostsView.vue') },
+      { path: 'users', name: 'adminUsers', component: () => import('../views/admin/AdminUsersView.vue') },
+      { path: 'words', name: 'adminWords', component: () => import('../views/admin/AdminWordsView.vue') },
+    ],
   },
   {
     path: '/:pathMatch(.*)*',
@@ -80,6 +85,10 @@ const router = createRouter({
 router.beforeEach((to) => {
   if (to.meta.requiresAuth && !isLoggedIn()) {
     return { path: '/login', query: { redirect: to.fullPath } }
+  }
+  if (to.matched.some((record) => record.meta.requiresAdmin)
+      && userStore.user?.role !== 'ADMIN') {
+    return { path: '/' }
   }
   return true
 })

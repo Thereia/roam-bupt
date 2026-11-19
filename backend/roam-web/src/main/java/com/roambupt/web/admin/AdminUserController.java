@@ -4,7 +4,7 @@ import com.roambupt.api.model.enums.StatusEnum;
 import com.roambupt.api.model.exception.BusinessException;
 import com.roambupt.api.model.vo.PageResult;
 import com.roambupt.api.model.vo.ResVo;
-import com.roambupt.api.model.vo.UserProfileVO;
+import com.roambupt.api.model.vo.AdminUserVO;
 import com.roambupt.core.context.CurrentUserContext;
 import com.roambupt.core.permission.Permission;
 import com.roambupt.service.user.service.UserAdminService;
@@ -32,7 +32,7 @@ public class AdminUserController {
     }
 
     @GetMapping
-    public ResVo<PageResult<UserProfileVO>> list(@RequestParam(required = false) String q,
+    public ResVo<PageResult<AdminUserVO>> list(@RequestParam(required = false) String q,
                                                  @RequestParam(defaultValue = "1") int page,
                                                  @RequestParam(defaultValue = "10") int pageSize) {
         return ResVo.ok(userAdminService.page(q, page, pageSize));
