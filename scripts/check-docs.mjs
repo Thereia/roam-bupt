@@ -2,10 +2,12 @@
 /**
  * 实现清单的一致性校验。
  *
- * 守住三件事：
- * 1. 清单里 ✅ 的行，验收必须写具体（测试类 / 截图 / 手测 / 演练），不能写“已完成”；
+ * 守住五件事：
+ * 1. ✅ 的行，验收必须写具体（测试类 / 截图 / 手测 / 演练），不能写“已完成”；
  * 2. 清单点名的测试类必须真实存在，防止清单变成假账；
- * 3. 每份域设计都必须被清单引用，且域设计里不允许再写状态（状态只能有一处）。
+ * 3. 每份域设计都必须被清单引用，且域设计里不允许再写状态（状态只能有一处）；
+ * 4. 待做行必须有批次，且依赖的批次严格早于本任务（顺序不是手感，是数据）；
+ * 5. 残留的过期说法（如“待确认”）不允许存在。
  */
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
@@ -24,7 +26,7 @@ const rows = list
 
 if (rows.length === 0) problems.push('实现清单里没有解析到任何任务行')
 
-// 1 + 2：✅ 行的验收必须具体，且测试类要存在
+// 1 + 2：验收要具体，点名的测试类要存在
 const testFiles = new Set()
 const walk = (dir) => {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -37,14 +39,40 @@ const walk = (dir) => {
 walk(join(root, 'backend'))
 
 const concrete = /Test|\d+\s*条|\.png|手测|演练|浏览器/
+const batchOf = new Map()
 for (const row of rows) {
-  const [code, , status, , , acceptance] = row
-  if (status !== '✅') continue
-  if (!acceptance || !concrete.test(acceptance)) {
+  const batchIdx = row.findIndex((cell) => /^B\d+$/.test(cell))
+  if (batchIdx >= 0) batchOf.set(row[0], Number(row[batchIdx].slice(1)) - 0)
+}
+
+for (const row of rows) {
+  const code = row[0]
+  const status = row[2]
+  const batchIdx = row.findIndex((cell) => /^B\d+$/.test(cell))
+  const acceptance = batchIdx >= 0 ? row[6] : row[5]
+
+  if (status === '✅' && (!acceptance || !concrete.test(acceptance))) {
     problems.push(`${code}: ✅ 但验收写得太虚（"${acceptance || '空'}"）`)
   }
-  for (const token of acceptance.match(/[A-Z][A-Za-z]*Test/g) || []) {
+  for (const token of (acceptance || '').match(/[A-Z][A-Za-z]*Test/g) || []) {
     if (!testFiles.has(token)) problems.push(`${code}: 验收点名的 ${token} 在 backend 下不存在`)
+  }
+}
+
+// 4：待做行必须有批次 + 依赖顺序合法
+for (const row of rows) {
+  const code = row[0]
+  const batchIdx = row.findIndex((cell) => /^B\d+$/.test(cell))
+  if (batchIdx < 0) continue
+  const myBatch = Number(row[batchIdx].slice(1))
+  const deps = row[batchIdx + 1]
+  if (!deps) problems.push(`${code}: 待做行缺少「依赖」列（没有就写 —）`)
+  for (const dep of (deps || '').match(/[A-Z]\d+/g) || []) {
+    const depBatch = batchOf.get(dep)
+    if (depBatch === undefined) continue
+    if (depBatch >= myBatch) {
+      problems.push(`${code}(B${myBatch}) 依赖 ${dep}(B${depBatch})：依赖必须排在更早的批次`)
+    }
   }
 }
 
@@ -57,7 +85,7 @@ for (const design of designs) {
   if (/^>\s*状态[:：]/m.test(body)) problems.push(`docs/${design} 还在写状态，状态只能留在实现清单`)
 }
 
-// 过期残留
+// 5：过期残留
 for (const file of ['docs/域设计-auth.md', 'docs/域设计-post.md']) {
   const full = join(root, file)
   if (existsSync(full) && readFileSync(full, 'utf8').includes('待确认')) {
@@ -70,4 +98,4 @@ if (problems.length) {
   for (const p of problems) console.error(' - ' + p)
   process.exit(1)
 }
-console.log(`check-docs 通过：${rows.length} 行任务、${designs.length} 份域设计`)
+console.log(`check-docs 通过：${rows.length} 行任务（${batchOf.size} 行有批次）、${designs.length} 份域设计`)
