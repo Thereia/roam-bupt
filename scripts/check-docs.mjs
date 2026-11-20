@@ -66,6 +66,10 @@ for (const row of rows) {
   if (batchIdx < 0) continue
   const myBatch = Number(row[batchIdx].slice(1))
   const deps = row[batchIdx + 1]
+  const design = row[row.length - 1]
+  if (myBatch <= 2 && (!design || design === '—' || design.includes('待建'))) {
+    problems.push(`${code}(B${myBatch})：近批次任务必须有设计文档，不能是「${design || '空'}」`)
+  }
   if (!deps) problems.push(`${code}: 待做行缺少「依赖」列（没有就写 —）`)
   for (const dep of (deps || '').match(/[A-Z]\d+/g) || []) {
     const depBatch = batchOf.get(dep)

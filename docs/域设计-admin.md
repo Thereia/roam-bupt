@@ -80,3 +80,10 @@ sensitive_word(
 | 审核 | `审核_PENDING转ONLINE_首页可见`、`审核_非法迁移_409`、`审核_DELETED后详情404` |
 | 封禁 | `封禁_旧token失效_401`、`封禁自己_4001` |
 | 敏感词 | `发帖含敏感词_4001`、`评论含敏感词_4001` |
+
+## 协调（谁给我数据 / 我给谁数据）
+
+- **拿**：拦截器提供当前用户角色（每请求查库，降权与封禁立即生效）。
+- **给**：审核改状态后发 `PostStatusChangedEvent` → search 同步索引；封禁调 `SessionStore.revokeAllOf` 让旧 token 立即失效。
+- **敏感词**：接口在 core（`SensitiveWordFilter`），实现在 moderation；post / comment 写前调用，命中即 4001。
+- **时序**：先改状态再发事件；事件消费失败只打 WARN，不回滚状态。

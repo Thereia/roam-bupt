@@ -99,3 +99,10 @@ comment(
 ## 6. 明确不做
 
 敏感词过滤、审核、@ 提及、点赞评论。敏感词与后台审核一起放 P2。
+
+## 协调（谁给我数据 / 我给谁数据）
+
+- **拿**：post 域 `existsOnline` 判帖子可评论；user 域取作者昵称头像。
+- **给**：`CommentCountProvider` 供帖子列表/详情显示评论数（批量查，避免 N+1）。
+- **事件**：`CommentCreatedEvent(postId, commentId, uid, parentId)` 同步发布，notify 域据此通知帖子作者或被回复者。
+- **跨域失败**：通知失败只打 WARN，不影响评论写入。

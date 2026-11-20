@@ -86,3 +86,10 @@ user_foot(
 - 不把计数写 Redis（P2 数据量上来再说）。
 - 不做点赞通知（留给 notify 域消费 `PostLikedEvent`）。
 - 不做关注（单独设计）。
+
+## 协调（谁给我数据 / 我给谁数据）
+
+- **拿**：post 域 `existsOnline` 判帖子存在；user 身份来自拦截器。
+- **给**：`InteractionCountProvider.summarize(postIds, viewerUid)` 供帖子列表/详情填 `counts.like/collect` 与 `myLiked/myCollected`。
+- **事件**：`PostLikedEvent(postId, uid, action)` 只在真正插入成功时发，连点不会重复通知。
+- **时序**：唯一键冲突按幂等成功处理，不抛 409。

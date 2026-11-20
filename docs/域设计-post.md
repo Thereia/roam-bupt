@@ -118,3 +118,11 @@ public interface TopicReadService {
 ## 6. 明确不做
 
 点赞、收藏、评论、草稿、发布、上传、搜索、浏览量。这些到对应阶段再进本文件。
+
+## 协调（谁给我数据 / 我给谁数据）
+
+- **拿**：topic 域校验主题合法（`findEnabledPlaceIds`）、user 域取作者资料；都不回写对方表。
+- **给**：`PostQueryService` 供 comment / interaction / search / space 查帖子是否在线、作者是谁、帖子数。
+- **事件**：`PostCreatedEvent` → search 建索引、notify 通知；`PostStatusChangedEvent` → search 增删索引。
+- **给下游的计数**：帖子展示的评论数、点赞数、收藏数由各域 `*CountProvider` 回填，post 不冗余计数列。
+- **时序**：先写 post / post_topic / post_media（同事务），提交后再发事件。

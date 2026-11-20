@@ -99,3 +99,10 @@ CI 里只跑兜底路径（`roam.search.enabled=false`），ES 路径靠本地�
 ## 7. 明确不做
 
 向量召回、搜索联想、热词统计、同义词、拼音搜索。
+
+## 协调（谁给我数据 / 我给谁数据）
+
+- **监听**：`PostCreatedEvent` 建索引、`PostStatusChangedEvent` 更新或删除（都走 AFTER_COMMIT）。
+- **拿**：post 域读标题正文，post_topic 读地点 id；不写任何业务表。
+- **给**：只给帖子 id 与总数，展示字段一律回读 MySQL（避免两份数据不一致）。
+- **时序**：索引失败只打 WARN，不影响发帖；启动时全量重建兜底。
