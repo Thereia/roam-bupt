@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="007-space-tables" author="thereia">
+        <comment>P2：路网表（静态数据，从 travel-bupt 导入）</comment>
+        <sql>
+            CREATE TABLE route_node (
+                node_id      BIGINT UNSIGNED NOT NULL,
+                name         VARCHAR(64)     NOT NULL,
+                node_type    VARCHAR(16)     NOT NULL COMMENT 'DESTINATION / INTERSECTION',
+                building_id  BIGINT UNSIGNED NULL,
+                floor        INT             NULL,
+                x_ratio      DECIMAL(6,4)    NOT NULL,
+                y_ratio      DECIMAL(6,4)    NOT NULL,
+                poi_category VARCHAR(32)     NULL,
+                enabled      TINYINT         NOT NULL DEFAULT 1,
+                PRIMARY KEY (node_id),
+                KEY idx_route_node_type (node_type)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '路网节点';
+
+            CREATE TABLE route_edge (
+                edge_id           BIGINT UNSIGNED NOT NULL,
+                from_node_id      BIGINT UNSIGNED NOT NULL,
+                to_node_id        BIGINT UNSIGNED NOT NULL,
+                distance_meters   INT             NOT NULL,
+                time_seconds      INT             NOT NULL,
+                edge_type         VARCHAR(16)     NOT NULL COMMENT 'ROAD / STAIR / ELEVATOR',
+                bike_allowed      TINYINT         NOT NULL DEFAULT 0,
+                congestion_factor DECIMAL(4,2)    NOT NULL DEFAULT 1.00,
+                enabled           TINYINT         NOT NULL DEFAULT 1,
+                PRIMARY KEY (edge_id),
+                KEY idx_route_edge_from (from_node_id),
+                KEY idx_route_edge_to (to_node_id)
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '路网边';
+        </sql>
+        <rollback>
+            <sql>DROP TABLE IF EXISTS route_edge; DROP TABLE IF EXISTS route_node;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="007-space-seed" author="thereia">
+        <comment>导入 372 个节点 / 446 条边</comment>
+        <loadData tableName="route_node"
+                  file="liquibase/data/route_node.csv"
+                  separator="," encoding="UTF-8">
+            <column name="node_id" type="numeric" header="node_id"/>
+            <column name="name" type="varchar(64)" header="node_name"/>
+            <column name="node_type" type="varchar(16)" header="node_type"/>
+            <column name="building_id" type="numeric" header="building_id"/>
+            <column name="floor" type="numeric" header="floor"/>
+            <column name="x_ratio" type="numeric" header="x_ratio"/>
+            <column name="y_ratio" type="numeric" header="y_ratio"/>
+            <column name="poi_category" type="varchar(32)" header="poi_category"/>
+            <column name="enabled" type="numeric" header="enabled"/>
+        </loadData>
+        <loadData tableName="route_edge"
+                  file="liquibase/data/route_edge.csv"
+                  separator="," encoding="UTF-8">
+            <column name="edge_id" type="numeric" header="edge_id"/>
+            <column name="from_node_id" type="numeric" header="from_node_id"/>
+            <column name="to_node_id" type="numeric" header="to_node_id"/>
+            <column name="distance_meters" type="numeric" header="distance_meters"/>
+            <column name="time_seconds" type="numeric" header="time_seconds"/>
+            <column name="edge_type" type="varchar(16)" header="edge_type"/>
+            <column name="bike_allowed" type="numeric" header="bike_allowed"/>
+            <column name="congestion_factor" type="numeric" header="congestion_factor"/>
+            <column name="enabled" type="numeric" header="enabled"/>
+        </loadData>
+        <rollback>
+            <sql>DELETE FROM route_edge; DELETE FROM route_node;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -57,6 +57,7 @@ public interface RoutePlanner {
 - `route_node`：`node_id, name, type, x_ratio, y_ratio, building_id, floor, poi_category, enabled`
 - `route_edge`：`edge_id, from_node_id, to_node_id, distance_meters, time_seconds, edge_type, bike_allowed, congestion_factor, enabled`
 - 静态数据由 CSV 灌入（`docs/数据导出说明.md`），**不建 route 表**，路线每次现算。
+- 导入后实测：372 节点 / 446 边，145 个 DESTINATION 全部能对上 `topic`；有 **1 个孤立 INTERSECTION**（无任何边），寻路时自然用不到，暂不处理。
 - Redis key：`roam:traffic:{edgeId}:{yyyyMMddHHmm}`，TTL 5 分钟；缓存 key `roam:route:{mode}:{from}-{to}:{stopsHash}`，TTL 60 秒。
 
 **拥挤度怎么算**（不落库，读时现算）：
