@@ -41,6 +41,10 @@ export function uncollectPost(id) {
   return withMock(() => ({ active: false, count: 0 }))
 }
 
+export function createComment(postId, content) {
+  return http.post(`/posts/${postId}/comments`, { content })
+}
+
 export function getComments(postId, params = {}) {
   if (!USE_MOCK) return http.get(`/posts/${postId}/comments`, { params })
   return withMock(() => listComments(postId, params))

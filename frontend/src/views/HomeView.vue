@@ -4,7 +4,6 @@ import { getPosts } from '../api/post'
 import { getTopicStats, getTopics } from '../api/topic'
 import PostCard from '../components/PostCard.vue'
 import StateBlock from '../components/StateBlock.vue'
-import { categoryTotal, dailyRoute, followedPlaces } from '../mock/display'
 import { isLoggedIn } from '../store/user'
 
 const feeds = [
@@ -65,7 +64,7 @@ function switchFeed(key) {
 
 const placeTotal = computed(() => {
   const values = Object.values(categoryCounts.value)
-  return values.length ? values.reduce((sum, value) => sum + value, 0) : categoryTotal
+  return values.length ? values.reduce((sum, value) => sum + value, 0) : placeTotal.value
 })
 
 const hottest = computed(() => [...places.value].sort((a, b) => b.heat - a.heat).slice(0, 4))
@@ -91,12 +90,6 @@ onMounted(() => {
         </li>
       </ul>
 
-      <h3>我关注的</h3>
-      <ul>
-        <li v-for="place in followedPlaces" :key="place.id">
-          <span>{{ place.name }}</span>
-        </li>
-      </ul>
     </aside>
 
     <main>
@@ -139,12 +132,8 @@ onMounted(() => {
 
       <section class="card">
         <h3>今天的路线</h3>
-        <ul class="route-line">
-          <li v-for="step in dailyRoute.steps" :key="step.place">
-            <b>{{ step.place }}</b>{{ step.note }}
-          </li>
-        </ul>
-        <button type="button" class="btn block" disabled title="P1 上线">按这条走</button>
+        <p class="muted-text">路线功能开发中：之后会按帖子里的地点顺序自动生成。</p>
+        <button type="button" class="btn block" disabled title="路线功能开发中">按这条走</button>
       </section>
     </aside>
   </div>

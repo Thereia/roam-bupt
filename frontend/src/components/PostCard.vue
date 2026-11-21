@@ -1,7 +1,6 @@
 <script setup>
 import { computed } from 'vue'
 import TopicChip from './TopicChip.vue'
-import { postDisplay } from '../mock/display'
 import { formatRelativeTime } from '../utils/time'
 
 const props = defineProps({
@@ -15,8 +14,8 @@ const props = defineProps({
   },
 })
 
-const display = computed(() => postDisplay[props.post.id] || {})
-const actions = computed(() => display.value.actions || ['收藏', '分享'])
+const hasImage = computed(() => (props.post.media?.length || 0) > 0)
+const actions = computed(() => ['收藏', '分享'])
 // 地点页的卡片不再重复挂当前地点，只留分类 chip
 const chips = computed(() =>
   props.variant === 'topic'
@@ -40,7 +39,7 @@ const chips = computed(() =>
       </template>
     </div>
     <p class="excerpt">{{ post.excerpt }}</p>
-    <div v-if="display.hasImage" class="thumb">图片</div>
+    <div v-if="hasImage" class="thumb">图片</div>
     <div class="chips">
       <TopicChip v-for="topic in chips" :key="topic.id" :topic="topic" />
     </div>

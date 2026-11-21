@@ -4,7 +4,6 @@ import { useRoute } from 'vue-router'
 import { getTopic, getTopicPosts } from '../api/topic'
 import PostCard from '../components/PostCard.vue'
 import StateBlock from '../components/StateBlock.vue'
-import { placeDisplay } from '../mock/display'
 
 const route = useRoute()
 const topic = ref(null)
@@ -32,12 +31,15 @@ async function load() {
   }
 }
 
-const display = computed(() => placeDisplay[topic.value?.id] || {})
 const sub = computed(
-  () => display.value.sub || `${topic.value?.category || ''} · ${topic.value?.postCount || 0} 条内容`,
+  () => [topic.value?.category, `${topic.value?.postCount || 0} 条内容`].filter(Boolean).join(' · '),
 )
-const facts = computed(() => display.value.facts || [['分类', topic.value?.category || '']])
-const nearby = computed(() => display.value.nearby || [])
+const facts = computed(() => {
+  const rows = [['分类', topic.value?.category || '未分类']]
+  if (topic.value?.heat != null) rows.push(['热度', String(topic.value.heat)])
+  if (topic.value?.nodeId) rows.push(['路线', '支持'])
+  return rows
+})
 const score = computed(() => Number(topic.value?.rating?.displayAvg || 0).toFixed(1))
 
 onMounted(load)
@@ -93,15 +95,6 @@ watch(() => route.params.id, load)
           <div v-for="fact in facts" :key="fact[0]" class="fact-line">{{ fact[0] }}<b>{{ fact[1] }}</b></div>
         </section>
 
-        <section v-if="nearby.length" class="card">
-          <h3>附近的地点</h3>
-          <div v-for="place in nearby" :key="place.name" class="hot">
-            <span class="rank">·</span>
-            <span>{{ place.name }}</span>
-            <span class="bar"><i :style="{ width: `${place.width}%` }"></i></span>
-            <span class="val">{{ place.distance }}</span>
-          </div>
-        </section>
       </aside>
     </div>
   </template>

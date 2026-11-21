@@ -1400,3 +1400,33 @@ ol {
   border-radius: var(--radius);
   border: 1px solid var(--line);
 }
+
+/* ---------- 评论输入 ---------- */
+
+.comment-form {
+  margin-bottom: 16px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--ink);
+  background: #fbfaf7;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+}
+
+.comment-form-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.comment-form-foot .form-error {
+  margin-right: auto;
+  margin-top: 0;
+}

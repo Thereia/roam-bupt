@@ -2,12 +2,12 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  COMMENTS_READY, collectPost, getComments, getPost, likePost, uncollectPost, unlikePost,
+  COMMENTS_READY, collectPost, createComment, getComments, getPost, likePost,
+  uncollectPost, unlikePost,
 } from '../api/post'
 import StateBlock from '../components/StateBlock.vue'
 import TopicChip from '../components/TopicChip.vue'
-import { postDisplay } from '../mock/display'
-import { isLoggedIn } from '../store/user'
+import { isLoggedIn, userStore } from '../store/user'
 import { formatCount } from '../utils/number'
 import { formatDayTime, formatRelativeTime } from '../utils/time'
 
@@ -15,9 +15,46 @@ const route = useRoute()
 const router = useRouter()
 const post = ref(null)
 const comments = ref([])
+const commentText = ref('')
+const commenting = ref(false)
+const commentError = ref('')
 const loading = ref(true)
 const error = ref('')
 const missing = ref(false)
+
+async function submitComment() {
+  const text = commentText.value.trim()
+  if (!text) return
+  if (!isLoggedIn()) {
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+  commenting.value = true
+  commentError.value = ''
+  try {
+    const created = await createComment(post.value.id, text)
+    comments.value = [
+      {
+        id: created.id,
+        postId: post.value.id,
+        content: text,
+        author: userStore.user,
+        createdTime: new Date().toISOString(),
+        replyCount: 0,
+      },
+      ...comments.value,
+    ]
+    post.value = {
+      ...post.value,
+      counts: { ...post.value.counts, comment: (post.value.counts.comment || 0) + 1 },
+    }
+    commentText.value = ''
+  } catch (err) {
+    commentError.value = err.message || '发表失败'
+  } finally {
+    commenting.value = false
+  }
+}
 
 async function toggleLike() {
   if (!isLoggedIn()) {
@@ -71,8 +108,6 @@ async function load() {
   }
 }
 
-const display = computed(() => postDisplay[post.value?.id] || {})
-
 const paragraphs = computed(() =>
   String(post.value?.content || '')
     .split(/\n+/)
@@ -86,11 +121,9 @@ const places = computed(() =>
     .sort((a, b) => a.sortNo - b.sortNo),
 )
 
-const related = computed(() => display.value.related || [])
 const authorInitial = computed(() => (post.value?.author?.nickname || '?').slice(0, 1))
 
 function stopLabel(index) {
-  if (display.value.stopLabels?.[index]) return display.value.stopLabels[index]
   if (places.value.length === 1) return '地点'
   if (index === 0) return '起点'
   if (index === places.value.length - 1) return '终点'
@@ -150,6 +183,22 @@ watch(() => route.params.id, load)
 
       <section class="comments">
         <h2 class="comments-title">评论</h2>
+
+        <form class="comment-form" @submit.prevent="submitComment">
+          <textarea
+            v-model="commentText"
+            maxlength="1000"
+            :placeholder="isLoggedIn() ? '说点什么，对后来的人有用' : '登录后可以评论'"
+            rows="2"
+          ></textarea>
+          <div class="comment-form-foot">
+            <span v-if="commentError" class="form-error">{{ commentError }}</span>
+            <button type="submit" class="btn primary" :disabled="commenting || !commentText.trim()">
+              {{ commenting ? '发表中…' : '发表' }}
+            </button>
+          </div>
+        </form>
+
         <p v-if="!comments.length" class="muted-text">还没有评论，说点什么？</p>
         <div v-for="comment in comments" :key="comment.id" class="comment">
           <span class="avatar small">{{ comment.author.nickname.slice(0, 1) }}</span>
@@ -169,18 +218,7 @@ watch(() => route.params.id, load)
             <b>{{ place.name }}</b>{{ stopLabel(index) }}
           </li>
         </ul>
-        <template v-if="display.routeSummary">
-          <p class="route-summary">{{ display.routeSummary }}</p>
-          <button type="button" class="btn primary block" disabled title="P1 上线">按这个顺序走</button>
-        </template>
-      </section>
-
-      <section v-if="related.length" class="card">
-        <h3>同类内容</h3>
-        <div v-for="title in related" :key="title" class="related-row">
-          <span class="rank">·</span>
-          <span>{{ title }}</span>
-        </div>
+        <button type="button" class="btn primary block" disabled title="路线功能开发中">按这个顺序走</button>
       </section>
     </aside>
   </div>
