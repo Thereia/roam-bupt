@@ -27,4 +27,23 @@ public class RedisCounterStore implements CounterStore {
         String value = redis.opsForValue().get(key);
         return value == null ? 0 : Long.parseLong(value);
     }
+
+    @Override
+    public java.util.Map<String, Long> multiGet(java.util.List<String> keys) {
+        java.util.Map<String, Long> result = new java.util.HashMap<>();
+        if (keys == null || keys.isEmpty()) {
+            return result;
+        }
+        java.util.List<String> values = redis.opsForValue().multiGet(keys);
+        if (values == null) {
+            return result;
+        }
+        for (int i = 0; i < keys.size(); i++) {
+            String value = values.get(i);
+            if (value != null) {
+                result.put(keys.get(i), Long.parseLong(value));
+            }
+        }
+        return result;
+    }
 }

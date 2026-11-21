@@ -98,6 +98,16 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public Long findNodeId(long topicId) {
+        TopicDO topic = topicMapper.selectById(topicId);
+        if (topic == null || topic.getEnabled() == null || topic.getEnabled() != 1
+                || !"PLACE".equals(topic.getType())) {
+            return null;
+        }
+        return topic.getNodeId();
+    }
+
+    @Override
     public List<TopicBriefVO> suggest(String keyword, int limit) {
         int size = Math.min(Math.max(1, limit), 10);
         if (StringUtils.isBlank(keyword)) {

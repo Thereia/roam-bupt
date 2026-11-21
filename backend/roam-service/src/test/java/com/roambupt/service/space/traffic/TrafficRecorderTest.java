@@ -55,5 +55,16 @@ class TrafficRecorderTest {
         public long get(String key) {
             return values.getOrDefault(key, 0L);
         }
+
+        @Override
+        public Map<String, Long> multiGet(java.util.List<String> keys) {
+            Map<String, Long> result = new java.util.HashMap<>();
+            for (String key : keys) {
+                if (values.containsKey(key)) {
+                    result.put(key, values.get(key));
+                }
+            }
+            return result;
+        }
     }
 }

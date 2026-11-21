@@ -1,7 +1,12 @@
 package com.roambupt.service.post.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.roambupt.service.post.repository.entity.PostDO;
+import com.roambupt.service.post.repository.entity.PostTopicDO;
 import com.roambupt.service.post.repository.mapper.PostMapper;
+import com.roambupt.service.post.repository.mapper.PostTopicMapper;
+import com.roambupt.service.topic.repository.entity.TopicDO;
+import com.roambupt.service.topic.repository.mapper.TopicMapper;
 import com.roambupt.service.post.service.PostQueryService;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +17,14 @@ import java.util.List;
 public class PostQueryServiceImpl implements PostQueryService {
 
     private final PostMapper postMapper;
+    private final PostTopicMapper postTopicMapper;
+    private final TopicMapper topicMapper;
 
-    public PostQueryServiceImpl(PostMapper postMapper) {
+    public PostQueryServiceImpl(PostMapper postMapper, PostTopicMapper postTopicMapper,
+                                TopicMapper topicMapper) {
         this.postMapper = postMapper;
+        this.postTopicMapper = postTopicMapper;
+        this.topicMapper = topicMapper;
     }
 
     @Override
@@ -42,5 +52,22 @@ public class PostQueryServiceImpl implements PostQueryService {
     @Override
     public long countOnlineByUser(long uid) {
         return postMapper.countByUser(uid, false);
+    }
+
+    @Override
+    public List<Long> findOrderedPlaceTopicIds(long postId) {
+        List<PostTopicDO> links = postTopicMapper.selectList(Wrappers.<PostTopicDO>lambdaQuery()
+                .eq(PostTopicDO::getPostId, postId)
+                .orderByAsc(PostTopicDO::getSortNo));
+        if (links.isEmpty()) {
+            return List.of();
+        }
+        List<Long> topicIds = links.stream().map(PostTopicDO::getTopicId).toList();
+        return topicMapper.selectBatchIds(topicIds).stream()
+                .filter(topic -> "PLACE".equals(topic.getType()))
+                .filter(topic -> topic.getEnabled() != null && topic.getEnabled() == 1)
+                .sorted(java.util.Comparator.comparing(topic -> topicIds.indexOf(topic.getId())))
+                .map(TopicDO::getId)
+                .toList();
     }
 }

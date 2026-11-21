@@ -10,4 +10,7 @@ public interface CounterStore {
     long increment(String key, Duration ttl);
 
     long get(String key);
+
+    /** 批量读，缺失的 key 不返回。 */
+    java.util.Map<String, Long> multiGet(java.util.List<String> keys);
 }

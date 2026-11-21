@@ -17,4 +17,7 @@ public interface PostQueryService {
 
     /** 用户在线帖子数。 */
     long countOnlineByUser(long uid);
+
+    /** 帖子挂的地点主题 id，按 sort_no 升序；没有地点返回空列表。 */
+    List<Long> findOrderedPlaceTopicIds(long postId);
 }

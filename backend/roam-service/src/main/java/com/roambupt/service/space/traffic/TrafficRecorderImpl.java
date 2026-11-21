@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** 按分钟桶累加，读时归一化。Redis 不可用不抛异常，按无拥挤处理。 */
@@ -52,19 +53,18 @@ public class TrafficRecorderImpl implements TrafficRecorder {
             return factors;
         }
         String minute = LocalDateTime.now().format(MINUTE);
-        Map<Long, Long> counts = new HashMap<>();
-        long max = 0;
+        List<String> keys = edgeIds.stream().map(edgeId -> key(edgeId, minute)).toList();
+        Map<String, Long> counts;
         try {
-            for (Long edgeId : edgeIds) {
-                long count = counterStore.get(key(edgeId, minute));
-                counts.put(edgeId, count);
-                max = Math.max(max, count);
-            }
+            counts = counterStore.multiGet(keys);
         } catch (Exception ignored) {
             return factors;
         }
-        final long maxCount = max;
-        counts.forEach((edgeId, count) -> factors.put(edgeId, CongestionModel.factor(count, maxCount, k)));
+        long max = counts.values().stream().mapToLong(Long::longValue).max().orElse(0L);
+        for (Long edgeId : edgeIds) {
+            long count = counts.getOrDefault(key(edgeId, minute), 0L);
+            factors.put(edgeId, CongestionModel.factor(count, max, k));
+        }
         return factors;
     }
 
