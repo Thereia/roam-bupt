@@ -8,6 +8,7 @@ import {
 import StateBlock from '../components/StateBlock.vue'
 import TopicChip from '../components/TopicChip.vue'
 import { isLoggedIn, userStore } from '../store/user'
+import { getPostRoute } from '../api/space'
 import { formatCount } from '../utils/number'
 import { formatDayTime, formatRelativeTime } from '../utils/time'
 
@@ -15,12 +16,27 @@ const route = useRoute()
 const router = useRouter()
 const post = ref(null)
 const comments = ref([])
+const routePlan = ref(null)
+const routeError = ref('')
+const routeLoading = ref(false)
 const commentText = ref('')
 const commenting = ref(false)
 const commentError = ref('')
 const loading = ref(true)
 const error = ref('')
 const missing = ref(false)
+
+async function loadRoute() {
+  routeLoading.value = true
+  routeError.value = ''
+  try {
+    routePlan.value = await getPostRoute(post.value.id)
+  } catch (err) {
+    routeError.value = err.message || '这条路暂时算不出来'
+  } finally {
+    routeLoading.value = false
+  }
+}
 
 async function submitComment() {
   const text = commentText.value.trim()
@@ -218,7 +234,20 @@ watch(() => route.params.id, load)
             <b>{{ place.name }}</b>{{ stopLabel(index) }}
           </li>
         </ul>
-        <button type="button" class="btn primary block" disabled title="路线功能开发中">按这个顺序走</button>
+        <button type="button" class="btn primary block" :disabled="routeLoading" @click="loadRoute">
+          {{ routeLoading ? '正在算路…' : '按这个顺序走' }}
+        </button>
+        <p v-if="routeError" class="form-error">{{ routeError }}</p>
+        <div v-if="routePlan" class="route-result">
+          <p class="route-summary">
+            全程 {{ routePlan.totalDistanceMeters }} 米 · 约 {{ Math.round(routePlan.totalTimeSeconds / 60) }} 分钟
+          </p>
+          <div v-for="(segment, index) in routePlan.segments" :key="index" class="plan-segment">
+            <span class="dot" :class="{ busy: segment.congestion >= 1.5 }"></span>
+            <span>{{ segment.fromName }} → {{ segment.toName }}</span>
+            <span class="muted-text">{{ segment.distanceMeters }}m</span>
+          </div>
+        </div>
       </section>
     </aside>
   </div>

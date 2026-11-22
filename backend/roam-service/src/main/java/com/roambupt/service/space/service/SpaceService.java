@@ -1,6 +1,7 @@
 package com.roambupt.service.space.service;
 
 import com.roambupt.api.model.dto.RouteQuery;
+import com.roambupt.api.model.vo.MapVO;
 import com.roambupt.api.model.vo.RoutePlanVO;
 
 import java.util.List;
@@ -13,4 +14,7 @@ public interface SpaceService {
 
     /** 2–3 条备选，按权重排序。 */
     List<RoutePlanVO> alternatives(RouteQuery query, int limit);
+
+    /** 底图：全部启用节点与边。 */
+    MapVO map();
 }

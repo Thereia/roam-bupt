@@ -79,6 +79,15 @@ class SpaceApiTest {
     }
 
     @Test
+    void 底图_返回全部启用节点与边() throws Exception {
+        mockMvc.perform(get("/api/v1/nav/map"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.nodes.length()").value(org.hamcrest.Matchers.greaterThan(300)))
+                .andExpect(jsonPath("$.data.edges.length()").value(org.hamcrest.Matchers.greaterThan(400)))
+                .andExpect(jsonPath("$.data.nodes[0].x").value(org.hamcrest.Matchers.greaterThan(0.0)));
+    }
+
+    @Test
     void 路线_两个地点_返回分段与总耗时() throws Exception {
         mockMvc.perform(post("/api/v1/nav/route")
                         .contentType(MediaType.APPLICATION_JSON)

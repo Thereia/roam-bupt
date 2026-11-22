@@ -3,6 +3,7 @@ package com.roambupt.web.portal.space;
 import com.roambupt.api.model.dto.RouteQuery;
 import com.roambupt.api.model.enums.StatusEnum;
 import com.roambupt.api.model.exception.BusinessException;
+import com.roambupt.api.model.vo.MapVO;
 import com.roambupt.api.model.vo.ResVo;
 import com.roambupt.api.model.vo.RoutePlanVO;
 import com.roambupt.service.space.service.PostRouteService;
@@ -30,6 +31,12 @@ public class RouteController {
     public RouteController(SpaceService spaceService, PostRouteService postRouteService) {
         this.spaceService = spaceService;
         this.postRouteService = postRouteService;
+    }
+
+    @OptionalAuth
+    @GetMapping("/nav/map")
+    public ResVo<MapVO> map() {
+        return ResVo.ok(spaceService.map());
     }
 
     @OptionalAuth

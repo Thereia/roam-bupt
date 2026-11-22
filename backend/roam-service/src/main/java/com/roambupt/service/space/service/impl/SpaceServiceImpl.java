@@ -4,6 +4,9 @@ import com.roambupt.api.model.dto.RouteQuery;
 import com.roambupt.api.model.dto.RouteStopRequest;
 import com.roambupt.api.model.enums.StatusEnum;
 import com.roambupt.api.model.exception.BusinessException;
+import com.roambupt.api.model.vo.MapEdgeVO;
+import com.roambupt.api.model.vo.MapNodeVO;
+import com.roambupt.api.model.vo.MapVO;
 import com.roambupt.api.model.vo.RoutePlanVO;
 import com.roambupt.api.model.vo.RouteSegmentVO;
 import com.roambupt.service.space.graph.RouteGraphProvider;
@@ -13,9 +16,14 @@ import com.roambupt.service.space.plan.RoutePlanner;
 import com.roambupt.service.space.plan.RouteStop;
 import com.roambupt.service.space.plan.TravelMode;
 import com.roambupt.service.space.service.SpaceService;
+import com.roambupt.service.space.repository.entity.RouteEdgeDO;
+import com.roambupt.service.space.repository.entity.RouteNodeDO;
+import com.roambupt.service.space.repository.mapper.RouteEdgeMapper;
+import com.roambupt.service.space.repository.mapper.RouteNodeMapper;
 import com.roambupt.service.space.traffic.TrafficRecorder;
 import com.roambupt.service.topic.service.TopicService;
 import org.apache.commons.lang3.StringUtils;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -36,13 +44,35 @@ public class SpaceServiceImpl implements SpaceService {
     private final RoutePlanner routePlanner;
     private final TrafficRecorder trafficRecorder;
     private final TopicService topicService;
+    private final RouteNodeMapper routeNodeMapper;
+    private final RouteEdgeMapper routeEdgeMapper;
 
     public SpaceServiceImpl(RouteGraphProvider graphProvider, RoutePlanner routePlanner,
-                            TrafficRecorder trafficRecorder, TopicService topicService) {
+                            TrafficRecorder trafficRecorder, TopicService topicService,
+                            RouteNodeMapper routeNodeMapper, RouteEdgeMapper routeEdgeMapper) {
         this.graphProvider = graphProvider;
         this.routePlanner = routePlanner;
         this.trafficRecorder = trafficRecorder;
         this.topicService = topicService;
+        this.routeNodeMapper = routeNodeMapper;
+        this.routeEdgeMapper = routeEdgeMapper;
+    }
+
+    @Override
+    public MapVO map() {
+        var nodes = routeNodeMapper.selectList(Wrappers.<RouteNodeDO>lambdaQuery()
+                        .eq(RouteNodeDO::getEnabled, 1))
+                .stream()
+                .map(node -> new MapNodeVO(node.getNodeId(), node.getName(), node.getNodeType(),
+                        node.getXRatio().doubleValue(), node.getYRatio().doubleValue()))
+                .toList();
+        var edges = routeEdgeMapper.selectList(Wrappers.<RouteEdgeDO>lambdaQuery()
+                        .eq(RouteEdgeDO::getEnabled, 1))
+                .stream()
+                .map(edge -> new MapEdgeVO(edge.getFromNodeId(), edge.getToNodeId(),
+                        edge.getEdgeType(), edge.getDistanceMeters()))
+                .toList();
+        return new MapVO(nodes, edges);
     }
 
     @Override

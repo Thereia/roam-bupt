@@ -42,7 +42,7 @@ const routes = [
   {
     path: '/nav',
     name: 'nav',
-    component: () => import('../views/PlaceholderView.vue'),
+    component: () => import('../views/NavView.vue'),
     meta: { title: '路线' },
   },
   {
