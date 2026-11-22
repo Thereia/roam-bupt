@@ -49,7 +49,7 @@
   - 起服务：`mvn -pl roam-web -am -DskipTests install` 然后 `mvn -pl roam-web spring-boot:run`
 - 前端在 `frontend/`：`npm install`、`npm run dev`、`npm run build`；连真实后端用 `VITE_USE_MOCK=false`
 - MySQL：`roam_bupt`（localhost:3306，root/123456）
-- Redis：`192.168.153.129:7001`，密码 `123456`
+- Redis：VM `192.168.153.129:7001`，密码 `123456`（已写进 `/usr/local/src/redis-7001.conf`，重启不会丢）
 
 ## 文档索引（按需读，不要全读）
 
