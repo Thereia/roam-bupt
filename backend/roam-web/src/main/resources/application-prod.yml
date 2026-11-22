@@ -1,0 +1,51 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${ROAM_DB_HOST:mysql}:${ROAM_DB_PORT:3306}/${ROAM_DB_NAME:roam_bupt}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${ROAM_DB_USER:root}
+    password: ${ROAM_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 2
+
+  data:
+    redis:
+      host: ${ROAM_REDIS_HOST:redis}
+      port: ${ROAM_REDIS_PORT:6379}
+      password: ${ROAM_REDIS_PASSWORD}
+      connect-timeout: 1s
+      timeout: 500ms
+
+roam:
+  jwt:
+    secret: ${ROAM_JWT_SECRET}
+    ttl: 7d
+  auth:
+    redis-fail-open: false
+    login-limit-per-minute: 5
+    exclude-paths:
+      - /api/v1/auth/register
+      - /api/v1/auth/login
+      - /actuator/**
+  post:
+    auto-approve: false          # 生产：新帖进 PENDING，等后台审核
+  upload:
+    dir: ${ROAM_UPLOAD_DIR:/app/uploads}
+    allowed-prefix: /files/
+    max-size-mb: 5
+  search:
+    enabled: true
+    host: ${ROAM_ES_HOST:elasticsearch}
+    port: ${ROAM_ES_PORT:9200}
+    index: roam_post_v1
+    connect-timeout-ms: 1000
+    socket-timeout-ms: 2000
+  security:
+    trust-forwarded-for: ${ROAM_TRUST_XFF:true}
+    trusted-proxies: ${ROAM_TRUSTED_PROXIES:}
+    write-per-minute: ${ROAM_WRITE_PER_MINUTE:30}
+
+management:
+  endpoint:
+    health:
+      show-details: never

@@ -1,8 +1,8 @@
 import http from './request'
 import { listPosts, getPostDetail, listComments, withMock } from '../mock'
 
-// 默认走 mock；后端帖子接口就绪后把 VITE_USE_MOCK 设为 false
-const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
+// 默认走真实接口；只有显式 VITE_USE_MOCK=true 才用 mock
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 // 评论接口已上线（P1）；置 false 可临时关掉评论请求
 export const COMMENTS_READY = true

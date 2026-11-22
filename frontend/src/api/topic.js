@@ -1,7 +1,8 @@
 import http from './request'
 import { listTopics, getTopicDetail, listTopicPosts, withMock } from '../mock'
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
+// 默认走真实接口；只有显式 VITE_USE_MOCK=true 才用 mock
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 export function getTopics(params = {}) {
   if (!USE_MOCK) return http.get('/topics', { params })
