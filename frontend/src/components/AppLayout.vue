@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { notifyStore, refreshUnread } from '../store/notify'
 import { logout } from '../api/auth'
 import { clearSession, userStore } from '../store/user'
 
@@ -28,6 +29,9 @@ async function handleLogout() {
   clearSession()
   router.push('/')
 }
+
+onMounted(refreshUnread)
+watch(() => route.path, refreshUnread)
 </script>
 
 <template>
@@ -45,7 +49,9 @@ async function handleLogout() {
       </nav>
       <div class="topright">
         <template v-if="userStore.token">
-          <RouterLink to="/notifications" class="link-button">通知</RouterLink>
+          <RouterLink to="/notifications" class="link-button">
+            通知<span v-if="notifyStore.unread" class="nav-badge">{{ notifyStore.unread }}</span>
+          </RouterLink>
           <span class="nickname">{{ nickname }}</span>
           <button type="button" class="link-button" @click="handleLogout">退出</button>
           <RouterLink :to="`/users/${userStore.user?.id ?? ''}`" class="avatar" :title="nickname">{{ initial }}</RouterLink>

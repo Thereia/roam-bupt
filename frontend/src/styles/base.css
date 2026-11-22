@@ -1589,3 +1589,35 @@ ol {
 .star.on {
   color: #b8862b;
 }
+
+/* ---------- 未读角标 ---------- */
+
+.nav-badge {
+  display: inline-block;
+  min-width: 16px;
+  margin-left: 4px;
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 16px;
+  color: #fff;
+  text-align: center;
+  background: var(--accent);
+  border-radius: 8px;
+}
+
+.notify-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+  font-size: var(--fs-sm);
+}
+
+.notify-pager button {
+  color: var(--accent);
+}
+
+.notify-pager button:disabled {
+  color: var(--muted);
+}
