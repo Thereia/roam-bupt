@@ -121,7 +121,8 @@ factor = 1 + K * u / (1 - u)                      // 漏桶放大，K 默认 1.0
     "totalDistanceMeters": 420, "totalTimeSeconds": 330, "maxCongestion": 1.4 }] }
 ```
 
-`x/y` 是底图比例坐标（0–1），前端按容器尺寸换算，不引入地图 SDK。
+`x/y` 是底图比例坐标（0–1），前端按**底图实际像素**换算（`x*748, y*1089`），不引入地图 SDK。
+底图文件 `frontend/public/map.png` 来自 travel-bupt 的 OSM 截图，节点坐标就是按它标定的，所以直接叠加即可对齐。
 
 ## 7. 实测记录（2026-11-21）
 

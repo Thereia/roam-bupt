@@ -1469,20 +1469,26 @@ ol {
 
 .map {
   display: block;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  max-height: 620px;
+  margin: 0 auto;
+  height: min(620px, 68vh);
+  width: auto;
+  aspect-ratio: 748 / 1089;
   background: #f7f5f0;
   border-radius: var(--radius-sm);
 }
 
+.map-base {
+  opacity: 0.85;
+}
+
 .map-edge {
-  stroke: #dcd6c9;
-  stroke-width: 1;
+  stroke: #b9b2a4;
+  stroke-width: 0.8;
+  opacity: 0.9;
 }
 
 .map-node {
-  fill: #cfc7b6;
+  fill: #8f8878;
 }
 
 .map-node.dest {

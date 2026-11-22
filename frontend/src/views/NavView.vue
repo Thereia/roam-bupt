@@ -3,6 +3,9 @@ import { computed, onMounted, ref } from 'vue'
 import { getMap, planRoutes } from '../api/space'
 import { getTopicSuggest } from '../api/topic'
 
+const MAP_W = 748
+const MAP_H = 1089
+
 const loading = ref(true)
 const error = ref('')
 const nodes = ref([])
@@ -26,7 +29,7 @@ const highlighted = computed(() => {
   return plan.nodeIds
     .map((id) => nodeById.value.get(id))
     .filter(Boolean)
-    .map((node) => `${(node.x * 1000).toFixed(1)},${(node.y * 1000).toFixed(1)}`)
+    .map((node) => `${(node.x * MAP_W).toFixed(1)},${(node.y * MAP_H).toFixed(1)}`)
     .join(' ')
 })
 
@@ -123,22 +126,23 @@ onMounted(load)
       <div class="card map-card">
         <p v-if="loading" class="muted-text">正在加载底图…</p>
         <p v-else-if="error" class="muted-text">{{ error }}</p>
-        <svg v-else class="map" viewBox="0 0 1000 1000" role="img" aria-label="校园示意图">
+        <svg v-else class="map" :viewBox="`0 0 ${MAP_W} ${MAP_H}`" role="img" aria-label="校园地图">
+          <image href="/map.png" :width="MAP_W" :height="MAP_H" class="map-base" />
           <line
             v-for="(edge, index) in edges"
             :key="`e${index}`"
-            :x1="nodeById.get(edge.from)?.x * 1000"
-            :y1="nodeById.get(edge.from)?.y * 1000"
-            :x2="nodeById.get(edge.to)?.x * 1000"
-            :y2="nodeById.get(edge.to)?.y * 1000"
+            :x1="nodeById.get(edge.from)?.x * MAP_W"
+            :y1="nodeById.get(edge.from)?.y * MAP_H"
+            :x2="nodeById.get(edge.to)?.x * MAP_W"
+            :y2="nodeById.get(edge.to)?.y * MAP_H"
             class="map-edge"
           />
           <polyline v-if="highlighted" :points="highlighted" class="map-route" />
           <circle
             v-for="node in nodes"
             :key="node.id"
-            :cx="node.x * 1000"
-            :cy="node.y * 1000"
+            :cx="node.x * MAP_W"
+            :cy="node.y * MAP_H"
             :r="node.type === 'DESTINATION' ? 4 : 2"
             :class="node.type === 'DESTINATION' ? 'map-node dest' : 'map-node'"
           />
