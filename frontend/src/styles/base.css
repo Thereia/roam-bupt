@@ -1555,3 +1555,37 @@ ol {
   color: var(--ink);
   margin-bottom: 6px;
 }
+
+/* ---------- 评分 ---------- */
+
+.rating-box {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.rating-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rating-avg {
+  font-size: var(--fs-xl);
+}
+
+.stars {
+  display: flex;
+  gap: 2px;
+  margin: 6px 0 4px;
+}
+
+.star {
+  font-size: 20px;
+  line-height: 1;
+  color: var(--line);
+}
+
+.star.on {
+  color: #b8862b;
+}

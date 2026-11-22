@@ -98,6 +98,13 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public boolean isEnabledPlace(long topicId) {
+        TopicDO topic = topicMapper.selectById(topicId);
+        return topic != null && "PLACE".equals(topic.getType())
+                && topic.getEnabled() != null && topic.getEnabled() == 1;
+    }
+
+    @Override
     public Long findNodeId(long topicId) {
         TopicDO topic = topicMapper.selectById(topicId);
         if (topic == null || topic.getEnabled() == null || topic.getEnabled() != 1

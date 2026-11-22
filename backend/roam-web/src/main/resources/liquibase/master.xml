@@ -13,5 +13,6 @@
     <include file="liquibase/changelog/005_follow.xml"/>
     <include file="liquibase/changelog/006_sensitive_word.xml"/>
     <include file="liquibase/changelog/007_space.xml"/>
+    <include file="liquibase/changelog/008_rating.xml"/>
     <include file="liquibase/changelog/010_seed_topic_place.xml"/>
 </databaseChangeLog>

@@ -25,6 +25,9 @@ public interface TopicService {
     /** 按分类统计可见地点数量，供首页左栏使用。 */
     List<CategoryCountVO> stats();
 
+    /** 是否是已启用、可评分的地点（分类不可评分）。 */
+    boolean isEnabledPlace(long topicId);
+
     /** 地点对应的路网入口节点；不是已启用的地点返回 null。 */
     Long findNodeId(long topicId);
 

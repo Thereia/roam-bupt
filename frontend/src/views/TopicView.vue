@@ -1,13 +1,19 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getTopic, getTopicPosts } from '../api/topic'
+import { getRatings, rateTopic } from '../api/rating'
+import { isLoggedIn } from '../store/user'
 import PostCard from '../components/PostCard.vue'
 import StateBlock from '../components/StateBlock.vue'
 
 const route = useRoute()
+const router = useRouter()
 const topic = ref(null)
 const posts = ref([])
+const rating = ref(null)
+const ratingBusy = ref(false)
+const ratingError = ref('')
 const loading = ref(true)
 const error = ref('')
 const missing = ref(false)
@@ -23,6 +29,15 @@ async function load() {
     ])
     topic.value = detail
     posts.value = list.list
+    // 详情里的 rating 是 {avg, displayAvg, count}，先转成统一形状，避免模板读到 undefined
+    rating.value = detail.rating
+      ? { average: detail.rating.displayAvg, count: detail.rating.count, myScore: null }
+      : null
+    if (detail.type === 'PLACE') {
+      getRatings(detail.id)
+        .then((summary) => { rating.value = summary })
+        .catch(() => {})
+    }
   } catch (err) {
     error.value = err.message || '加载失败'
     missing.value = err.code === 404 || err.httpStatus === 404
@@ -41,6 +56,23 @@ const facts = computed(() => {
   return rows
 })
 const score = computed(() => Number(topic.value?.rating?.displayAvg || 0).toFixed(1))
+
+async function rate(score) {
+  if (!isLoggedIn()) {
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+  if (ratingBusy.value) return
+  ratingBusy.value = true
+  ratingError.value = ''
+  try {
+    rating.value = await rateTopic(topic.value.id, score)
+  } catch (err) {
+    ratingError.value = err.message || '打分失败'
+  } finally {
+    ratingBusy.value = false
+  }
+}
 
 onMounted(load)
 watch(() => route.params.id, load)
@@ -93,6 +125,26 @@ watch(() => route.params.id, load)
         <section class="card">
           <h3>地点信息</h3>
           <div v-for="fact in facts" :key="fact[0]" class="fact-line">{{ fact[0] }}<b>{{ fact[1] }}</b></div>
+
+          <div v-if="rating" class="rating-box">
+            <div class="rating-head">
+              <b class="rating-avg">{{ (rating.average ?? 0).toFixed(1) }}</b>
+              <span class="muted-text">{{ rating.count }} 人评分</span>
+            </div>
+            <div class="stars">
+              <button
+                v-for="score in 5"
+                :key="score"
+                type="button"
+                class="star"
+                :class="{ on: (rating.myScore || 0) >= score }"
+                :disabled="ratingBusy"
+                @click="rate(score)"
+              >★</button>
+            </div>
+            <p v-if="ratingError" class="form-error">{{ ratingError }}</p>
+            <p v-if="!rating.myScore" class="muted-text">点星星打分，一人一次，可改。</p>
+          </div>
         </section>
 
       </aside>

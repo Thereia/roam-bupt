@@ -7,6 +7,7 @@ import com.roambupt.api.model.vo.PostVO;
 import com.roambupt.api.model.vo.ResVo;
 import com.roambupt.api.model.vo.TopicVO;
 import com.roambupt.service.post.service.PostReadService;
+import com.roambupt.service.rating.service.RatingService;
 import com.roambupt.service.topic.service.TopicService;
 import com.roambupt.web.global.OptionalAuth;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,10 +23,13 @@ public class TopicController {
 
     private final TopicService topicService;
     private final PostReadService postReadService;
+    private final RatingService ratingService;
 
-    public TopicController(TopicService topicService, PostReadService postReadService) {
+    public TopicController(TopicService topicService, PostReadService postReadService,
+                           RatingService ratingService) {
         this.topicService = topicService;
         this.postReadService = postReadService;
+        this.ratingService = ratingService;
     }
 
     @OptionalAuth
@@ -55,7 +59,13 @@ public class TopicController {
     @OptionalAuth
     @GetMapping("/{id}")
     public ResVo<TopicVO> detail(@PathVariable long id) {
-        return ResVo.ok(topicService.detail(id));
+        TopicVO topic = topicService.detail(id);
+        if ("PLACE".equals(topic.type())) {
+            topic = new TopicVO(topic.id(), topic.type(), topic.name(), topic.category(),
+                    topic.cover(), topic.description(), topic.heat(), topic.nodeId(),
+                    topic.postCount(), topic.todayRouteCount(), ratingService.ratingOf(id));
+        }
+        return ResVo.ok(topic);
     }
 
     @OptionalAuth
