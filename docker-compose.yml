@@ -23,6 +23,9 @@ services:
   redis:
     image: redis:7-alpine
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-123456}"]
+    environment:
+      # 健康检查里的 redis-cli 需要这个变量
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-123456}
     ports:
       - "6379:6379"
     volumes:
