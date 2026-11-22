@@ -15,7 +15,7 @@ services:
       - mysql-data:/var/lib/mysql
       - ./deploy/mysql-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD:-123456}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p$$MYSQL_ROOT_PASSWORD || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -28,7 +28,7 @@ services:
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-123456}", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep -q PONG || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -57,8 +57,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
+      # 不把 ES 放进依赖：搜索是可降级能力，ES 没起来后端也应该能启动
     environment:
       SPRING_PROFILES_ACTIVE: prod
       ROAM_DB_HOST: mysql
@@ -80,7 +79,7 @@ services:
     volumes:
       - uploads-data:/app/uploads
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q UP || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 30
