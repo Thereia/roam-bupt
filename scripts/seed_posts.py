@@ -10,7 +10,10 @@ import json
 import urllib.error
 import urllib.request
 
-BASE = "http://127.0.0.1:8080/api/v1"
+import os
+
+# 默认打本机；部署到别的机器时用 ROAM_API_BASE 覆盖
+BASE = os.environ.get("ROAM_API_BASE", "http://127.0.0.1:8080/api/v1")
 
 AUTHORS = [
     ("seed_lin", "secret123", "林知远"),
