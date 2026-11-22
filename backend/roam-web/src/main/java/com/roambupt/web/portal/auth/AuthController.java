@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.roambupt.web.global.ClientIpResolver;
 
 /**
  * 认证接口：注册、登录、登出、当前用户。
@@ -24,21 +25,23 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final ClientIpResolver clientIpResolver;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, ClientIpResolver clientIpResolver) {
         this.authService = authService;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @PostMapping("/register")
     public ResVo<AuthResult> register(@Valid @RequestBody RegisterCommand command,
                                       HttpServletRequest request) {
-        return ResVo.ok(authService.register(command, clientIp(request)));
+        return ResVo.ok(authService.register(command, clientIpResolver.resolve(request)));
     }
 
     @PostMapping("/login")
     public ResVo<AuthResult> login(@Valid @RequestBody LoginCommand command,
                                    HttpServletRequest request) {
-        return ResVo.ok(authService.login(command, clientIp(request)));
+        return ResVo.ok(authService.login(command, clientIpResolver.resolve(request)));
     }
 
     @PostMapping("/logout")
@@ -54,11 +57,4 @@ public class AuthController {
         return ResVo.ok(authService.currentUser(uid == null ? 0L : uid));
     }
 
-    private String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
-    }
 }

@@ -40,3 +40,8 @@ roam:
       - /api/v1/auth/register
       - /api/v1/auth/login
       - /actuator/**
+  security:
+    # 部署在可信代理（nginx 等）后面时才开；开了以后只信任 trusted-proxies 里的来源
+    trust-forwarded-for: ${ROAM_TRUST_XFF:false}
+    trusted-proxies: ${ROAM_TRUSTED_PROXIES:}
+    write-per-minute: ${ROAM_WRITE_PER_MINUTE:30}
