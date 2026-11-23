@@ -2,12 +2,13 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  COMMENTS_READY, collectPost, createComment, getComments, getPost, likePost,
+  COMMENTS_READY, collectPost, createComment, deleteComment, deletePost, getComments, getPost, likePost,
   uncollectPost, unlikePost,
 } from '../api/post'
 import StateBlock from '../components/StateBlock.vue'
 import TopicChip from '../components/TopicChip.vue'
 import { isLoggedIn, userStore } from '../store/user'
+import { showNotice } from '../store/notice'
 import { getPostRoute } from '../api/space'
 import { formatCount } from '../utils/number'
 import { formatDayTime, formatRelativeTime } from '../utils/time'
@@ -54,7 +55,8 @@ async function removeComment(comment) {
   if (!window.confirm('确定删除这条评论？')) return
   try {
     await deleteComment(comment.id)
-    await loadComments()
+    comments.value = comments.value.filter((item) => item.id !== comment.id)
+    if (post.value?.counts) post.value.counts.comment = Math.max(0, post.value.counts.comment - 1)
   } catch (err) {
     showNotice(err.message || '删除失败', 'error')
   }
