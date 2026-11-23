@@ -122,7 +122,7 @@ onMounted(async () => {
           <span class="place-name">{{ place.name }}</span>
           <span class="place-meta">{{ place.category || '未分类' }}</span>
           <span class="place-foot">
-            <span>{{ place.postCount }} 条内容</span>
+            <span>{{ place.postCount }} 条内容 </span>
             <span v-if="place.rating && place.rating.count">· {{ place.rating.displayAvg }} 分</span>
             <span v-else>· 暂无评分</span>
           </span>
