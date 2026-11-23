@@ -226,9 +226,8 @@ function threadIdOf(target) {
 }
 
 function replyTargetName(reply, top) {
-  // 每条回复都标出回复对象：直接回顶层评论就是楼主，回某条回复就是那条的作者
-  if (!reply.parentId) return top.author.nickname
-  if (reply.parentId === top.id) return top.author.nickname
+  // 直接回顶层评论（楼主）不用标 @；只有回某条回复时才标出对象
+  if (!reply.parentId || reply.parentId === top.id) return ''
   const siblings = repliesByTop.value[top.id] || []
   const parent = siblings.find((item) => item.id === reply.parentId)
   return parent ? parent.author.nickname : ''
