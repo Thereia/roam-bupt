@@ -237,18 +237,18 @@
   "page": "home",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "home",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -273,18 +273,18 @@
   "page": "home",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "home",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -309,18 +309,18 @@
   "page": "home",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "home",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -345,18 +345,18 @@
   "page": "home",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "home",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -381,18 +381,18 @@
   "page": "home",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "home",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -417,18 +417,18 @@
   "page": "home",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "home",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -462,18 +462,18 @@
   "page": "home",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "home",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -498,18 +498,18 @@
   "page": "home",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "home",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -534,18 +534,18 @@
   "page": "home",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "home",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -570,18 +570,18 @@
   "page": "home",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "home",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -1362,18 +1362,18 @@
   "page": "post",
   "tag": "button",
   "text": "评论 1",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "post",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -1632,18 +1632,18 @@
   "page": "search",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "search",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -1677,18 +1677,18 @@
   "page": "search",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "search",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -2172,18 +2172,18 @@
   "page": "user",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "user",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -2208,18 +2208,18 @@
   "page": "user",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "user",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -2244,18 +2244,18 @@
   "page": "user",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "user",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -2280,18 +2280,18 @@
   "page": "user",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "user",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -2316,18 +2316,18 @@
   "page": "user",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "user",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
@@ -2352,18 +2352,18 @@
   "page": "user",
   "tag": "button",
   "text": "收藏",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
   "page": "user",
   "tag": "button",
   "text": "分享",
-  "kind": "disabled",
+  "kind": "ok",
   "href": null,
-  "title": "暂未开放",
+  "title": "",
   "cls": ""
  },
  {
