@@ -77,8 +77,7 @@ services:
       ROAM_TRUST_XFF: "true"
       ROAM_WRITE_PER_MINUTE: ${ROAM_WRITE_PER_MINUTE:-30}
       JAVA_OPTS: "-Xms256m -Xmx512m"
-    ports:
-      - "8080:8080"
+    # 不对外发布端口：只能经 nginx 访问，避免绕过代理伪造 XFF
     volumes:
       - uploads-data:/app/uploads
     healthcheck:
