@@ -220,6 +220,19 @@ function startReply(comment) {
   replyText.value = ''
 }
 
+// 顶层评论的 topId 是 0；回复的 topId 指向顶层评论
+function threadIdOf(target) {
+  return target?.topId || target?.id
+}
+
+function replyTargetName(reply, top) {
+  if (!reply.parentId || reply.parentId === top.id) return ''
+  if (reply.parentId === top.id) return top.author.nickname
+  const siblings = repliesByTop.value[top.id] || []
+  const parent = siblings.find((item) => item.id === reply.parentId)
+  return parent ? parent.author.nickname : ''
+}
+
 function cancelReply() {
   replyTo.value = null
   replyText.value = ''
@@ -231,7 +244,7 @@ async function submitReply(comment) {
   replyBusy.value = true
   commentError.value = ''
   try {
-    await createComment(post.value.id, content, comment.topId || comment.id)
+    await createComment(post.value.id, content, threadIdOf(replyTo.value))
     cancelReply()
     await loadComments()
     await loadReplies()
@@ -351,13 +364,19 @@ watch(() => route.params.id, load)
             <div v-if="repliesByTop[comment.id]?.length" class="reply-list">
               <div v-for="reply in repliesByTop[comment.id]" :key="reply.id" class="reply">
                 <b>{{ reply.author.nickname }}</b>
+                <span v-if="replyTargetName(reply, comment)" class="reply-to">回复 @{{ replyTargetName(reply, comment) }}</span>
                 <span>{{ reply.content }}</span>
+                <button v-if="isLoggedIn()" type="button" class="link-button" @click="startReply(reply)">回复</button>
                 <button v-if="canRemoveComment(reply)" type="button" class="link-button" @click="removeComment(reply)">删除</button>
               </div>
             </div>
 
-            <form v-if="replyTo?.id === comment.id" class="reply-form" @submit.prevent="submitReply(comment)">
-              <textarea v-model="replyText" rows="2" maxlength="1000" :placeholder="`回复 ${comment.author.nickname}`"></textarea>
+            <form
+              v-if="replyTo && threadIdOf(replyTo) === comment.id"
+              class="reply-form"
+              @submit.prevent="submitReply(comment)"
+            >
+              <textarea v-model="replyText" rows="2" maxlength="1000" :placeholder="`回复 ${replyTo.author.nickname}`"></textarea>
               <div class="reply-foot">
                 <button type="button" class="link-button" @click="cancelReply">取消</button>
                 <button type="submit" class="btn primary" :disabled="replyBusy || !replyText.trim()">

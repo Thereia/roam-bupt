@@ -2076,3 +2076,8 @@ ol {
   gap: 8px;
   margin-top: 6px;
 }
+
+.reply-to {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
