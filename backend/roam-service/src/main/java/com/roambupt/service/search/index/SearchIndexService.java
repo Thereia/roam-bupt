@@ -89,6 +89,34 @@ public class SearchIndexService {
         }
     }
 
+    /**
+     * 只改状态，不重算全文：上下线、审核通过都用它。
+     * 文档不存在时退化成整篇重建。
+     */
+    public void updateStatus(long postId, String status) {
+        if (!enabled()) {
+            return;
+        }
+        // 只索引公开内容：下线/删除/待审一律移除文档
+        if (!"ONLINE".equals(status)) {
+            delete(postId);
+            return;
+        }
+        try {
+            RestClient client = restClientProvider.getIfAvailable();
+            if (client == null) {
+                return;
+            }
+            Request request = new Request("POST", "/" + properties.index() + "/_update/" + postId);
+            request.setJsonEntity(objectMapper.writeValueAsString(
+                    Map.of("doc", Map.of("status", status))));
+            client.performRequest(request);
+        } catch (Exception e) {
+            log.warn("search.index.status.failed postId={} status={} reason={}", postId, status, e.getMessage());
+            index(postId);
+        }
+    }
+
     /** 写一条文档；帖子不在线时删除。 */
     public void index(long postId) {
         if (!enabled()) {

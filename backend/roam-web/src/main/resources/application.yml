@@ -21,15 +21,16 @@ spring:
     port: ${ROAM_RABBIT_PORT:5672}
     username: ${ROAM_RABBIT_USER:admin}
     password: ${ROAM_RABBIT_PASSWORD:admin}
+    # 发布确认 + mandatory：消息没到交换机/队列时要能落库重投
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
     virtual-host: ${ROAM_RABBIT_VHOST:/}
     listener:
       simple:
-        # 消费失败重试 3 次，仍失败就拒绝，由队列的死信参数送进 DLQ
-        retry:
-          enabled: true
-          max-attempts: 3
-          initial-interval: 500ms
-        default-requeue-rejected: false
+        # 手动 ACK：消费成功才 ack，失败由消费者重试 3 次后 nack，进死信队列
+        acknowledge-mode: manual
 
 management:
   endpoints:

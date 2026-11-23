@@ -3,9 +3,11 @@ package com.roambupt.service.notify.mq;
 import com.roambupt.service.notify.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,14 +29,18 @@ public class RabbitNotifyConsumer {
     }
 
     @RabbitListener(queues = "${roam.notify.mq.queue:roam.notify.queue}")
-    public void onMessage(NotifyMessage message) {
+    public void onMessage(NotifyMessage message,
+                          Channel channel,
+                          @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws Exception {
         try {
             notificationService.send(message.recipientId(), message.actorId(), message.type(),
                     message.sourceType(), message.sourceId(), message.postId(), message.content());
-        } catch (DuplicateKeyException e) {
-            // 同一事件重复投递，按成功处理
-            log.debug("notify.mq.duplicate type={} recipient={} source={}",
-                    message.type(), message.recipientId(), message.sourceId());
+            channel.basicAck(deliveryTag, false);
+        } catch (Exception e) {
+            // 不做线程内重试：拒绝后进死信队列，由 DLQ 重放
+            log.warn("notify.mq.consume.failed type={} source={} reason={}",
+                    message.type(), message.sourceId(), e.getMessage());
+            channel.basicNack(deliveryTag, false, false);
         }
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * 应用入口。
  */
 @SpringBootApplication(scanBasePackages = "com.roambupt")
+@org.springframework.scheduling.annotation.EnableScheduling
 @MapperScan(basePackages = "com.roambupt.service", annotationClass = Mapper.class)
 public class RoamApplication {
 

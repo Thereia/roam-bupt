@@ -100,8 +100,13 @@ notification(
 
 通知默认仍是「同一事务同步写库」；打开 `roam.notify.mq.enabled=true` 后改走 RabbitMQ：
 
-- **发布**：`NotificationListener`（`@EventListener`）→ `NotifyDispatcher` → `RabbitNotifyPublisher`；
-  发布器在事务内会注册 `afterCommit` 再发送，**回滚不发消息**；
+- **发布**：`NotificationListener`（`@EventListener`）→ `NotifyDispatcher` → `RabbitNotifyPublisher` → `NotifyMqSender`；
+  事务内会注册 `afterCommit` 再发送，**回滚不发消息**；
+- **发布确认**：`publisher-confirm-type=correlated` + `mandatory=true`；
+  ack 才算成功；nack、return、或 60 秒等不到确认 → 写 `notify_outbox` 待重投；
+- **失败重投**：`notify_outbox`（payload/status/attempts/next_retry_time），`NotifyOutboxRetryScheduler` 每 30 秒取到期的重投，
+  重投同样走 `NotifyMqSender` 等确认，ack 才标 `SENT`；失败递增次数，5 次后标 `DEAD` 留人工处理；
 - **拓扑**：`roam.notify.exchange`（direct）→ `roam.notify.queue`；队列带死信参数，失败重试 3 次后进 `roam.notify.dlx` → `roam.notify.dead.queue`；
-- **消费**：`RabbitNotifyConsumer` 调 `NotificationService.send`，幂等靠 `notification` 表唯一键 `uk_notify(user_id, type, source_id, actor_id)`，重复投递捕获 `DuplicateKeyException` 当成功；
+- **消费**：`RabbitNotifyConsumer` 调 `NotificationService.send`，幂等靠 `notification` 表唯一键 `uk_notify`（`send` 内部吞掉重复键）；
+  手动 ACK：成功 `basicAck`，异常 `basicNack(requeue=false)` 进死信，不在监听线程里 sleep 重试；
 - **降级**：没有 MQ 发布器（开关关闭）时 `NotifyDispatcher` 直接同步写库，本地不开 RabbitMQ 也能跑。

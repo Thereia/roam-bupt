@@ -6,6 +6,7 @@ import { isLoggedIn } from '../store/user'
 import { showNotice } from '../store/notice'
 import { copyText } from '../utils/clipboard'
 import ImageLightbox from './ImageLightbox.vue'
+import HighlightText from './HighlightText.vue'
 import TopicChip from './TopicChip.vue'
 import { formatRelativeTime } from '../utils/time'
 
@@ -18,9 +19,14 @@ const props = defineProps({
     type: String,
     default: 'home',
   },
+  highlight: {
+    type: String,
+    default: '',
+  },
 })
 
 const hasImage = computed(() => (props.post.media?.length || 0) > 0)
+
 
 const route = useRoute()
 const router = useRouter()
@@ -69,7 +75,7 @@ const chips = computed(() =>
 <template>
   <article class="post" role="link" tabindex="0" @click="openPost" @keydown.enter="openPost">
     <h2>
-      <RouterLink :to="`/posts/${post.id}`">{{ post.title }}</RouterLink>
+      <RouterLink :to="`/posts/${post.id}`"><HighlightText :text="post.title" :keyword="highlight" /></RouterLink>
     </h2>
     <div class="meta">
       <span>{{ post.author.nickname }}</span>
@@ -80,7 +86,7 @@ const chips = computed(() =>
         <span>{{ post.counts.like }} 赞</span>
       </template>
     </div>
-    <p class="excerpt">{{ post.excerpt }}</p>
+    <p class="excerpt"><HighlightText :text="post.excerpt" :keyword="highlight" /></p>
     <div v-if="hasImage" class="thumb" title="查看大图" @click.stop="lightboxOpen = true">
       <img :src="post.media[0].url" :alt="post.title" />
     </div>

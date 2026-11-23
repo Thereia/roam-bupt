@@ -15,6 +15,7 @@ const loading = ref(false)
 const error = ref('')
 const searched = ref(false)
 const places = ref([])
+const activeKeyword = ref('')
 
 async function submit() {
   const q = keyword.value.trim()
@@ -24,6 +25,7 @@ async function submit() {
   searched.value = true
   try {
     router.replace({ path: '/search', query: { q } })
+    activeKeyword.value = q
     const [page, placePage] = await Promise.all([
       search({ q, pageSize: 10 }),
       getTopics({ type: 'PLACE', q, pageSize: 6 }).catch(() => ({ list: [] })),
@@ -72,7 +74,7 @@ onMounted(() => {
 
       <h3 v-if="results.length" class="search-section">帖子</h3>
       <div v-if="results.length" class="search-results">
-        <PostCard v-for="post in results" :key="post.id" :post="post" />
+        <PostCard v-for="post in results" :key="post.id" :post="post" :highlight="activeKeyword" />
       </div>
     </div>
   </div>

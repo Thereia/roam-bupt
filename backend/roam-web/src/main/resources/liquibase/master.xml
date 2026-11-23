@@ -16,4 +16,5 @@
     <include file="liquibase/changelog/008_rating.xml"/>
     <include file="liquibase/changelog/010_seed_topic_place.xml"/>
     <include file="liquibase/changelog/011_rating_review.xml"/>
+    <include file="liquibase/changelog/012_notify_outbox.xml"/>
 </databaseChangeLog>

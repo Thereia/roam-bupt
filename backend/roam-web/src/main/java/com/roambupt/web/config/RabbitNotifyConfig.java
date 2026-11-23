@@ -7,7 +7,8 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.beans.factory.annotation.Value;
+import com.roambupt.service.notify.config.NotifyMqProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>只在 roam.notify.mq.enabled=true 时生效，本地不开 RabbitMQ 也能启动。</p>
  */
 @Configuration
+@EnableConfigurationProperties(NotifyMqProperties.class)
 @ConditionalOnProperty(name = "roam.notify.mq.enabled", havingValue = "true")
 public class RabbitNotifyConfig {
 
@@ -27,47 +29,37 @@ public class RabbitNotifyConfig {
     }
 
     @Bean
-    public DirectExchange notifyExchange(
-            @Value("${roam.notify.mq.exchange:roam.notify.exchange}") String exchange) {
-        return new DirectExchange(exchange, true, false);
+    public DirectExchange notifyExchange(NotifyMqProperties properties) {
+        return new DirectExchange(properties.getExchange(), true, false);
     }
 
     @Bean
-    public Queue notifyQueue(
-            @Value("${roam.notify.mq.queue:roam.notify.queue}") String queue,
-            @Value("${roam.notify.mq.dlx:roam.notify.dlx}") String dlx,
-            @Value("${roam.notify.mq.dead-routing-key:roam.notify.dead}") String deadRoutingKey) {
-        return QueueBuilder.durable(queue)
-                .deadLetterExchange(dlx)
-                .deadLetterRoutingKey(deadRoutingKey)
+    public Queue notifyQueue(NotifyMqProperties properties) {
+        return QueueBuilder.durable(properties.getQueue())
+                .deadLetterExchange(properties.getDlx())
+                .deadLetterRoutingKey(properties.getDeadRoutingKey())
                 .build();
     }
 
     @Bean
-    public Binding notifyBinding(
-            Queue notifyQueue,
-            DirectExchange notifyExchange,
-            @Value("${roam.notify.mq.routing-key:roam.notify.created}") String routingKey) {
-        return BindingBuilder.bind(notifyQueue).to(notifyExchange).with(routingKey);
+    public Binding notifyBinding(Queue notifyQueue, DirectExchange notifyExchange,
+                                 NotifyMqProperties properties) {
+        return BindingBuilder.bind(notifyQueue).to(notifyExchange).with(properties.getRoutingKey());
     }
 
     @Bean
-    public DirectExchange notifyDeadExchange(
-            @Value("${roam.notify.mq.dlx:roam.notify.dlx}") String dlx) {
-        return new DirectExchange(dlx, true, false);
+    public DirectExchange notifyDeadExchange(NotifyMqProperties properties) {
+        return new DirectExchange(properties.getDlx(), true, false);
     }
 
     @Bean
-    public Queue notifyDeadQueue(
-            @Value("${roam.notify.mq.dead-queue:roam.notify.dead.queue}") String deadQueue) {
-        return QueueBuilder.durable(deadQueue).build();
+    public Queue notifyDeadQueue(NotifyMqProperties properties) {
+        return QueueBuilder.durable(properties.getDeadQueue()).build();
     }
 
     @Bean
-    public Binding notifyDeadBinding(
-            Queue notifyDeadQueue,
-            DirectExchange notifyDeadExchange,
-            @Value("${roam.notify.mq.dead-routing-key:roam.notify.dead}") String deadRoutingKey) {
-        return BindingBuilder.bind(notifyDeadQueue).to(notifyDeadExchange).with(deadRoutingKey);
+    public Binding notifyDeadBinding(Queue notifyDeadQueue, DirectExchange notifyDeadExchange,
+                                     NotifyMqProperties properties) {
+        return BindingBuilder.bind(notifyDeadQueue).to(notifyDeadExchange).with(properties.getDeadRoutingKey());
     }
 }

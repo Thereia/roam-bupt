@@ -106,3 +106,10 @@ CI 里只跑兜底路径（`roam.search.enabled=false`），ES 路径靠本地�
 - **拿**：post 域读标题正文，post_topic 读地点 id；不写任何业务表。
 - **给**：只给帖子 id 与总数，展示字段一律回读 MySQL（避免两份数据不一致）。
 - **时序**：索引失败只打 WARN，不影响发帖；启动时全量重建兜底。
+
+## 索引同步与高亮（2026-11-23）
+
+- **内容编辑**：`PostWriteServiceImpl.update` 发 `PostUpdatedEvent`，监听器整篇重建索引（标题/正文/地点一起更新）；
+- **状态变化**：`PostStatusChangedEvent` 只改文档 `status`（`_update`），**非 ONLINE（下线/删除/待审）直接删文档**，索引里只保留公开内容；
+- **降级**：ES 异常或命中 0 条都回退 MySQL `LIKE`；
+- **高亮**：前端按已提交的关键词做字面高亮（`HighlightText`），不依赖 ES highlight 字段；ES 侧只召回 id。

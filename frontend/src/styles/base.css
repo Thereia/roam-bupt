@@ -2081,3 +2081,11 @@ ol {
   color: var(--muted);
   font-size: var(--fs-sm);
 }
+
+/* 搜索关键词高亮 */
+.hl {
+  padding: 0 1px;
+  color: inherit;
+  background: #f3e2a7;
+  border-radius: 2px;
+}

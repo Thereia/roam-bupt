@@ -3,6 +3,7 @@ package com.roambupt.service.post.service.impl;
 import com.roambupt.api.model.dto.MediaRef;
 import com.roambupt.api.model.dto.PostCreateCommand;
 import com.roambupt.api.model.event.PostCreatedEvent;
+import com.roambupt.api.model.event.PostUpdatedEvent;
 import com.roambupt.api.model.event.PostStatusChangedEvent;
 import com.roambupt.api.model.enums.StatusEnum;
 import com.roambupt.api.model.exception.BusinessException;
@@ -97,7 +98,8 @@ public class PostWriteServiceImpl implements PostWriteService {
         bindTopics(postId, input);
         bindMedia(postId, input);
 
-        eventPublisher.publishEvent(new PostStatusChangedEvent(postId, input.status()));
+        // 编辑可能同时改内容与状态：发 PostUpdatedEvent，由搜索侧整篇重建
+        eventPublisher.publishEvent(new PostUpdatedEvent(postId));
         return new PostCreatedVO(postId, input.status());
     }
 
