@@ -226,7 +226,8 @@ function threadIdOf(target) {
 }
 
 function replyTargetName(reply, top) {
-  if (!reply.parentId || reply.parentId === top.id) return ''
+  // 每条回复都标出回复对象：直接回顶层评论就是楼主，回某条回复就是那条的作者
+  if (!reply.parentId) return top.author.nickname
   if (reply.parentId === top.id) return top.author.nickname
   const siblings = repliesByTop.value[top.id] || []
   const parent = siblings.find((item) => item.id === reply.parentId)
@@ -244,7 +245,8 @@ async function submitReply(comment) {
   replyBusy.value = true
   commentError.value = ''
   try {
-    await createComment(post.value.id, content, threadIdOf(replyTo.value))
+    // parentId 指向被回复的那一条（顶层或某条回复），后端会自己归到 topId
+    await createComment(post.value.id, content, replyTo.value.id)
     cancelReply()
     await loadComments()
     await loadReplies()
