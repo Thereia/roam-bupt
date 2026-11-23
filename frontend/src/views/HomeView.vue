@@ -62,10 +62,9 @@ function switchFeed(key) {
   loadPosts()
 }
 
-const placeTotal = computed(() => {
-  const values = Object.values(categoryCounts.value)
-  return values.length ? values.reduce((sum, value) => sum + value, 0) : placeTotal.value
-})
+const placeTotal = computed(() =>
+  Object.values(categoryCounts.value).reduce((sum, value) => sum + value, 0),
+)
 
 const hottest = computed(() => [...places.value].sort((a, b) => b.heat - a.heat).slice(0, 4))
 
@@ -81,12 +80,13 @@ onMounted(() => {
       <h3>逛什么</h3>
       <ul>
         <li class="on">
-          <span>全部</span>
-          <span class="n">{{ placeTotal }}</span>
+          <RouterLink to="/topics"><span>全部</span><span class="n">{{ placeTotal }}</span></RouterLink>
         </li>
         <li v-for="category in categories" :key="category.id">
-          <span>{{ category.name }}</span>
-          <span class="n">{{ categoryCounts[category.name] ?? category.postCount }}</span>
+          <RouterLink :to="{ path: '/topics', query: { category: category.name } }">
+            <span>{{ category.name }}</span>
+            <span class="n">{{ categoryCounts[category.name] ?? category.postCount }}</span>
+          </RouterLink>
         </li>
       </ul>
 

@@ -1627,3 +1627,95 @@ ol {
 .notify-pager button:disabled {
   color: var(--muted);
 }
+
+/* ---------- 地点列表 ---------- */
+
+.topics-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.topics-search {
+  display: flex;
+  gap: 6px;
+}
+
+.topics-search input {
+  padding: 6px 10px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  background: #fbfaf7;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.topics-search button {
+  padding: 6px 12px;
+  font-size: var(--fs-sm);
+  color: #fff;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+.topics-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.topics-filters button {
+  padding: 4px 10px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.topics-filters button.on {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.place-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.place-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+  background: #fbfaf7;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.place-card:hover {
+  border-color: var(--accent);
+}
+
+.place-name {
+  font-size: var(--fs-md);
+  color: var(--ink);
+}
+
+.place-meta {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.place-foot {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}

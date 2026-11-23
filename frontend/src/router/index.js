@@ -6,7 +6,7 @@ const routes = [
   {
     path: '/topics',
     name: 'topics',
-    component: () => import('../views/PlaceholderView.vue'),
+    component: () => import('../views/TopicsView.vue'),
     meta: { title: '地点' },
   },
   {
