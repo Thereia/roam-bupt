@@ -18,6 +18,12 @@ public interface PostQueryService {
     /** 用户在线帖子数。 */
     long countOnlineByUser(long uid);
 
+    /** 帖子标题；不存在返回 null。 */
+    String findTitle(long postId);
+
+    /** 批量取标题，供通知列表展示。 */
+    java.util.Map<Long, String> titlesOf(java.util.Collection<Long> postIds);
+
     /** 帖子状态；不存在返回 null。 */
     String findStatus(long postId);
 

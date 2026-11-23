@@ -55,6 +55,24 @@ public class PostQueryServiceImpl implements PostQueryService {
     }
 
     @Override
+    public String findTitle(long postId) {
+        PostDO post = postMapper.selectById(postId);
+        return post == null ? null : post.getTitle();
+    }
+
+    @Override
+    public java.util.Map<Long, String> titlesOf(java.util.Collection<Long> postIds) {
+        if (postIds == null || postIds.isEmpty()) {
+            return java.util.Map.of();
+        }
+        java.util.Map<Long, String> titles = new java.util.HashMap<>();
+        for (PostDO post : postMapper.selectBatchIds(postIds)) {
+            titles.put(post.getId(), post.getTitle());
+        }
+        return titles;
+    }
+
+    @Override
     public String findStatus(long postId) {
         PostDO post = postMapper.selectById(postId);
         return post == null ? null : post.getStatus();

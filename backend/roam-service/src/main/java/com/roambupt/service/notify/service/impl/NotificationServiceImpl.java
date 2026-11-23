@@ -8,6 +8,7 @@ import com.roambupt.api.model.vo.UserVO;
 import com.roambupt.service.notify.repository.entity.NotificationDO;
 import com.roambupt.service.notify.repository.mapper.NotificationMapper;
 import com.roambupt.service.notify.service.NotificationService;
+import com.roambupt.service.post.service.PostQueryService;
 import com.roambupt.service.user.service.UserQueryService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -31,11 +32,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationMapper notificationMapper;
     private final UserQueryService userQueryService;
+    private final PostQueryService postQueryService;
 
     public NotificationServiceImpl(NotificationMapper notificationMapper,
-                                   UserQueryService userQueryService) {
+                                   UserQueryService userQueryService,
+                                   PostQueryService postQueryService) {
         this.notificationMapper = notificationMapper;
         this.userQueryService = userQueryService;
+        this.postQueryService = postQueryService;
     }
 
     @Override
@@ -83,10 +87,15 @@ public class NotificationServiceImpl implements NotificationService {
                 .collect(Collectors.toMap(UserVO::id,
                         user -> new UserBriefVO(user.id(), user.nickname(), user.avatar(), null)));
 
+        var postIds = rows.stream().map(row -> row.getPostId()).filter(Objects::nonNull)
+                .distinct().toList();
+        var titles = postQueryService.titlesOf(postIds);
+
         List<NotificationVO> list = rows.stream()
                 .map(row -> new NotificationVO(row.getId(), row.getType(),
                         actors.get(row.getActorId()), row.getSourceType(), row.getSourceId(),
-                        row.getPostId(), row.getContent(),
+                        row.getPostId(), row.getPostId() == null ? null : titles.get(row.getPostId()),
+                        row.getContent(),
                         row.getReadFlag() != null && row.getReadFlag() == 1,
                         row.getCreatedTime()))
                 .toList();

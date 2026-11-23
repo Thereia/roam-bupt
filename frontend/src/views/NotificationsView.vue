@@ -79,6 +79,7 @@ watch(() => notifyStore.unread, () => {})
             <span class="avatar small">{{ (item.actor?.nickname || '?').slice(0, 1) }}</span>
             <span class="notify-text">
               <b>{{ item.actor?.nickname || '某人' }}</b> {{ item.content }}
+              <span v-if="item.postTitle" class="notify-post">《{{ item.postTitle }}》</span>
             </span>
             <span class="notify-time">{{ formatRelativeTime(item.createdTime) }}</span>
           </RouterLink>

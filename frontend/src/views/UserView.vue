@@ -20,6 +20,7 @@ const busy = ref(false)
 
 const isSelf = computed(() => userStore.user && profile.value && userStore.user.id === profile.value.id)
 
+const draftCount = ref(0)
 const editing = ref(false)
 const saving = ref(false)
 const uploading = ref(false)
@@ -76,7 +77,9 @@ async function load() {
     const [user, page] = await Promise.all([getUserProfile(id), getUserPosts(id, { pageSize: 10 })])
     profile.value = user
     following.value = user.isFollowed === true
-    posts.value = page.list
+    // 主页只展示已发布内容，草稿与待审不混进来
+    posts.value = page.list.filter((post) => post.status === 'ONLINE')
+    draftCount.value = page.list.filter((post) => post.status === 'DRAFT').length
   } catch (err) {
     error.value = err.message || '加载失败'
   } finally {
@@ -171,6 +174,9 @@ watch(() => route.params.id, load)
 
         <div class="card">
           <h2 class="section-title">帖子</h2>
+          <p v-if="isSelf && draftCount" class="muted-text">
+            还有 {{ draftCount }} 条草稿在<RouterLink to="/drafts" class="link-button">草稿箱</RouterLink>。
+          </p>
           <p v-if="!posts.length" class="muted-text">还没有帖子。</p>
           <PostCard v-for="post in posts" :key="post.id" :post="post" />
         </div>

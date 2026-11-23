@@ -1886,3 +1886,41 @@ ol {
   gap: 10px;
   flex-shrink: 0;
 }
+
+.notify-post {
+  color: var(--muted);
+}
+
+.search-section {
+  margin: 18px 0 8px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.search-places .place-card {
+  text-decoration: none;
+}
+
+/* 帖子配图：缩略图画廊，点击看原图 */
+.post-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.gallery-item {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  aspect-ratio: 4 / 3;
+}
+
+.gallery-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

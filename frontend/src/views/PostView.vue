@@ -227,9 +227,18 @@ watch(() => route.params.id, load)
         <p>{{ paragraph }}</p>
       </template>
 
-      <figure v-for="image in post.media || []" :key="image.url" class="post-media">
-        <img :src="image.url" :alt="post.title" />
-      </figure>
+      <div v-if="post.media?.length" class="post-gallery">
+        <a
+          v-for="image in post.media"
+          :key="image.url"
+          :href="image.url"
+          target="_blank"
+          rel="noopener"
+          class="gallery-item"
+        >
+          <img :src="image.url" :alt="post.title" loading="lazy" />
+        </a>
+      </div>
 
       <div class="chips">
         <TopicChip v-for="topic in post.topics" :key="topic.id" :topic="topic" />

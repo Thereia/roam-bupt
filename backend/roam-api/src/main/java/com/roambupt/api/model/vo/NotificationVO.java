@@ -4,6 +4,6 @@ import java.time.LocalDateTime;
 
 /** 站内通知视图。 */
 public record NotificationVO(Long id, String type, UserBriefVO actor,
-                             String sourceType, Long sourceId, Long postId,
+                             String sourceType, Long sourceId, Long postId, String postTitle,
                              String content, boolean read, LocalDateTime createdTime) {
 }

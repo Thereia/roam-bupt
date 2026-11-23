@@ -94,7 +94,8 @@ class NotificationApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.list[0].type").value("COMMENT"))
-                .andExpect(jsonPath("$.data.list[0].actor.id").isNumber());
+                .andExpect(jsonPath("$.data.list[0].actor.id").isNumber())
+                .andExpect(jsonPath("$.data.list[0].postTitle").isNotEmpty());
     }
 
     @Test
