@@ -275,6 +275,7 @@ ol {
 }
 
 .post {
+  cursor: pointer;
   padding: 18px 0;
   border-bottom: 1px solid var(--line);
 }
@@ -323,14 +324,17 @@ ol {
 }
 
 .thumb {
-  display: grid;
-  place-items: center;
-  height: 132px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  height: 176px;
   overflow: hidden; /* 图片必须被框住，否则会压到下一张卡片 */
   margin: 12px 0;
   font-size: var(--fs-sm);
   color: var(--thumb-ink);
-  background: var(--thumb);
+  background: #f6f3ec;
   border-radius: 6px;
 }
 
@@ -1756,10 +1760,11 @@ ol {
 
 .thumb img {
   display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   border-radius: inherit;
 }
 
@@ -1913,16 +1918,21 @@ ol {
 }
 
 .gallery-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  aspect-ratio: 4 / 3;
+  background: #f6f3ec;
+  max-height: 320px;
 }
 
 .gallery-item img {
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 320px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }

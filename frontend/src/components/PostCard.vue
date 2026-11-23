@@ -20,6 +20,10 @@ const props = defineProps({
 })
 
 const hasImage = computed(() => (props.post.media?.length || 0) > 0)
+
+function openPost() {
+  router.push(`/posts/${props.post.id}`)
+}
 const route = useRoute()
 const router = useRouter()
 const busy = ref(false)
@@ -57,7 +61,7 @@ const chips = computed(() =>
 </script>
 
 <template>
-  <article class="post">
+  <article class="post" role="link" tabindex="0" @click="openPost" @keydown.enter="openPost">
     <h2>
       <RouterLink :to="`/posts/${post.id}`">{{ post.title }}</RouterLink>
     </h2>
@@ -72,10 +76,10 @@ const chips = computed(() =>
     </div>
     <p class="excerpt">{{ post.excerpt }}</p>
     <div v-if="hasImage" class="thumb"><img :src="post.media[0].url" :alt="post.title" /></div>
-    <div class="chips">
+    <div class="chips" @click.stop>
       <TopicChip v-for="topic in chips" :key="topic.id" :topic="topic" />
     </div>
-    <div v-if="variant === 'home'" class="row">
+    <div v-if="variant === 'home'" class="row" @click.stop>
       <span>{{ post.counts.like }} 赞 · {{ post.counts.comment }} 评论</span>
       <span class="act">
         <button type="button" :disabled="busy" @click="toggleCollect">
