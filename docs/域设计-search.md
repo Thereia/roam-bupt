@@ -113,3 +113,17 @@ CI 里只跑兜底路径（`roam.search.enabled=false`），ES 路径靠本地�
 - **状态变化**：`PostStatusChangedEvent` 只改文档 `status`（`_update`），**非 ONLINE（下线/删除/待审）直接删文档**，索引里只保留公开内容；
 - **降级**：ES 异常或命中 0 条都回退 MySQL `LIKE`；
 - **高亮**：前端按已提交的关键词做字面高亮（`HighlightText`），不依赖 ES highlight 字段；ES 侧只召回 id。
+
+## 语义召回与融合（2026-11-23）
+
+与 taco 同一条线：ES 里同时放 BM25 文本和向量，检索时双路召回后融合。
+
+- **向量化**：智谱 `embedding-3`，1024 维；只在 `roam.search.vector.enabled=true` 且配置了 `ROAM_EMBEDDING_API_KEY` 时启用；
+- **索引**：`embedding` 字段为 `dense_vector`（dims=1024、cosine）；建帖/编辑时把「标题 + 正文」向量化一并写入；向量化失败只记 warn，BM25 照常可用；
+- **检索**：
+  - 关键词命中时：BM25 取候选，向量只在这个候选集内做 RRF 重排（`score = Σ 1/(k+rank)`，k=60），不把整库都当结果；
+  - 关键词零命中时：向量兜底，按相似度取前 12 条，避免整页空白；
+  - ES 异常、向量服务异常：逐级降级到 BM25 → MySQL `LIKE`；
+- **上限**：单路召回窗口 50 条，融合后分页在这个窗口内；语料上万时需要改成 ES 侧 RRF retriever 或分片融合。
+
+配置项（`roam.search.vector`）：`enabled`、`endpoint`、`api-key`、`model`、`dims`、`timeout-ms`、`top-k`。

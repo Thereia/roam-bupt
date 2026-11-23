@@ -65,6 +65,16 @@ roam:
       dlx: roam.notify.dlx
       dead-queue: roam.notify.dead.queue
       dead-routing-key: roam.notify.dead
+  search:
+    vector:
+      # 语义召回：开启后索引写 embedding，检索走 BM25 + kNN + RRF
+      enabled: ${ROAM_SEARCH_VECTOR_ENABLED:false}
+      endpoint: ${ROAM_EMBEDDING_ENDPOINT:https://open.bigmodel.cn/api/paas/v4/embeddings}
+      api-key: ${ROAM_EMBEDDING_API_KEY:}
+      model: ${ROAM_EMBEDDING_MODEL:embedding-3}
+      dims: 1024
+      timeout-ms: 8000
+      top-k: 50
   security:
     # 部署在可信代理（nginx 等）后面时才开；开了以后只信任 trusted-proxies 里的来源
     trust-forwarded-for: ${ROAM_TRUST_XFF:false}

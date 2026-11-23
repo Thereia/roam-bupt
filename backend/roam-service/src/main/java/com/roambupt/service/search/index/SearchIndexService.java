@@ -14,9 +14,12 @@ import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import com.roambupt.service.search.embedding.EmbeddingClient;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,17 +38,20 @@ public class SearchIndexService {
 
     private final SearchProperties properties;
     private final ObjectProvider<RestClient> restClientProvider;
+    private final ObjectProvider<EmbeddingClient> embeddingClientProvider;
     private final ObjectMapper objectMapper;
     private final PostMapper postMapper;
     private final PostTopicMapper postTopicMapper;
 
     public SearchIndexService(SearchProperties properties,
+                              ObjectProvider<EmbeddingClient> embeddingClientProvider,
                               ObjectProvider<RestClient> restClientProvider,
                               ObjectMapper objectMapper,
                               PostMapper postMapper,
                               PostTopicMapper postTopicMapper) {
         this.properties = properties;
         this.restClientProvider = restClientProvider;
+        this.embeddingClientProvider = embeddingClientProvider;
         this.objectMapper = objectMapper;
         this.postMapper = postMapper;
         this.postTopicMapper = postTopicMapper;
@@ -79,7 +85,10 @@ public class SearchIndexService {
                             "authorId", Map.of("type", "long"),
                             "topicIds", Map.of("type", "long"),
                             "status", Map.of("type", "keyword"),
-                            "createdTime", Map.of("type", "date")));
+                            "createdTime", Map.of("type", "date"),
+                            // 语义召回用；维度必须与 embedding 模型一致
+                            "embedding", Map.of("type", "dense_vector",
+                                    "dims", 1024, "index", true, "similarity", "cosine")));
             Request create = new Request("PUT", "/" + properties.index());
             create.setJsonEntity(objectMapper.writeValueAsString(Map.of("mappings", mappings)));
             client.performRequest(create);
@@ -139,6 +148,21 @@ public class SearchIndexService {
         doc.put("topicIds", topicIds);
         doc.put("status", post.getStatus());
         doc.put("createdTime", post.getCreatedTime().format(TIME_FORMAT));
+
+        EmbeddingClient embeddingClient = embeddingClientProvider.getIfAvailable();
+        if (embeddingClient != null) {
+            try {
+                float[] vector = embeddingClient.embed(post.getTitle() + "\n" + post.getContent());
+                List<Double> values = new ArrayList<>(vector.length);
+                for (float value : vector) {
+                    values.add((double) value);
+                }
+                doc.put("embedding", values);
+            } catch (Exception e) {
+                // 向量失败只影响语义召回，BM25 照常写
+                log.warn("search.index.embedding.failed postId={} reason={}", postId, e.getMessage());
+            }
+        }
 
         try {
             Request request = new Request("PUT", "/" + properties.index() + "/_doc/" + postId);

@@ -73,6 +73,43 @@ public class EsSearchGateway {
                 "size", size);
     }
 
+    /**
+     * kNN 语义召回：只返回 id 列表（未知 ES 版本/未建向量时返回空，由调用方降级）。
+     */
+    public List<Long> knnSearch(float[] vector, Long topicId, int k) throws Exception {
+        RestClient restClient = restClientProvider.getIfAvailable();
+        if (restClient == null || !properties.enabled()) {
+            return List.of();
+        }
+        List<Double> values = new ArrayList<>(vector.length);
+        for (float value : vector) {
+            values.add((double) value);
+        }
+        List<Object> filter = new ArrayList<>();
+        filter.add(Map.of("term", Map.of("status", "ONLINE")));
+        if (topicId != null) {
+            filter.add(Map.of("term", Map.of("topicIds", topicId)));
+        }
+        Map<String, Object> knn = Map.of(
+                "field", "embedding",
+                "query_vector", values,
+                "k", k,
+                "num_candidates", Math.max(k * 2, 50),
+                "filter", filter);
+        Request request = new Request("POST", "/" + properties.index() + "/_search");
+        request.setJsonEntity(objectMapper.writeValueAsString(
+                Map.of("knn", knn, "_source", List.of("postId"), "size", k)));
+        Response response = restClient.performRequest(request);
+        Map<?, ?> parsed = objectMapper.readValue(EntityUtils.toString(response.getEntity()), Map.class);
+        Map<?, ?> hits = (Map<?, ?>) parsed.get("hits");
+        List<Long> ids = new ArrayList<>();
+        for (Object item : (List<?>) hits.get("hits")) {
+            Map<?, ?> source = (Map<?, ?>) ((Map<?, ?>) item).get("_source");
+            ids.add(((Number) source.get("postId")).longValue());
+        }
+        return ids;
+    }
+
     /** 召回结果。 */
     public record SearchHits(List<Long> ids, long total) {
     }
