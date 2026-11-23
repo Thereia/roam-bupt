@@ -105,8 +105,8 @@ watch(() => route.params.id, load)
           <span><b>今日 {{ topic.todayRouteCount }}</b> 人问路</span>
         </div>
         <div class="topic-actions">
-          <button type="button" class="btn" disabled title="P1 上线">打分</button>
-          <button type="button" class="btn primary" disabled title="P1 上线">到这里怎么走</button>
+          <button type="button" class="btn" disabled title="暂未开放">打分</button>
+          <button type="button" class="btn primary" disabled title="暂未开放">到这里怎么走</button>
         </div>
       </div>
     </div>
@@ -115,7 +115,7 @@ watch(() => route.params.id, load)
       <main>
         <div class="feed-head">
           <button type="button" class="on">广场</button>
-          <button type="button" disabled title="P1 上线">评分</button>
+          <button type="button" disabled title="暂未开放">评分</button>
         </div>
         <StateBlock v-if="!posts.length" text="这个地点还没有帖子。" />
         <PostCard v-for="post in posts" :key="post.id" :post="post" variant="topic" />
