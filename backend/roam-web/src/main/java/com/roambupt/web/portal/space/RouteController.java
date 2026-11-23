@@ -6,6 +6,7 @@ import com.roambupt.api.model.exception.BusinessException;
 import com.roambupt.api.model.vo.MapVO;
 import com.roambupt.api.model.vo.ResVo;
 import com.roambupt.api.model.vo.RoutePlanVO;
+import com.roambupt.core.context.CurrentUserContext;
 import com.roambupt.service.space.service.PostRouteService;
 import com.roambupt.service.space.service.SpaceService;
 import com.roambupt.web.global.OptionalAuth;
@@ -61,6 +62,6 @@ public class RouteController {
     @GetMapping("/posts/{id}/route")
     public ResVo<RoutePlanVO> postRoute(@PathVariable long id,
                                         @RequestParam(defaultValue = "MIXED") String mode) {
-        return ResVo.ok(postRouteService.routeOfPost(id, mode));
+        return ResVo.ok(postRouteService.routeOfPost(id, mode, CurrentUserContext.uid()));
     }
 }

@@ -22,9 +22,17 @@ public class PostRouteService {
         this.spaceService = spaceService;
     }
 
-    public RoutePlanVO routeOfPost(long postId, String mode) {
-        if (!postQueryService.existsOnline(postId)) {
+    public RoutePlanVO routeOfPost(long postId, String mode, Long viewerUid) {
+        String status = postQueryService.findStatus(postId);
+        if (status == null) {
             throw new BusinessException(StatusEnum.NOT_FOUND, "帖子不存在");
+        }
+        // 待审/下线帖只有作者本人能看路线
+        if (!"ONLINE".equals(status)) {
+            Long author = postQueryService.findAuthorId(postId);
+            if (viewerUid == null || !viewerUid.equals(author)) {
+                throw new BusinessException(StatusEnum.NOT_FOUND, "帖子不存在");
+            }
         }
         List<Long> topicIds = postQueryService.findOrderedPlaceTopicIds(postId);
         if (topicIds.isEmpty()) {

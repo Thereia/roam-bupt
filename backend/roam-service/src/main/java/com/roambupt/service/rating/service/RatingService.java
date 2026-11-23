@@ -13,4 +13,7 @@ public interface RatingService {
 
     /** 给主题详情填充 avg/count。 */
     RatingVO ratingOf(long topicId);
+
+    /** 给列表批量填充 avg/count。 */
+    java.util.Map<Long, RatingVO> ratingsOf(java.util.Collection<Long> topicIds);
 }

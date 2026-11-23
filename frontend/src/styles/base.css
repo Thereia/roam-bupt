@@ -741,6 +741,11 @@ ol {
 
 .btn:disabled,
 .follow:disabled,
+.actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .actions button:disabled,
 .row .act button:disabled {
   cursor: default;

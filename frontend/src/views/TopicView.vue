@@ -129,7 +129,7 @@ watch(() => route.params.id, load)
           <div v-if="rating" class="rating-box">
             <div class="rating-head">
               <b class="rating-avg">{{ (rating.average ?? 0).toFixed(1) }}</b>
-              <span class="muted-text">{{ rating.count }} 人评分</span>
+              <span class="muted-text">分 · {{ rating.count }} 人评分</span>
             </div>
             <div class="stars">
               <button

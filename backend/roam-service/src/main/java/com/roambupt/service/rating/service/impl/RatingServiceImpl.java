@@ -98,6 +98,19 @@ public class RatingServiceImpl implements RatingService {
         return new RatingVO(avg, Math.round(avg * 10) / 10.0, count);
     }
 
+    @Override
+    public java.util.Map<Long, RatingVO> ratingsOf(java.util.Collection<Long> topicIds) {
+        java.util.Map<Long, RatingVO> result = new java.util.HashMap<>();
+        if (topicIds == null || topicIds.isEmpty()) {
+            return result;
+        }
+        for (TopicRatingMapper.TopicStatRow row : ratingMapper.statsByTopics(topicIds)) {
+            double avg = bayesian(row.getC(), row.getS());
+            result.put(row.getTopicId(), new RatingVO(avg, Math.round(avg * 10) / 10.0, row.getC()));
+        }
+        return result;
+    }
+
     private double bayesian(long count, long sum) {
         return (PRIOR_COUNT * PRIOR_MEAN + sum) / (PRIOR_COUNT + count);
     }

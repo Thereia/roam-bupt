@@ -132,8 +132,8 @@ onMounted(() => {
 
       <section class="card">
         <h3>今天的路线</h3>
-        <p class="muted-text">路线功能开发中：之后会按帖子里的地点顺序自动生成。</p>
-        <button type="button" class="btn block" disabled title="路线功能开发中">按这条走</button>
+        <p class="muted-text">想从这儿走到那儿？去路线页选两个地点就能出方案。</p>
+        <RouterLink to="/nav" class="btn block">规划一条路线</RouterLink>
       </section>
     </aside>
   </div>

@@ -132,7 +132,7 @@ async function submit() {
         </label>
       </div>
 
-      <label>挂在哪些主题上</label>
+      <label>挂在哪里（地点决定路线顺序，分类只做归类）</label>
       <input v-model="keyword" placeholder="搜地点，比如「教三」「图书馆」" @input="onKeywordInput" />
       <div v-if="suggestions.length" class="suggest-list">
         <button v-for="item in suggestions" :key="item.id" type="button" class="suggest-item" @click="pick(item)">
@@ -142,6 +142,7 @@ async function submit() {
 
       <div class="chips">
         <span v-for="topic in selected" :key="topic.id" class="chip solid">
+          <b v-if="topic.type === 'PLACE'">{{ selected.filter((t) => t.type === 'PLACE').indexOf(topic) + 1 }}.</b>
           {{ topic.name }}<button type="button" class="chip-remove" @click="remove(topic.id)">×</button>
         </span>
       </div>

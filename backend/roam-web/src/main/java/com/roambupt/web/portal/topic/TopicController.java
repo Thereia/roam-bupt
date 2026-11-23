@@ -39,7 +39,23 @@ public class TopicController {
                                            @RequestParam(required = false) String q,
                                            @RequestParam(defaultValue = "1") int page,
                                            @RequestParam(defaultValue = "10") int pageSize) {
-        return ResVo.ok(topicService.list(new TopicQuery(type, category, q, page, pageSize)));
+        PageResult<TopicVO> result = topicService.list(new TopicQuery(type, category, q, page, pageSize));
+        java.util.List<Long> placeIds = result.list().stream()
+                .filter(item -> "PLACE".equals(item.type()))
+                .map(TopicVO::id)
+                .toList();
+        if (placeIds.isEmpty()) {
+            return ResVo.ok(result);
+        }
+        var ratings = ratingService.ratingsOf(placeIds);
+        java.util.List<TopicVO> filled = result.list().stream()
+                .map(item -> ratings.containsKey(item.id())
+                        ? new TopicVO(item.id(), item.type(), item.name(), item.category(), item.cover(),
+                                item.description(), item.heat(), item.nodeId(), item.postCount(),
+                                item.todayRouteCount(), ratings.get(item.id()))
+                        : item)
+                .toList();
+        return ResVo.ok(PageResult.of(result.total(), result.page(), result.pageSize(), filled));
     }
 
     @OptionalAuth

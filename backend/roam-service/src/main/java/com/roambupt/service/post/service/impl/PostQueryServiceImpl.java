@@ -55,6 +55,12 @@ public class PostQueryServiceImpl implements PostQueryService {
     }
 
     @Override
+    public String findStatus(long postId) {
+        PostDO post = postMapper.selectById(postId);
+        return post == null ? null : post.getStatus();
+    }
+
+    @Override
     public List<Long> findOrderedPlaceTopicIds(long postId) {
         List<PostTopicDO> links = postTopicMapper.selectList(Wrappers.<PostTopicDO>lambdaQuery()
                 .eq(PostTopicDO::getPostId, postId)
