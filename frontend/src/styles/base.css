@@ -324,22 +324,18 @@ ol {
 }
 
 .thumb {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  /* 框跟着图片走：宽图按宽度缩，竖图按高度缩，不留底色 */
   width: fit-content;
   max-width: 100%;
-  height: 176px;
+  max-height: 240px;
   overflow: hidden; /* 图片必须被框住，否则会压到下一张卡片 */
   margin: 12px 0;
   font-size: var(--fs-sm);
   color: var(--thumb-ink);
   background: #f6f3ec;
   border-radius: 6px;
-}
-
-.thumb.tall {
-  height: 200px;
+  cursor: zoom-in;
 }
 
 .chips {
@@ -1760,10 +1756,10 @@ ol {
 
 .thumb img {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
   width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: 240px;
   object-fit: contain;
   border-radius: inherit;
 }
@@ -1909,30 +1905,134 @@ ol {
   text-decoration: none;
 }
 
-/* 帖子配图：缩略图画廊，点击看原图 */
+/* 帖子配图：缩略图画廊，点击开灯箱看大图 */
 .post-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 14px 0;
 }
 
 .gallery-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  /* 和卡片图一样贴合图片，整框最高 320px */
+  width: fit-content;
+  max-width: 100%;
+  max-height: 320px;
+  padding: 0;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: #f6f3ec;
-  max-height: 320px;
+  cursor: zoom-in;
 }
 
 .gallery-item img {
   display: block;
-  max-width: 100%;
-  max-height: 320px;
   width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: 318px; /* 上下各 1px 边框，整框不超过 320px */
   object-fit: contain;
+}
+
+/* ---------- 图片灯箱 ---------- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 64px;
+  background: rgba(10, 10, 9, 0.97);
+}
+
+.lightbox-img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 2px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  width: 38px;
+  height: 38px;
+  font-size: 26px;
+  line-height: 1;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  width: 42px;
+  height: 56px;
+  font-size: 30px;
+  line-height: 1;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  transform: translateY(-50%);
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lightbox-prev {
+  left: 14px;
+}
+
+.lightbox-next {
+  right: 14px;
+}
+
+.lightbox-count {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  font-size: var(--fs-sm);
+  color: rgba(255, 255, 255, 0.78);
+  letter-spacing: 0.08em;
+  transform: translateX(-50%);
+}
+
+.lightbox button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .lightbox {
+    padding: 28px 10px;
+  }
+
+  .lightbox-nav {
+    width: 34px;
+    height: 46px;
+    font-size: 24px;
+  }
+
+  .lightbox-prev {
+    left: 6px;
+  }
+
+  .lightbox-next {
+    right: 6px;
+  }
 }

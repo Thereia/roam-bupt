@@ -5,6 +5,7 @@ import { collectPost, uncollectPost } from '../api/post'
 import { isLoggedIn } from '../store/user'
 import { showNotice } from '../store/notice'
 import { copyText } from '../utils/clipboard'
+import ImageLightbox from './ImageLightbox.vue'
 import TopicChip from './TopicChip.vue'
 import { formatRelativeTime } from '../utils/time'
 
@@ -21,12 +22,17 @@ const props = defineProps({
 
 const hasImage = computed(() => (props.post.media?.length || 0) > 0)
 
-function openPost() {
-  router.push(`/posts/${props.post.id}`)
-}
 const route = useRoute()
 const router = useRouter()
 const busy = ref(false)
+const lightboxOpen = ref(false)
+const lightboxImages = computed(() => (props.post.media || []).map((item) => item.url))
+
+function openPost() {
+  // 灯箱开着时焦点可能还在卡片上，别让回车把页面带走
+  if (lightboxOpen.value) return
+  router.push(`/posts/${props.post.id}`)
+}
 
 async function toggleCollect() {
   if (!isLoggedIn()) {
@@ -75,7 +81,9 @@ const chips = computed(() =>
       </template>
     </div>
     <p class="excerpt">{{ post.excerpt }}</p>
-    <div v-if="hasImage" class="thumb"><img :src="post.media[0].url" :alt="post.title" /></div>
+    <div v-if="hasImage" class="thumb" title="查看大图" @click.stop="lightboxOpen = true">
+      <img :src="post.media[0].url" :alt="post.title" />
+    </div>
     <div class="chips" @click.stop>
       <TopicChip v-for="topic in chips" :key="topic.id" :topic="topic" />
     </div>
@@ -89,4 +97,10 @@ const chips = computed(() =>
       </span>
     </div>
   </article>
+  <ImageLightbox
+    v-if="lightboxOpen"
+    :images="lightboxImages"
+    :index="0"
+    @close="lightboxOpen = false"
+  />
 </template>
