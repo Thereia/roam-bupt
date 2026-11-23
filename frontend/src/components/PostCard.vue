@@ -1,5 +1,9 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { collectPost, uncollectPost } from '../api/post'
+import { isLoggedIn } from '../store/user'
+import { showNotice } from '../store/notice'
 import TopicChip from './TopicChip.vue'
 import { formatRelativeTime } from '../utils/time'
 
@@ -15,7 +19,38 @@ const props = defineProps({
 })
 
 const hasImage = computed(() => (props.post.media?.length || 0) > 0)
-const actions = computed(() => ['收藏', '分享'])
+const route = useRoute()
+const router = useRouter()
+const busy = ref(false)
+
+async function toggleCollect() {
+  if (!isLoggedIn()) {
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+  if (busy.value) return
+  busy.value = true
+  try {
+    const active = props.post.myCollected === true
+    const result = active ? await uncollectPost(props.post.id) : await collectPost(props.post.id)
+    props.post.myCollected = result.active
+    props.post.counts.collect = result.count
+  } catch (err) {
+    showNotice(err.message || '操作失败', 'error')
+  } finally {
+    busy.value = false
+  }
+}
+
+async function share() {
+  const url = `${window.location.origin}/posts/${props.post.id}`
+  try {
+    await navigator.clipboard.writeText(url)
+    showNotice('链接已复制')
+  } catch {
+    showNotice(url)
+  }
+}
 // 地点页的卡片不再重复挂当前地点，只留分类 chip
 const chips = computed(() =>
   props.variant === 'topic'
@@ -46,7 +81,10 @@ const chips = computed(() =>
     <div v-if="variant === 'home'" class="row">
       <span>{{ post.counts.like }} 赞 · {{ post.counts.comment }} 评论</span>
       <span class="act">
-        <button v-for="label in actions" :key="label" type="button" disabled title="暂未开放">{{ label }}</button>
+        <button type="button" :disabled="busy" @click="toggleCollect">
+          {{ post.myCollected ? '已收藏' : '收藏' }}
+        </button>
+        <button type="button" @click="share">分享</button>
       </span>
     </div>
   </article>

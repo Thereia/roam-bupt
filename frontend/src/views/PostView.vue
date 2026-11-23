@@ -26,6 +26,20 @@ const loading = ref(true)
 const error = ref('')
 const missing = ref(false)
 
+function scrollToComments() {
+  document.querySelector('.comments')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+async function sharePost() {
+  const url = `${window.location.origin}/posts/${post.value.id}`
+  try {
+    await navigator.clipboard.writeText(url)
+    showNotice('链接已复制')
+  } catch {
+    showNotice(url)
+  }
+}
+
 async function loadRoute() {
   routeLoading.value = true
   routeError.value = ''
@@ -197,8 +211,8 @@ watch(() => route.params.id, load)
         <button type="button" :class="{ on: post.myCollected }" @click="toggleCollect">
           {{ post.myCollected ? '已收藏' : '收藏' }} {{ post.counts.collect }}
         </button>
-        <button type="button" disabled title="暂未开放">评论 {{ post.counts.comment }}</button>
-        <button type="button" disabled title="暂未开放">分享</button>
+        <button type="button" @click="scrollToComments">评论 {{ post.counts.comment }}</button>
+        <button type="button" @click="sharePost">分享</button>
       </div>
 
       <section class="comments">
