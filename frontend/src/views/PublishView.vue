@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createPost } from '../api/post'
 import { getTopicSuggest, getTopics } from '../api/topic'
