@@ -17,6 +17,8 @@ public class TopicRatingDO {
     private Long userId;
     private Long topicId;
     private Integer score;
+    private String reviewText;
+    private String reviewImages;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
 }

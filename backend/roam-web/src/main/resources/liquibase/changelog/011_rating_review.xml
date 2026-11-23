@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="011-rating-review" author="thereia">
+        <comment>P2：地点评价流，评分补充文字与图片</comment>
+        <sql>
+            ALTER TABLE topic_rating
+                ADD COLUMN review_text   VARCHAR(200)  NULL COMMENT '评价文字，最多 200 字' AFTER score,
+                ADD COLUMN review_images VARCHAR(1024) NULL COMMENT '站内图片 URL，逗号分隔，最多 3 张' AFTER review_text;
+        </sql>
+        <rollback>
+            <sql>
+                ALTER TABLE topic_rating
+                    DROP COLUMN review_images,
+                    DROP COLUMN review_text;
+            </sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

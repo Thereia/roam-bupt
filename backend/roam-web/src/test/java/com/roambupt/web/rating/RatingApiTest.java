@@ -65,9 +65,11 @@ class RatingApiTest {
     void 匿名看评分_零条时返回先验均分() throws Exception {
         mockMvc.perform(get("/api/v1/topics/" + PLACE + "/ratings"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.count").value(0))
-                .andExpect(jsonPath("$.data.average").value(3.5))
-                .andExpect(jsonPath("$.data.myScore").doesNotExist());
+                .andExpect(jsonPath("$.data.summary.count").value(0))
+                .andExpect(jsonPath("$.data.summary.average").value(3.5))
+                .andExpect(jsonPath("$.data.summary.myScore").doesNotExist())
+                .andExpect(jsonPath("$.data.reviews.total").value(0))
+                .andExpect(jsonPath("$.data.reviews.list").isEmpty());
     }
 
     @Test
