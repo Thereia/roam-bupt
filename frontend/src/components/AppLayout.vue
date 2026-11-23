@@ -3,7 +3,7 @@ import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { notifyStore, refreshUnread } from '../store/notify'
 import { logout } from '../api/auth'
-import { clearSession, userStore } from '../store/user'
+import { clearSession, isLoggedIn, userStore } from '../store/user'
 
 const route = useRoute()
 const router = useRouter()
@@ -49,6 +49,7 @@ watch(() => route.path, refreshUnread)
       </nav>
       <div class="topright">
         <template v-if="userStore.token">
+          <RouterLink v-if="isLoggedIn()" to="/collections" class="link-button">收藏</RouterLink>
           <RouterLink to="/notifications" class="link-button">
             通知<span v-if="notifyStore.unread" class="nav-badge">{{ notifyStore.unread }}</span>
           </RouterLink>

@@ -127,6 +127,26 @@ class InteractionApiTest {
     }
 
     @Test
+    void 我的收藏_收藏后出现在列表里() throws Exception {
+        String token = register("i_user7");
+        long postId = createPost(token);
+        mockMvc.perform(post("/api/v1/posts/" + postId + "/collect")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/me/collections").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.list[0].id").value(postId));
+    }
+
+    @Test
+    void 我的收藏_未登录_返回401() throws Exception {
+        mockMvc.perform(get("/api/v1/me/collections"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void 详情_登录用户_myLiked为true() throws Exception {
         String token = register("i_user5");
         long postId = createPost(token);

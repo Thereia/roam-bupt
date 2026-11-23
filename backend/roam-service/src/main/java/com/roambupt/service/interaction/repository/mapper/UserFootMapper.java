@@ -28,6 +28,14 @@ public interface UserFootMapper extends BaseMapper<UserFootDO> {
                            @Param("action") String action,
                            @Param("postIds") Collection<Long> postIds);
 
+    @Select("SELECT post_id FROM user_foot WHERE user_id = #{uid} AND action = 'COLLECT' "
+            + "ORDER BY created_time DESC LIMIT #{offset}, #{size}")
+    List<Long> findCollectedPostIds(@Param("uid") long uid, @Param("offset") int offset,
+                                    @Param("size") int size);
+
+    @Select("SELECT COUNT(*) FROM user_foot WHERE user_id = #{uid} AND action = 'COLLECT'")
+    long countCollected(@Param("uid") long uid);
+
     /** 批量计数的行。 */
     class FootCountRow {
         private Long postId;

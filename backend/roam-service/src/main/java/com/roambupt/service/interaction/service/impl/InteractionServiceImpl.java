@@ -63,6 +63,18 @@ public class InteractionServiceImpl implements InteractionService {
         return remove(postId, uid, COLLECT);
     }
 
+    @Override
+    public java.util.List<Long> collectedPostIds(long uid, int page, int pageSize) {
+        int pageNo = Math.max(1, page);
+        int size = Math.min(Math.max(1, pageSize), 50);
+        return userFootMapper.findCollectedPostIds(uid, (pageNo - 1) * size, size);
+    }
+
+    @Override
+    public long countCollected(long uid) {
+        return userFootMapper.countCollected(uid);
+    }
+
     private InteractionResultVO add(long postId, long uid, String action) {
         requireOnline(postId);
         boolean inserted;

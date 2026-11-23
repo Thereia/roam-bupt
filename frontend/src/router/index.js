@@ -46,6 +46,12 @@ const routes = [
     meta: { title: '路线' },
   },
   {
+    path: '/collections',
+    name: 'collections',
+    component: () => import('../views/CollectionsView.vue'),
+    meta: { title: '我的收藏', requiresAuth: true },
+  },
+  {
     path: '/notifications',
     name: 'notifications',
     component: () => import('../views/NotificationsView.vue'),

@@ -35,6 +35,47 @@ const highlighted = computed(() => {
 
 const canPlan = computed(() => from.value && to.value && from.value.id !== to.value.id)
 
+const planHint = computed(() => {
+  if (!from.value) return '先选起点'
+  if (!to.value) return '再选终点'
+  if (from.value.id === to.value.id) return '起点和终点不能是同一个地方'
+  return ''
+})
+
+function displaySegments(plan) {
+  const rows = []
+  let junctionCount = 0
+  let junctionMeters = 0
+  const flush = () => {
+    if (!junctionCount) return
+    rows.push({
+      junction: true,
+      label: `穿过 ${junctionCount} 个路口`,
+      distanceMeters: junctionMeters,
+      congestion: 1,
+    })
+    junctionCount = 0
+    junctionMeters = 0
+  }
+  for (const segment of plan.segments) {
+    const isJunction = segment.fromName === '路口' || segment.toName === '路口'
+    if (isJunction) {
+      junctionCount += 1
+      junctionMeters += segment.distanceMeters
+    } else {
+      flush()
+      rows.push({
+        junction: false,
+        label: `${segment.fromName} → ${segment.toName}`,
+        distanceMeters: segment.distanceMeters,
+        congestion: segment.congestion,
+      })
+    }
+  }
+  flush()
+  return rows
+}
+
 function congestionColor(value) {
   if (value >= 3) return '#b4453a'
   if (value >= 1.5) return '#b8862b'
@@ -64,6 +105,15 @@ function search(which) {
       else suggestionsTo.value = list
     })
     .catch(() => {})
+}
+
+function onEnter(which) {
+  const list = which === 'from' ? suggestionsFrom.value : suggestionsTo.value
+  if (list.length) {
+    pick(which, list[0])
+    return
+  }
+  search(which)
 }
 
 function pick(which, topic) {
@@ -102,7 +152,7 @@ onMounted(load)
       <div class="card nav-toolbar">
         <div class="pick">
           <label>起点</label>
-          <input v-model="keywordFrom" placeholder="搜地点" @input="search('from')" />
+          <input v-model="keywordFrom" placeholder="搜地点" @input="search('from')" @keydown.enter.prevent="onEnter('from')" />
           <div v-if="suggestionsFrom.length" class="suggest-list">
             <button v-for="item in suggestionsFrom" :key="item.id" type="button" class="suggest-item" @click="pick('from', item)">
               {{ item.name }}
@@ -111,7 +161,7 @@ onMounted(load)
         </div>
         <div class="pick">
           <label>终点</label>
-          <input v-model="keywordTo" placeholder="搜地点" @input="search('to')" />
+          <input v-model="keywordTo" placeholder="搜地点" @input="search('to')" @keydown.enter.prevent="onEnter('to')" />
           <div v-if="suggestionsTo.length" class="suggest-list">
             <button v-for="item in suggestionsTo" :key="item.id" type="button" class="suggest-item" @click="pick('to', item)">
               {{ item.name }}
@@ -121,6 +171,7 @@ onMounted(load)
         <button type="button" class="btn primary" :disabled="!canPlan || planning" @click="plan">
           {{ planning ? '规划中…' : '规划路线' }}
         </button>
+        <span v-if="planHint" class="muted-text">{{ planHint }}</span>
       </div>
 
       <div class="card map-card">
@@ -154,6 +205,7 @@ onMounted(load)
     <aside class="side">
       <section class="card">
         <h3>路线方案</h3>
+        <p class="muted-text">按综合耗时排序（时间 × 拥挤度）。</p>
         <p v-if="!plans.length" class="muted-text">选两个地点，点「规划路线」。</p>
         <div v-for="(plan, index) in plans" :key="index" class="plan" :class="{ on: index === selected }" @click="selected = index">
           <div class="plan-head">
@@ -161,9 +213,9 @@ onMounted(load)
             <span class="muted-text">{{ plan.totalDistanceMeters }} 米 · 约 {{ Math.round(plan.totalTimeSeconds / 60) }} 分钟</span>
           </div>
           <div class="plan-segments">
-            <div v-for="(segment, i) in plan.segments" :key="i" class="plan-segment">
-              <span class="dot" :style="{ background: congestionColor(segment.congestion) }"></span>
-              <span>{{ segment.fromName }} → {{ segment.toName }}</span>
+            <div v-for="(segment, i) in displaySegments(plan)" :key="i" class="plan-segment">
+              <span class="dot" :style="{ background: segment.junction ? '#b9b2a4' : congestionColor(segment.congestion) }"></span>
+              <span>{{ segment.label }}</span>
               <span class="muted-text">{{ segment.distanceMeters }}m</span>
             </div>
           </div>

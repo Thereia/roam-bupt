@@ -46,7 +46,7 @@ const chips = computed(() =>
     <div v-if="variant === 'home'" class="row">
       <span>{{ post.counts.like }} 赞 · {{ post.counts.comment }} 评论</span>
       <span class="act">
-        <button v-for="label in actions" :key="label" type="button" disabled title="P1 上线">{{ label }}</button>
+        <button v-for="label in actions" :key="label" type="button" disabled title="暂未开放">{{ label }}</button>
       </span>
     </div>
   </article>

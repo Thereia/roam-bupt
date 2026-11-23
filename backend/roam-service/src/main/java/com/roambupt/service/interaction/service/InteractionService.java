@@ -12,4 +12,9 @@ public interface InteractionService {
     InteractionResultVO collect(long postId, long uid);
 
     InteractionResultVO uncollect(long postId, long uid);
+
+    /** 我的收藏：按收藏时间倒序的帖子 id。 */
+    java.util.List<Long> collectedPostIds(long uid, int page, int pageSize);
+
+    long countCollected(long uid);
 }

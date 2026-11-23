@@ -197,8 +197,8 @@ watch(() => route.params.id, load)
         <button type="button" :class="{ on: post.myCollected }" @click="toggleCollect">
           {{ post.myCollected ? '已收藏' : '收藏' }} {{ post.counts.collect }}
         </button>
-        <button type="button" disabled title="评论输入待做">评论 {{ post.counts.comment }}</button>
-        <button type="button" disabled title="分享待做">分享</button>
+        <button type="button" disabled title="暂未开放">评论 {{ post.counts.comment }}</button>
+        <button type="button" disabled title="暂未开放">分享</button>
       </div>
 
       <section class="comments">

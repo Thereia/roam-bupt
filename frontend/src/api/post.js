@@ -45,6 +45,10 @@ export function createComment(postId, content) {
   return http.post(`/posts/${postId}/comments`, { content })
 }
 
+export function getMyCollections(params = {}) {
+  return http.get('/me/collections', { params })
+}
+
 export function getComments(postId, params = {}) {
   if (!USE_MOCK) return http.get(`/posts/${postId}/comments`, { params })
   return withMock(() => listComments(postId, params))
