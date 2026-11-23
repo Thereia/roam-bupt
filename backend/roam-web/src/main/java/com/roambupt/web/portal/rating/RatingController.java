@@ -9,6 +9,7 @@ import com.roambupt.core.context.CurrentUserContext;
 import com.roambupt.service.rating.service.RatingService;
 import com.roambupt.web.global.OptionalAuth;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -31,6 +32,15 @@ public class RatingController {
     @GetMapping
     public ResVo<RatingSummaryVO> summary(@PathVariable long topicId) {
         return ResVo.ok(ratingService.summary(topicId, CurrentUserContext.uid()));
+    }
+
+    @DeleteMapping
+    public ResVo<RatingSummaryVO> clear(@PathVariable long topicId) {
+        Long uid = CurrentUserContext.uid();
+        if (uid == null) {
+            throw new BusinessException(StatusEnum.UNAUTHORIZED);
+        }
+        return ResVo.ok(ratingService.clear(topicId, uid));
     }
 
     @PutMapping

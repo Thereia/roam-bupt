@@ -1760,3 +1760,46 @@ ol {
   object-fit: cover;
   border-radius: inherit;
 }
+
+/* ---------- 评分 tab ---------- */
+
+.rating-panel {
+  padding: 8px 0 4px;
+}
+
+.rating-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.rating-star {
+  width: 42px;
+  text-align: right;
+}
+
+.rating-bar {
+  flex: 1;
+  height: 8px;
+  background: #f0ece3;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rating-bar i {
+  display: block;
+  height: 100%;
+  background: #d9b96a;
+}
+
+.rating-mine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}

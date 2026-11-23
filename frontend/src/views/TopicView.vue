@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getTopic, getTopicPosts } from '../api/topic'
-import { getRatings, rateTopic } from '../api/rating'
+import { getRatings, rateTopic, removeRating } from '../api/rating'
 import { isLoggedIn } from '../store/user'
 import PostCard from '../components/PostCard.vue'
 import StateBlock from '../components/StateBlock.vue'
@@ -13,6 +13,7 @@ const topic = ref(null)
 const posts = ref([])
 const rating = ref(null)
 const ratingBusy = ref(false)
+const tab = ref('posts')
 const ratingError = ref('')
 const loading = ref(true)
 const error = ref('')
@@ -57,6 +58,19 @@ const facts = computed(() => {
 })
 const score = computed(() => Number(topic.value?.rating?.displayAvg || 0).toFixed(1))
 
+async function withdraw() {
+  if (ratingBusy.value) return
+  ratingBusy.value = true
+  ratingError.value = ''
+  try {
+    rating.value = await removeRating(topic.value.id)
+  } catch (err) {
+    ratingError.value = err.message || '撤回失败'
+  } finally {
+    ratingBusy.value = false
+  }
+}
+
 async function rate(score) {
   if (!isLoggedIn()) {
     router.push({ path: '/login', query: { redirect: route.fullPath } })
@@ -72,6 +86,12 @@ async function rate(score) {
   } finally {
     ratingBusy.value = false
   }
+}
+
+function barWidth(star) {
+  const total = rating.value?.count || 0
+  const count = rating.value?.distribution?.[star - 1] || 0
+  return total ? `${Math.round((count / total) * 100)}%` : '0%'
 }
 
 onMounted(load)
@@ -105,8 +125,8 @@ watch(() => route.params.id, load)
           <span><b>今日 {{ topic.todayRouteCount }}</b> 人问路</span>
         </div>
         <div class="topic-actions">
-          <button type="button" class="btn" disabled title="暂未开放">打分</button>
-          <button type="button" class="btn primary" disabled title="暂未开放">到这里怎么走</button>
+          <button type="button" class="btn" @click="tab = 'rating'">打分</button>
+          <RouterLink :to="`/nav?to=${topic.id}`" class="btn primary">到这里怎么走</RouterLink>
         </div>
       </div>
     </div>
@@ -114,11 +134,45 @@ watch(() => route.params.id, load)
     <div class="page page-two">
       <main>
         <div class="feed-head">
-          <button type="button" class="on">广场</button>
-          <button type="button" disabled title="暂未开放">评分</button>
+          <button type="button" :class="{ on: tab === 'posts' }" @click="tab = 'posts'">广场</button>
+          <button type="button" :class="{ on: tab === 'rating' }" @click="tab = 'rating'">评分</button>
         </div>
-        <StateBlock v-if="!posts.length" text="这个地点还没有帖子。" />
-        <PostCard v-for="post in posts" :key="post.id" :post="post" variant="topic" />
+
+        <template v-if="tab === 'posts'">
+          <StateBlock v-if="!posts.length" text="这个地点还没有帖子。" />
+          <PostCard v-for="post in posts" :key="post.id" :post="post" variant="topic" />
+        </template>
+
+        <section v-else class="rating-panel">
+          <p class="muted-text">共 {{ rating?.count || 0 }} 人评分{{ rating?.count ? `，均分 ${rating.average.toFixed(1)}` : '' }}。</p>
+          <div v-for="star in [5, 4, 3, 2, 1]" :key="star" class="rating-row">
+            <span class="rating-star">{{ star }} 星</span>
+            <span class="rating-bar"><i :style="{ width: barWidth(star) }"></i></span>
+            <span class="muted-text">{{ rating?.distribution?.[star - 1] || 0 }}</span>
+          </div>
+
+          <div class="rating-mine">
+            <template v-if="isLoggedIn()">
+              <span class="muted-text">我的评分</span>
+              <div class="stars">
+                <button
+                  v-for="star in 5"
+                  :key="star"
+                  type="button"
+                  class="star"
+                  :class="{ on: (rating?.myScore || 0) >= star }"
+                  :disabled="ratingBusy"
+                  @click="rate(star)"
+                >★</button>
+              </div>
+              <button v-if="rating?.myScore" type="button" class="link-button" @click="withdraw">撤回</button>
+            </template>
+            <RouterLink v-else :to="{ path: '/login', query: { redirect: route.fullPath } }" class="btn">
+              登录后打分
+            </RouterLink>
+          </div>
+          <p v-if="ratingError" class="form-error">{{ ratingError }}</p>
+        </section>
       </main>
 
       <aside class="side">

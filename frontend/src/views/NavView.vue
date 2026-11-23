@@ -1,7 +1,10 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { getMap, planRoutes } from '../api/space'
-import { getTopicSuggest } from '../api/topic'
+import { getTopic, getTopicSuggest } from '../api/topic'
+
+const route = useRoute()
 
 const MAP_W = 748
 const MAP_H = 1089
@@ -143,7 +146,18 @@ async function plan() {
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  await load()
+  const preset = route.query.to
+  if (!preset) return
+  try {
+    const topic = await getTopic(String(preset))
+    to.value = { id: topic.id, name: topic.name }
+    keywordTo.value = topic.name
+  } catch {
+    // 预填失败不影响手动选择
+  }
+})
 </script>
 
 <template>

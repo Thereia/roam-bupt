@@ -14,6 +14,9 @@ public interface RatingService {
     /** 给主题详情填充 avg/count。 */
     RatingVO ratingOf(long topicId);
 
+    /** 撤回自己的评分。 */
+    RatingSummaryVO clear(long topicId, long uid);
+
     /** 给列表批量填充 avg/count。 */
     java.util.Map<Long, RatingVO> ratingsOf(java.util.Collection<Long> topicIds);
 }

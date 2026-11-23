@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -128,6 +129,28 @@ class RatingApiTest {
         mockMvc.perform(put("/api/v1/topics/" + PLACE + "/ratings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("score", 4))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void 撤回评分_计数归零() throws Exception {
+        String token = register("rt_user7");
+        mockMvc.perform(put("/api/v1/topics/" + PLACE + "/ratings")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("score", 5))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/api/v1/topics/" + PLACE + "/ratings")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.count").value(0))
+                .andExpect(jsonPath("$.data.myScore").doesNotExist());
+    }
+
+    @Test
+    void 撤回评分_未登录_返回401() throws Exception {
+        mockMvc.perform(delete("/api/v1/topics/" + PLACE + "/ratings"))
                 .andExpect(status().isUnauthorized());
     }
 

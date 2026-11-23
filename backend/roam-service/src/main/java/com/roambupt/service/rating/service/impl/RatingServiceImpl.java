@@ -91,6 +91,16 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public RatingSummaryVO clear(long topicId, long uid) {
+        requirePlace(topicId);
+        ratingMapper.delete(Wrappers.<TopicRatingDO>lambdaQuery()
+                .eq(TopicRatingDO::getUserId, uid)
+                .eq(TopicRatingDO::getTopicId, topicId));
+        return summary(topicId, uid);
+    }
+
+    @Override
     public RatingVO ratingOf(long topicId) {
         long count = ratingMapper.countByTopic(topicId);
         long sum = ratingMapper.sumByTopic(topicId);
