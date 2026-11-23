@@ -71,9 +71,9 @@
 | GET | `/topics/suggest` | — | `q`、`limit≤10` → `[{id,name,type,category,nodeId}]`（发布页选地点） |
 | GET | `/topics/{id}` | ○ | 详情；`enabled=0` → `404` |
 | GET | `/topics/{id}/posts` | — | 内容流，`sort=latest\|hot` |
-| GET | `/topics/{id}/ratings` | ○ | 评分列表分页，含 `myScore` |
+| GET | `/topics/{id}/ratings` | ○ | `{summary, reviews}`；reviews 分页，含作者昵称头像、分数、文字、图、时间、`mine` |
 | GET | `/topics/{id}/rating-summary` | ○ | `{avg, displayAvg, count, myScore}` |
-| PUT | `/topics/{id}/ratings` | ✓ | `{score: 1..5}`；重复提交即改分（upsert）；对 `CATEGORY` → `4001` |
+| PUT | `/topics/{id}/ratings` | ✓ | `{score: 1..5, review?: ≤200 字, images?: ≤3 个 /files/ 开头}`；重复提交即修改评价（upsert） |
 | GET | `/topics/{id}/nearby` | — | P2：`limit≤5` → 距离最近的地点 |
 
 ```json
