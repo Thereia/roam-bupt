@@ -3,6 +3,7 @@ package com.roambupt.web.portal.rating;
 import com.roambupt.api.model.dto.RatingCommand;
 import com.roambupt.api.model.enums.StatusEnum;
 import com.roambupt.api.model.exception.BusinessException;
+import com.roambupt.api.model.vo.RatingFeedVO;
 import com.roambupt.api.model.vo.RatingSummaryVO;
 import com.roambupt.api.model.vo.ResVo;
 import com.roambupt.core.context.CurrentUserContext;
@@ -15,9 +16,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 地点评分。 */
+/** 地点评分与评价流。 */
 @RestController
 @RequestMapping("/api/v1/topics/{topicId}/ratings")
 public class RatingController {
@@ -30,8 +32,10 @@ public class RatingController {
 
     @OptionalAuth
     @GetMapping
-    public ResVo<RatingSummaryVO> summary(@PathVariable long topicId) {
-        return ResVo.ok(ratingService.summary(topicId, CurrentUserContext.uid()));
+    public ResVo<RatingFeedVO> feed(@PathVariable long topicId,
+                                    @RequestParam(defaultValue = "1") int page,
+                                    @RequestParam(defaultValue = "10") int pageSize) {
+        return ResVo.ok(ratingService.feed(topicId, CurrentUserContext.uid(), page, pageSize));
     }
 
     @DeleteMapping
@@ -50,6 +54,6 @@ public class RatingController {
         if (uid == null) {
             throw new BusinessException(StatusEnum.UNAUTHORIZED);
         }
-        return ResVo.ok(ratingService.rate(topicId, uid, command.score()));
+        return ResVo.ok(ratingService.rate(topicId, uid, command));
     }
 }
