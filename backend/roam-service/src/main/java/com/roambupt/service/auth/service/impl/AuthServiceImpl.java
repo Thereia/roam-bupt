@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResult register(RegisterCommand command, String clientIp) {
         String username = normalize(command.username());
         if (!rateLimiter.tryAcquire(clientIp, username)) {
-            throw new BusinessException(StatusEnum.RATE_LIMITED);
+            throw new BusinessException(StatusEnum.RATE_LIMITED, "尝试太频繁，每分钟最多 5 次，请稍后再试");
         }
         String encoded = passwordEncoder.encode(command.password());
         long uid;
@@ -85,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
         String username = normalize(command.username());
         if (!rateLimiter.tryAcquire(clientIp, username)) {
             publish(null, username, false, "RATE_LIMITED", clientIp);
-            throw new BusinessException(StatusEnum.RATE_LIMITED);
+            throw new BusinessException(StatusEnum.RATE_LIMITED, "尝试太频繁，每分钟最多 5 次，请稍后再试");
         }
 
         Optional<UserAccount> found = userQueryService.findByUsername(username);

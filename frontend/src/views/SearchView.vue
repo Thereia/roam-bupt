@@ -47,6 +47,7 @@ onMounted(() => {
         <button type="submit" class="search-button">搜索</button>
       </form>
 
+      <p v-if="!searched" class="muted-text">输入关键词搜帖子或地点，比如「教三」「食堂」「插座」。</p>
       <p v-if="loading" class="muted-text">正在搜索…</p>
       <p v-else-if="error" class="muted-text">{{ error }}</p>
       <p v-else-if="searched && !results.length" class="muted-text">没有找到相关内容。</p>

@@ -78,12 +78,12 @@ class PostCreateValidatorTest {
     }
 
     @Test
-    void 校验_正文超过48KB_抛4001() {
+    void 校验_正文超过20000字_抛4001() {
         PostCreateCommand cmd = command("标题", "a".repeat(50 * 1024), List.of(new TopicRef(PLACE_ID, 0)));
 
         assertThatThrownBy(() -> validator.validate(cmd, 1L))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("正文超过 48KB");
+                .hasMessage("正文最多 20000 字");
     }
 
     @Test

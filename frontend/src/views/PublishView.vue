@@ -78,6 +78,10 @@ async function onFiles(event) {
   }
 }
 
+watch([title, content, selected], () => {
+  if (error.value) error.value = ''
+})
+
 async function submit() {
   error.value = ''
   if (!title.value.trim()) {
@@ -99,7 +103,7 @@ async function submit() {
       content: content.value,
       topics: selected.value.map((item, index) => ({ topicId: item.id, sortNo: index })),
       media: images.value.map((item, index) => ({ type: 'IMAGE', url: item.url, sortNo: index })),
-    })
+    }, { silent: true })
     router.push(`/posts/${result.id}`)
   } catch (err) {
     error.value = err.message || '发布失败'
@@ -152,7 +156,7 @@ async function submit() {
       <p v-if="error" class="form-error">{{ error }}</p>
 
       <div class="form-foot">
-        <span class="muted-text">发布后所有人可见</span>
+        <span class="muted-text">提交后需审核，通过后所有人可见</span>
         <button type="button" class="btn-primary" :disabled="submitting" @click="submit">
           {{ submitting ? '发布中…' : '发布' }}
         </button>

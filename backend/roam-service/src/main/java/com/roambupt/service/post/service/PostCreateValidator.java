@@ -11,7 +11,6 @@ import com.roambupt.service.storage.UploadProperties;
 import com.roambupt.service.topic.service.TopicService;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -27,7 +26,7 @@ public class PostCreateValidator {
 
     private static final int MAX_TOPICS = 9;
     private static final int MAX_MEDIA = 9;
-    private static final int MAX_CONTENT_BYTES = 48 * 1024;
+    private static final int MAX_CONTENT_CHARS = 20000;
     private static final String MEDIA_IMAGE = "IMAGE";
     private static final String STATUS_DRAFT = "DRAFT";
     private static final String STATUS_ONLINE = "ONLINE";
@@ -55,7 +54,7 @@ public class PostCreateValidator {
         String content = command.content();
         require(!sensitiveWordFilter.hit(command.title()) && !sensitiveWordFilter.hit(content),
                 "内容包含敏感词");
-        require(content.getBytes(StandardCharsets.UTF_8).length <= MAX_CONTENT_BYTES, "正文超过 48KB");
+        require(content.length() <= MAX_CONTENT_CHARS, "正文最多 20000 字");
 
         List<TopicRef> refs = command.topics() == null ? List.of() : command.topics();
         require(!refs.isEmpty() && refs.size() <= MAX_TOPICS, "主题数量需在 1-9 之间");

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { isLoggedIn, userStore } from '../store/user'
+import { showNotice } from '../store/notice'
 
 const routes = [
   { path: '/', name: 'home', component: () => import('../views/HomeView.vue') },
@@ -94,6 +95,7 @@ router.beforeEach((to) => {
   }
   if (to.matched.some((record) => record.meta.requiresAdmin)
       && userStore.user?.role !== 'ADMIN') {
+    showNotice('没有权限访问后台', 'error')
     return { path: '/' }
   }
   return true

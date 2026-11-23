@@ -12,8 +12,8 @@ export function getPosts(params = {}) {
   return withMock(() => listPosts(params))
 }
 
-export function createPost(payload) {
-  return http.post('/posts', payload)
+export function createPost(payload, config = {}) {
+  return http.post('/posts', payload, config)
 }
 
 export function getPost(id) {

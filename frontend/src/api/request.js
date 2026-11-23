@@ -1,19 +1,9 @@
 import axios from 'axios'
-import { reactive } from 'vue'
 import router from '../router'
 import { TOKEN_KEY, clearSession } from '../store/user'
+import { notice, showNotice } from '../store/notice'
 
-export const notice = reactive({ text: '', kind: 'info' })
-let noticeTimer = 0
-
-export function showNotice(text, kind = 'info') {
-  notice.text = text
-  notice.kind = kind
-  window.clearTimeout(noticeTimer)
-  noticeTimer = window.setTimeout(() => {
-    notice.text = ''
-  }, 4000)
-}
+export { notice, showNotice }
 
 export class ApiError extends Error {
   constructor(code, message, httpStatus = 0) {
@@ -71,6 +61,8 @@ http.interceptors.response.use(
 
     const status = error.response?.status || 0
     const serverMessage = error.response?.data?.message
+    // 表单类页面自己就地显示错误，传 silent 避免同一错误弹两次
+    const silent = error.config?.silent === true
 
     if (isAuthAttempt(error.config?.url)) {
       return Promise.reject(new ApiError(status || -1, authMessage(status, serverMessage), status))
@@ -78,29 +70,30 @@ http.interceptors.response.use(
 
     if (status === 401) {
       clearSession()
-      showNotice('登录已过期，请重新登录', 'error')
+      if (!silent) showNotice('登录已过期，请重新登录', 'error')
       redirectToLogin()
       return Promise.reject(new ApiError(401, '未登录或登录已过期', 401))
     }
 
     if (status === 403) {
-      showNotice('没有权限', 'error')
+      if (!silent) showNotice('没有权限', 'error')
       return Promise.reject(new ApiError(403, '没有权限', 403))
     }
 
     if (status === 429) {
-      showNotice('操作过于频繁，请稍后再试', 'error')
-      return Promise.reject(new ApiError(429, '操作过于频繁，请稍后再试', 429))
+      const tooFast = serverMessage || '操作太频繁，每分钟 5 次，请稍后再试'
+      if (!silent) showNotice(tooFast, 'error')
+      return Promise.reject(new ApiError(429, tooFast, 429))
     }
 
     if (status === 503) {
       // 认证依赖故障不是登录态失效，不能清 token
-      showNotice('服务暂时不可用，请稍后重试', 'error')
+      if (!silent) showNotice('服务暂时不可用，请稍后重试', 'error')
       return Promise.reject(new ApiError(503, '服务暂时不可用，请稍后重试', 503))
     }
 
     const message = authMessage(status, serverMessage)
-    showNotice(message, 'error')
+    if (!silent) showNotice(message, 'error')
     return Promise.reject(new ApiError(status || -1, message, status))
   },
 )
