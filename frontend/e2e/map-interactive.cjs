@@ -192,7 +192,10 @@ async function dragBy(page, from, dx, dy) {
 
   // ---- 2. 再点已选中的终点 → 取消 ----
   console.log('2) 再点已选节点取消')
-  await page.mouse.click(b.cx, b.cy)
+  // 选中后地图会平移把起终点带进视野，坐标要用最新的
+  const spots2 = await visiblePlaces(page)
+  const b2 = spots2.find((spot) => spot.id === b.id) || spots2.find((spot) => spot.name === b.name) || b
+  await page.mouse.click(b2.cx, b2.cy)
   const afterUnpick = await readState(page)
   check('取消后终点输入框清空', afterUnpick.to === '', `input=${afterUnpick.to}`)
   check('取消后终点节点不再高亮', afterUnpick.toNode === null, `class=${afterUnpick.toNode}`)

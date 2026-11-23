@@ -41,8 +41,12 @@ export function uncollectPost(id) {
   return withMock(() => ({ active: false, count: 0 }))
 }
 
-export function createComment(postId, content) {
-  return http.post(`/posts/${postId}/comments`, { content })
+export function createComment(postId, content, parentId = null) {
+  return http.post(`/posts/${postId}/comments`, { content, parentId })
+}
+
+export function getCommentReplies(commentId, params = {}) {
+  return http.get(`/comments/${commentId}/replies`, { params })
 }
 
 export function getMyCollections(params = {}) {

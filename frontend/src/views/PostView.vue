@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  COMMENTS_READY, collectPost, createComment, deleteComment, deletePost, getComments, getPost, likePost,
+  COMMENTS_READY, collectPost, createComment, deleteComment, deletePost, getCommentReplies, getComments, getPost, likePost,
   uncollectPost, unlikePost,
 } from '../api/post'
 import StateBlock from '../components/StateBlock.vue'
@@ -11,7 +11,6 @@ import ImageLightbox from '../components/ImageLightbox.vue'
 import { isLoggedIn, userStore } from '../store/user'
 import { showNotice } from '../store/notice'
 import { copyText } from '../utils/clipboard'
-import { getPostRoute } from '../api/space'
 import { formatCount } from '../utils/number'
 import { formatDayTime, formatRelativeTime } from '../utils/time'
 
@@ -19,9 +18,6 @@ const route = useRoute()
 const router = useRouter()
 const post = ref(null)
 const comments = ref([])
-const routePlan = ref(null)
-const routeError = ref('')
-const routeLoading = ref(false)
 const commentText = ref('')
 const commenting = ref(false)
 const commentError = ref('')
@@ -29,6 +25,10 @@ const loading = ref(true)
 const error = ref('')
 const missing = ref(false)
 const galleryIndex = ref(-1)
+const replyTo = ref(null)
+const replyText = ref('')
+const replyBusy = ref(false)
+const repliesByTop = ref({})
 
 const galleryImages = computed(() => (post.value?.media || []).map((image) => image.url))
 
@@ -83,16 +83,10 @@ async function sharePost() {
   showNotice(ok ? '链接已复制' : url)
 }
 
-async function loadRoute() {
-  routeLoading.value = true
-  routeError.value = ''
-  try {
-    routePlan.value = await getPostRoute(post.value.id)
-  } catch (err) {
-    routeError.value = err.message || '这条路暂时算不出来'
-  } finally {
-    routeLoading.value = false
-  }
+function goRoute() {
+  const ids = places.value.map((place) => place.id)
+  if (ids.length < 2) return
+  router.push({ path: '/nav', query: { stops: ids.join(','), mode: 'DISTANCE', auto: '1' } })
 }
 
 async function submitComment() {
@@ -166,14 +160,14 @@ async function load() {
   comments.value = []
   try {
     post.value = await getPost(requestedId)
-    if (COMMENTS_READY) getComments(requestedId, { pageSize: 20 })
-      .then((data) => {
-        // 页面已经切到别的帖子时丢掉旧响应
-        if (route.params.id === requestedId) comments.value = data.list
-      })
-      .catch(() => {
-        // 评论是 P1 能力，取不到时帖子正文照常看
-      })
+    if (COMMENTS_READY) {
+      const data = await getComments(requestedId, { pageSize: 20 })
+      // 页面已经切到别的帖子时丢掉旧响应
+      if (route.params.id === requestedId) {
+        comments.value = data.list
+        await loadReplies()
+      }
+    }
   } catch (err) {
     error.value = err.message || '加载失败'
     missing.value = err.code === 404 || err.httpStatus === 404
@@ -202,6 +196,58 @@ function stopLabel(index) {
   if (index === 0) return '起点'
   if (index === places.value.length - 1) return '终点'
   return '途经'
+}
+
+async function loadReplies() {
+  const tops = (comments.value || []).filter((item) => item.replyCount > 0)
+  const out = {}
+  await Promise.all(
+    tops.map(async (top) => {
+      try {
+        const page = await getCommentReplies(top.id, { pageSize: 20 })
+        out[top.id] = page.list || []
+      } catch {
+        out[top.id] = []
+      }
+    }),
+  )
+  repliesByTop.value = out
+}
+
+function startReply(comment) {
+  if (!isLoggedIn()) return
+  replyTo.value = comment
+  replyText.value = ''
+}
+
+function cancelReply() {
+  replyTo.value = null
+  replyText.value = ''
+}
+
+async function submitReply(comment) {
+  const content = replyText.value.trim()
+  if (!content || replyBusy.value) return
+  replyBusy.value = true
+  commentError.value = ''
+  try {
+    await createComment(post.value.id, content, comment.topId || comment.id)
+    cancelReply()
+    await loadComments()
+    await loadReplies()
+    if (post.value?.counts) post.value.counts.comment += 1
+  } catch (err) {
+    commentError.value = err.message || '回复失败'
+  } finally {
+    replyBusy.value = false
+  }
+}
+
+async function loadComments() {
+  if (!COMMENTS_READY || !post.value) return
+  const data = await getComments(post.value.id, { pageSize: 20 })
+  comments.value = data.list || []
+  await loadReplies()
 }
 
 onMounted(load)
@@ -297,9 +343,28 @@ watch(() => route.params.id, load)
           <div class="comment-body">
             <p class="who">
               <b>{{ comment.author.nickname }}</b> · {{ formatRelativeTime(comment.createdTime) }}
+              <button v-if="isLoggedIn()" type="button" class="link-button" @click="startReply(comment)">回复</button>
               <button v-if="canRemoveComment(comment)" type="button" class="link-button" @click="removeComment(comment)">删除</button>
             </p>
             <p>{{ comment.content }}</p>
+
+            <div v-if="repliesByTop[comment.id]?.length" class="reply-list">
+              <div v-for="reply in repliesByTop[comment.id]" :key="reply.id" class="reply">
+                <b>{{ reply.author.nickname }}</b>
+                <span>{{ reply.content }}</span>
+                <button v-if="canRemoveComment(reply)" type="button" class="link-button" @click="removeComment(reply)">删除</button>
+              </div>
+            </div>
+
+            <form v-if="replyTo?.id === comment.id" class="reply-form" @submit.prevent="submitReply(comment)">
+              <textarea v-model="replyText" rows="2" maxlength="1000" :placeholder="`回复 ${comment.author.nickname}`"></textarea>
+              <div class="reply-foot">
+                <button type="button" class="link-button" @click="cancelReply">取消</button>
+                <button type="submit" class="btn primary" :disabled="replyBusy || !replyText.trim()">
+                  {{ replyBusy ? '发送中…' : '回复' }}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </section>
@@ -313,20 +378,11 @@ watch(() => route.params.id, load)
             <b>{{ place.name }}</b>{{ stopLabel(index) }}
           </li>
         </ul>
-        <button type="button" class="btn primary block" :disabled="routeLoading" @click="loadRoute">
-          {{ routeLoading ? '正在算路…' : '按这个顺序走' }}
+        <button v-if="places.length > 1" type="button" class="btn primary block" @click="goRoute">
+          按这个顺序走
         </button>
-        <p v-if="routeError" class="form-error">{{ routeError }}</p>
-        <div v-if="routePlan" class="route-result">
-          <p class="route-summary">
-            全程 {{ routePlan.totalDistanceMeters }} 米 · 约 {{ Math.round(routePlan.totalTimeSeconds / 60) }} 分钟
-          </p>
-          <div v-for="(segment, index) in routePlan.segments" :key="index" class="plan-segment">
-            <span class="dot" :class="{ busy: segment.congestion >= 1.5 }"></span>
-            <span>{{ segment.fromName }} → {{ segment.toName }}</span>
-            <span class="muted-text">{{ segment.distanceMeters }}m</span>
-          </div>
-        </div>
+        <p v-if="places.length > 1" class="muted-text">会跳到路线页，按最短距离给你出方案。</p>
+        <p v-else class="muted-text">这篇帖子只串了 1 个地点，选两个以上才能规划路线。</p>
       </section>
     </aside>
   </div>

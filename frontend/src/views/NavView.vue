@@ -15,34 +15,53 @@ const edges = ref([])
 const plans = ref([])
 const selected = ref(0)
 const planning = ref(false)
-
-// 能点选的地点：路网节点 + 对应的地点主题（后端寻路只认 topicId）
 const places = ref([])
 
-const from = ref(null)
-const to = ref(null)
-const keywordFrom = ref('')
-const keywordTo = ref('')
+const MODES = [
+  { key: 'MIXED', label: '综合（时间 × 拥挤度）' },
+  { key: 'TIME', label: '最快' },
+  { key: 'DISTANCE', label: '最短' },
+]
+const mode = ref('MIXED')
 
-const suggestionsFrom = ref([])
-const suggestionsTo = ref([])
+// 多目的地：至少 2 个点，可插入途经点（最多 9 个）
+const stops = ref([emptyStop(), emptyStop()])
+const suggestionIndex = ref(-1)
+const suggestions = ref([])
+
+function emptyStop() {
+  return { place: null, keyword: '' }
+}
+
+const filled = computed(() => stops.value.map((stop) => stop.place).filter(Boolean))
+// 只剩一个点时不要把同一个点同时当起点和终点
+const fromNodeId = computed(() => (filled.value.length >= 1 ? filled.value[0].nodeId : null))
+const toNodeId = computed(() =>
+  filled.value.length >= 2 ? filled.value[filled.value.length - 1].nodeId : null,
+)
+const planNodeIds = computed(() => plans.value[selected.value]?.nodeIds ?? [])
+
+const canPlan = computed(() => {
+  if (filled.value.length < 2) return false
+  const ids = filled.value.map((place) => place.id)
+  return new Set(ids).size === ids.length
+})
+
+const planHint = computed(() => {
+  if (filled.value.length < 2) return '选起点和终点：点地图上的地点，或搜地点'
+  const ids = filled.value.map((place) => place.id)
+  if (new Set(ids).size !== ids.length) return '地点不能重复'
+  return ''
+})
 
 const nodeById = computed(() => new Map(nodes.value.map((node) => [node.id, node])))
 const topicNode = computed(() => new Map(places.value.map((place) => [place.topicId, place.nodeId])))
 
-const fromNodeId = computed(() => from.value?.nodeId ?? null)
-const toNodeId = computed(() => to.value?.nodeId ?? null)
-
-const planNodeIds = computed(() => plans.value[selected.value]?.nodeIds ?? [])
-
-const canPlan = computed(() => from.value && to.value && from.value.id !== to.value.id)
-
-const planHint = computed(() => {
-  if (!from.value) return '先选起点：点地图上的地点，或搜地点'
-  if (!to.value) return '再选终点'
-  if (from.value.id === to.value.id) return '起点和终点不能是同一个地方'
-  return ''
-})
+function stopLabel(index) {
+  if (index === 0) return '起点'
+  if (index === stops.value.length - 1) return '终点'
+  return `途经 ${index}`
+}
 
 function displaySegments(plan) {
   const rows = []
@@ -139,63 +158,73 @@ function resetPlans() {
   planError.value = ''
 }
 
-function setStop(which, place) {
-  const stop = place ? { id: place.topicId, name: place.name, nodeId: place.nodeId ?? null } : null
-  if (which === 'from') {
-    from.value = stop
-    keywordFrom.value = stop?.name ?? ''
-    suggestionsFrom.value = []
-  } else {
-    to.value = stop
-    keywordTo.value = stop?.name ?? ''
-    suggestionsTo.value = []
-  }
-}
-
-// 点地图：先起点、再终点；点已选中的那个就是取消；两个都选好后重新从起点开始
-function pickOnMap(place) {
-  if (from.value?.nodeId != null && from.value.nodeId === place.nodeId) {
-    setStop('from', null)
-  } else if (to.value?.nodeId != null && to.value.nodeId === place.nodeId) {
-    setStop('to', null)
-  } else if (!from.value) {
-    setStop('from', place)
-  } else if (!to.value) {
-    setStop('to', place)
-  } else {
-    setStop('to', null)
-    setStop('from', place)
-  }
+function fillStop(index, topic, keyword = '') {
+  const place = topic
+    ? { id: topic.id ?? topic.topicId, name: topic.name, nodeId: topic.nodeId ?? topicNode.value.get(topic.id ?? topic.topicId) ?? null }
+    : null
+  stops.value[index] = { place, keyword: place ? place.name : keyword }
   resetPlans()
 }
 
-function search(which) {
-  const keyword = (which === 'from' ? keywordFrom : keywordTo).value.trim()
-  if (!keyword) return
+function addStop() {
+  if (stops.value.length >= 9) return
+  stops.value.splice(stops.value.length - 1, 0, emptyStop())
+}
+
+function removeStop(index) {
+  if (stops.value.length <= 2) return
+  stops.value.splice(index, 1)
+  resetPlans()
+}
+
+// 点地图：已选的取消；否则填第一个空位，没空位就作为新的终点插入
+function pickOnMap(place) {
+  const existing = stops.value.findIndex((stop) => stop.place?.nodeId != null && stop.place.nodeId === place.nodeId)
+  if (existing >= 0) {
+    stops.value[existing] = emptyStop()
+    resetPlans()
+    return
+  }
+  const empty = stops.value.findIndex((stop) => !stop.place)
+  if (empty >= 0) {
+    fillStop(empty, { id: place.topicId, name: place.name, nodeId: place.nodeId })
+    return
+  }
+  if (stops.value.length < 9) {
+    stops.value.splice(stops.value.length - 1, 0, {
+      place: { id: place.topicId, name: place.name, nodeId: place.nodeId },
+      keyword: place.name,
+    })
+    resetPlans()
+  }
+}
+
+function search(index) {
+  suggestionIndex.value = index
+  const keyword = stops.value[index].keyword.trim()
+  if (!keyword) {
+    suggestions.value = []
+    return
+  }
   getTopicSuggest({ q: keyword, limit: 6 })
     .then((list) => {
-      if (which === 'from') suggestionsFrom.value = list
-      else suggestionsTo.value = list
+      if (suggestionIndex.value === index) suggestions.value = list
     })
     .catch(() => {})
 }
 
-function onEnter(which) {
-  const list = which === 'from' ? suggestionsFrom.value : suggestionsTo.value
-  if (list.length) {
-    pick(which, list[0])
+function onEnter(index) {
+  if (suggestions.value.length && suggestionIndex.value === index) {
+    pick(index, suggestions.value[0])
     return
   }
-  search(which)
+  search(index)
 }
 
-function pick(which, topic) {
-  setStop(which, {
-    topicId: topic.id,
-    name: topic.name,
-    nodeId: topicNode.value.get(topic.id) ?? null,
-  })
-  resetPlans()
+function pick(index, topic) {
+  fillStop(index, { id: topic.id, name: topic.name, nodeId: topicNode.value.get(topic.id) ?? null })
+  suggestions.value = []
+  suggestionIndex.value = -1
 }
 
 async function plan() {
@@ -203,7 +232,7 @@ async function plan() {
   planning.value = true
   planError.value = ''
   try {
-    plans.value = await planRoutes([from.value.id, to.value.id])
+    plans.value = await planRoutes(filled.value.map((place) => place.id), mode.value)
     selected.value = 0
   } catch (err) {
     planError.value = err.message || '规划失败'
@@ -213,18 +242,37 @@ async function plan() {
   }
 }
 
+// 从帖子跳过来：?stops=1,2,3&mode=DISTANCE&auto=1
+async function applyPreset() {
+  const raw = typeof route.query.stops === 'string' ? route.query.stops : ''
+  if (!raw) return
+  const ids = raw.split(',').map((item) => Number(item)).filter((id) => Number.isFinite(id))
+  if (ids.length < 2) return
+  try {
+    const topics = await Promise.all(ids.map((id) => getTopic(id)))
+    stops.value = topics.map((topic) => ({
+      place: { id: topic.id, name: topic.name, nodeId: topic.nodeId ?? topicNode.value.get(topic.id) ?? null },
+      keyword: topic.name,
+    }))
+    if (typeof route.query.mode === 'string' && MODES.some((item) => item.key === route.query.mode)) {
+      mode.value = route.query.mode
+    }
+    if (route.query.auto === '1') await plan()
+  } catch (err) {
+    planError.value = err.message || '按帖子里的地点规划失败'
+  }
+}
+
 onMounted(async () => {
   await load()
   await loadPlaces()
+  await applyPreset()
+  if (route.query.stops) return
   const preset = route.query.to
   if (!preset) return
   try {
     const topic = await getTopic(String(preset))
-    if (topic?.type === 'PLACE') {
-      setStop('to', { topicId: topic.id, name: topic.name, nodeId: topic.nodeId ?? null })
-    } else {
-      setStop('to', { topicId: topic.id, name: topic.name, nodeId: null })
-    }
+    fillStop(1, { id: topic.id, name: topic.name, nodeId: topic.nodeId ?? null })
   } catch {
     // 预填失败不影响手动选择
   }
@@ -235,39 +283,37 @@ onMounted(async () => {
   <div class="page page-two nav-page">
     <main>
       <div class="card nav-toolbar">
-        <div class="pick">
-          <label>起点</label>
+        <div v-for="(stop, index) in stops" :key="index" class="pick">
+          <label>{{ stopLabel(index) }}</label>
           <input
-            v-model="keywordFrom"
-            data-pick="from"
+            v-model="stop.keyword"
+            :data-pick="index === 0 ? 'from' : index === stops.length - 1 ? 'to' : `way-${index}`"
             placeholder="点地图选，或搜地点"
-            @input="search('from')"
-            @keydown.enter.prevent="onEnter('from')"
+            @input="search(index)"
+            @keydown.enter.prevent="onEnter(index)"
           />
-          <div v-if="suggestionsFrom.length" class="suggest-list">
-            <button v-for="item in suggestionsFrom" :key="item.id" type="button" class="suggest-item" @click="pick('from', item)">
+          <button
+            v-if="stops.length > 2 && index !== 0 && index !== stops.length - 1"
+            type="button"
+            class="stop-remove"
+            title="删除这个途经点"
+            @click="removeStop(index)"
+          >×</button>
+          <div v-if="suggestionIndex === index && suggestions.length" class="suggest-list">
+            <button v-for="item in suggestions" :key="item.id" type="button" class="suggest-item" @click="pick(index, item)">
               {{ item.name }}
             </button>
           </div>
         </div>
-        <div class="pick">
-          <label>终点</label>
-          <input
-            v-model="keywordTo"
-            data-pick="to"
-            placeholder="点地图选，或搜地点"
-            @input="search('to')"
-            @keydown.enter.prevent="onEnter('to')"
-          />
-          <div v-if="suggestionsTo.length" class="suggest-list">
-            <button v-for="item in suggestionsTo" :key="item.id" type="button" class="suggest-item" @click="pick('to', item)">
-              {{ item.name }}
-            </button>
-          </div>
+        <div class="nav-actions">
+          <button type="button" class="btn" :disabled="stops.length >= 9" @click="addStop">+ 途经点</button>
+          <select v-model="mode" class="mode-select" aria-label="路线策略">
+            <option v-for="item in MODES" :key="item.key" :value="item.key">{{ item.label }}</option>
+          </select>
+          <button type="button" class="btn primary" :disabled="!canPlan || planning" @click="plan">
+            {{ planning ? '规划中…' : '规划路线' }}
+          </button>
         </div>
-        <button type="button" class="btn primary" :disabled="!canPlan || planning" @click="plan">
-          {{ planning ? '规划中…' : '规划路线' }}
-        </button>
         <span v-if="planHint" class="muted-text">{{ planHint }}</span>
       </div>
       <p v-if="planError" class="form-error map-plan-error">{{ planError }}</p>
@@ -286,7 +332,7 @@ onMounted(async () => {
             @pick="pickOnMap"
           />
           <p class="muted-text map-tip">
-            示意图：{{ nodes.length }} 个节点 · {{ edges.length }} 条路，{{ places.length }} 个地点可点选；拖动平移，右下角 +/− 缩放。
+            示意图：{{ nodes.length }} 个节点 · {{ edges.length }} 条路，{{ places.length }} 个地点可点选；拖动平移，滚轮或右下角 +/− 缩放。
             <template v-if="!places.length">地点列表没加载出来，先用上面的搜索框选起终点。</template>
           </p>
         </template>
@@ -296,8 +342,9 @@ onMounted(async () => {
     <aside class="side">
       <section class="card">
         <h3>路线方案</h3>
-        <p class="muted-text">按综合耗时排序（时间 × 拥挤度）。</p>
-        <p v-if="!plans.length" class="muted-text">选两个地点，点「规划路线」。</p>
+        <p class="muted-text">{{ MODES.find((item) => item.key === mode)?.label }}为权重，选中方案可在地图上看线路。</p>
+        <p v-if="!plans.length" class="muted-text">选好地点，点「规划路线」。</p>
+
         <div v-for="(plan, index) in plans" :key="index" class="plan" :class="{ on: index === selected }" @click="selected = index">
           <div class="plan-head">
             <b>方案 {{ index + 1 }}</b>
@@ -319,5 +366,37 @@ onMounted(async () => {
 <style scoped>
 .map-plan-error {
   margin-top: 8px;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mode-select {
+  padding: 6px 8px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  background: #fbfaf7;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.pick {
+  position: relative;
+}
+
+.stop-remove {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0 4px;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
 }
 </style>

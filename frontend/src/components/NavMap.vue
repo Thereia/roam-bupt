@@ -80,12 +80,7 @@ const px = (value) => value / unitScale.value
 // 底图本身已经印了地名，所以只在「选中」和「鼠标停在这个点上」时补名字，避免叠字
 const labels = computed(() =>
   props.places
-    .filter(
-      (place) =>
-        place.nodeId === props.fromNodeId ||
-        place.nodeId === props.toNodeId ||
-        place.nodeId === hoveredId.value,
-    )
+    .filter((place) => place.nodeId === hoveredId.value)
     .map((place) => ({
       nodeId: place.nodeId,
       text: place.name,
@@ -118,6 +113,22 @@ function applyZoom(next) {
   zoom.value = target
   offset.x = size.w / 2 - centerMapX * baseScale.value * target
   offset.y = size.h / 2 - centerMapY * baseScale.value * target
+  clampOffset()
+}
+
+function onWheel(event) {
+  event.preventDefault()
+  const rect = frame.value?.getBoundingClientRect()
+  if (!rect) return
+  const anchorX = event.clientX - rect.left
+  const anchorY = event.clientY - rect.top
+  const mapX = (anchorX - offset.x) / (baseScale.value * zoom.value)
+  const mapY = (anchorY - offset.y) / (baseScale.value * zoom.value)
+  const step = event.deltaY < 0 ? 1.15 : 1 / 1.15
+  const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM.value, zoom.value * step))
+  zoom.value = Math.round(next * 1000) / 1000
+  offset.x = anchorX - mapX * baseScale.value * zoom.value
+  offset.y = anchorY - mapY * baseScale.value * zoom.value
   clampOffset()
 }
 
@@ -265,6 +276,7 @@ onBeforeUnmount(() => {
     :class="{ dragging }"
     role="group"
     aria-label="校园地图，可拖动平移、可缩放"
+    @wheel.prevent="onWheel"
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
