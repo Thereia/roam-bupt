@@ -110,6 +110,23 @@ class UserApiTest {
     }
 
     @Test
+    void 清空简介_保存后为空() throws Exception {
+        Account account = register("up_edit3");
+        mockMvc.perform(put("/api/v1/users/me")
+                        .header("Authorization", "Bearer " + account.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("nickname", "有简介", "bio", "先写一段"))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/v1/users/me")
+                        .header("Authorization", "Bearer " + account.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("nickname", "有简介", "bio", ""))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.bio").doesNotExist());
+    }
+
+    @Test
     void 修改昵称_空_返回4001() throws Exception {
         Account account = register("up_edit2");
         mockMvc.perform(put("/api/v1/users/me")

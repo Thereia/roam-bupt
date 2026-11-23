@@ -9,6 +9,7 @@ import StateBlock from '../components/StateBlock.vue'
 import TopicChip from '../components/TopicChip.vue'
 import { isLoggedIn, userStore } from '../store/user'
 import { showNotice } from '../store/notice'
+import { copyText } from '../utils/clipboard'
 import { getPostRoute } from '../api/space'
 import { formatCount } from '../utils/number'
 import { formatDayTime, formatRelativeTime } from '../utils/time'
@@ -70,12 +71,8 @@ function canRemoveComment(comment) {
 
 async function sharePost() {
   const url = `${window.location.origin}/posts/${post.value.id}`
-  try {
-    await navigator.clipboard.writeText(url)
-    showNotice('链接已复制')
-  } catch {
-    showNotice(url)
-  }
+  const ok = await copyText(url)
+  showNotice(ok ? '链接已复制' : url)
 }
 
 async function loadRoute() {

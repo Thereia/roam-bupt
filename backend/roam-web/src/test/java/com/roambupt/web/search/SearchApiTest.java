@@ -85,6 +85,17 @@ class SearchApiTest {
     }
 
     @Test
+    void 搜索_新帖能搜到_索引没写入也不漏() throws Exception {
+        String token = register("search_new1");
+        createPost(token, "新帖唯一词月光宝盒", "正文", PLACE_A);
+
+        mockMvc.perform(get("/api/v1/search").param("q", "月光宝盒"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.total").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.data.list[0].title").value(org.hamcrest.Matchers.containsString("月光宝盒")));
+    }
+
+    @Test
     void 搜索_关键词为空_返回4001() throws Exception {
         mockMvc.perform(get("/api/v1/search").param("q", "  "))
                 .andExpect(status().isBadRequest())

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { collectPost, uncollectPost } from '../api/post'
 import { isLoggedIn } from '../store/user'
 import { showNotice } from '../store/notice'
+import { copyText } from '../utils/clipboard'
 import TopicChip from './TopicChip.vue'
 import { formatRelativeTime } from '../utils/time'
 
@@ -44,12 +45,8 @@ async function toggleCollect() {
 
 async function share() {
   const url = `${window.location.origin}/posts/${props.post.id}`
-  try {
-    await navigator.clipboard.writeText(url)
-    showNotice('链接已复制')
-  } catch {
-    showNotice(url)
-  }
+  const ok = await copyText(url)
+  showNotice(ok ? '链接已复制' : url)
 }
 // 地点页的卡片不再重复挂当前地点，只留分类 chip
 const chips = computed(() =>

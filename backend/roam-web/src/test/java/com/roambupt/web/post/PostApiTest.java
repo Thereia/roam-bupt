@@ -225,6 +225,20 @@ class PostApiTest {
     }
 
     @Test
+    void 作者自己看已删除帖也404() throws Exception {
+        String token = registerAndGetToken("p_del3");
+        long postId = createPostFor(token, "删完自己也不能看");
+
+        mockMvc.perform(delete("/api/v1/posts/" + postId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/posts/" + postId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void 删除_别人的帖子_返回403() throws Exception {
         String author = registerAndGetToken("p_del2a");
         String other = registerAndGetToken("p_del2b");

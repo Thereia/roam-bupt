@@ -63,11 +63,13 @@ public class UserCommandServiceImpl implements UserCommandService {
         if (user == null) {
             throw new BusinessException(StatusEnum.NOT_FOUND, "用户不存在");
         }
-        user.setNickname(nickname);
-        user.setAvatar(avatar == null || avatar.isBlank() ? null : avatar);
-        user.setBio(bio == null || bio.isEmpty() ? null : bio);
-        user.setUpdatedTime(LocalDateTime.now());
-        userMapper.updateById(user);
+        // updateById 默认跳过 null 字段，清空简介/头像必须显式 set
+        userMapper.update(null, com.baomidou.mybatisplus.core.toolkit.Wrappers.<UserDO>lambdaUpdate()
+                .eq(UserDO::getId, uid)
+                .set(UserDO::getNickname, nickname)
+                .set(UserDO::getAvatar, avatar == null || avatar.isBlank() ? null : avatar)
+                .set(UserDO::getBio, bio == null || bio.isEmpty() ? null : bio)
+                .set(UserDO::getUpdatedTime, LocalDateTime.now()));
     }
 
     @Override

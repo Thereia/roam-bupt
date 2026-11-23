@@ -57,7 +57,8 @@ public class SearchServiceImpl implements SearchService {
             try {
                 EsSearchGateway.SearchHits hits =
                         esSearchGateway.search(keyword, query.topicId(), offset, size);
-                if (hits != null) {
+                // 命中 0 条也降级：索引写入失败（如 ES 只读）时新内容不能永久搜不到
+                if (hits != null && hits.total() > 0) {
                     List<PostVO> list = postReadService.byIds(hits.ids(), viewerUid);
                     return PageResult.of(hits.total(), page, size, list);
                 }

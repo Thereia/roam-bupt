@@ -204,7 +204,7 @@ async function submit() {
       <p v-if="error" class="form-error">{{ error }}</p>
 
       <div class="form-foot">
-        <span class="muted-text">提交后需审核，通过后所有人可见</span>
+        <span class="muted-text">{{ editing ? '保存后需要重新审核，通过前其他人看不到' : '提交后需审核，通过后所有人可见' }}</span>
         <button v-if="!editing" type="button" class="btn" :disabled="submitting" @click="saveDraft">存草稿</button>
         <button type="button" class="btn-primary" :disabled="submitting" @click="submit">
           {{ submitting ? '保存中…' : (editing ? '保存修改' : '发布') }}

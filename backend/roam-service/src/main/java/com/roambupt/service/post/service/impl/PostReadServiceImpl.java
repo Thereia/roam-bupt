@@ -219,6 +219,10 @@ public class PostReadServiceImpl implements PostReadService {
     }
 
     private boolean visible(PostDO post, Long viewerUid, String viewerRole) {
+        // 已删除的帖子对任何人都不可见（作者与管理员也一样）
+        if ("DELETED".equals(post.getStatus())) {
+            return false;
+        }
         if (STATUS_ONLINE.equals(post.getStatus())) {
             return true;
         }
