@@ -17,6 +17,9 @@ public interface UserQueryService {
 
     Optional<UserAccount> findAccountById(long uid);
 
+    /** 批量取用户简要信息，保持传入顺序。 */
+    java.util.List<com.roambupt.api.model.vo.UserBriefVO> briefs(java.util.Collection<Long> ids);
+
     /** 我关注了谁，供关注流使用。 */
     List<Long> findFollowingIds(long uid);
 }

@@ -18,4 +18,10 @@ public interface FollowService {
     long countFollowing(long uid);
 
     List<Long> findFollowingIds(long uid);
+
+    /** 粉丝 id（按关注时间倒序，分页）。 */
+    List<Long> followerIds(long uid, int page, int pageSize);
+
+    /** 关注的人 id（分页）。 */
+    List<Long> followingIds(long uid, int page, int pageSize);
 }

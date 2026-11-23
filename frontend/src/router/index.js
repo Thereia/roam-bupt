@@ -59,6 +59,18 @@ const routes = [
     meta: { title: '通知', requiresAuth: true },
   },
   {
+    path: '/users/:id/followers',
+    name: 'followers',
+    component: () => import('../views/FollowListView.vue'),
+    meta: { title: '粉丝' },
+  },
+  {
+    path: '/users/:id/following',
+    name: 'following',
+    component: () => import('../views/FollowListView.vue'),
+    meta: { title: '关注' },
+  },
+  {
     path: '/users/:id',
     name: 'user',
     component: () => import('../views/UserView.vue'),

@@ -52,6 +52,20 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
+    public List<Long> followerIds(long uid, int page, int pageSize) {
+        int pageNo = Math.max(1, page);
+        int size = Math.min(Math.max(1, pageSize), 50);
+        return followMapper.findFollowerIdsPaged(uid, (pageNo - 1) * size, size);
+    }
+
+    @Override
+    public List<Long> followingIds(long uid, int page, int pageSize) {
+        int pageNo = Math.max(1, page);
+        int size = Math.min(Math.max(1, pageSize), 50);
+        return followMapper.findFollowingIdsPaged(uid, (pageNo - 1) * size, size);
+    }
+
+    @Override
     public boolean isFollowed(long uid, long targetUid) {
         return followMapper.selectCount(Wrappers.<FollowDO>lambdaQuery()
                 .eq(FollowDO::getUserId, uid)

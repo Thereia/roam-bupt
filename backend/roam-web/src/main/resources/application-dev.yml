@@ -12,8 +12,8 @@ spring:
       port: ${ROAM_REDIS_PORT:7001}
       # 仅本地开发默认值；生产必须走环境变量
       password: ${ROAM_REDIS_PASSWORD:123456}
-      connect-timeout: 1s
-      timeout: 500ms
+      connect-timeout: 2s
+      timeout: 3s
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml

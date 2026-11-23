@@ -150,6 +150,25 @@ class UserApiTest {
     }
 
     @Test
+    void 粉丝列表_关注后包含粉丝() throws Exception {
+        Account target = register("up_fl1t");
+        Account fan = register("up_fl1f");
+        mockMvc.perform(post("/api/v1/users/" + target.id() + "/follow")
+                        .header("Authorization", "Bearer " + fan.token()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/users/" + target.id() + "/followers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.list[0].id").value(fan.id()));
+
+        mockMvc.perform(get("/api/v1/users/" + fan.id() + "/following"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.list[0].id").value(target.id()));
+    }
+
+    @Test
     void 关注_自己_返回4001() throws Exception {
         Account a = register("up_self");
         mockMvc.perform(post("/api/v1/users/" + a.id() + "/follow")

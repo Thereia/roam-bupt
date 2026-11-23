@@ -40,6 +40,24 @@ public class UserQueryServiceImpl implements UserQueryService {
     }
 
     @Override
+    public List<com.roambupt.api.model.vo.UserBriefVO> briefs(java.util.Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        List<UserDO> users = userMapper.selectBatchIds(ids);
+        java.util.Map<Long, UserDO> byId = new java.util.HashMap<>();
+        for (UserDO user : users) {
+            byId.put(user.getId(), user);
+        }
+        return ids.stream()
+                .map(byId::get)
+                .filter(java.util.Objects::nonNull)
+                .map(user -> new com.roambupt.api.model.vo.UserBriefVO(
+                        user.getId(), user.getNickname(), user.getAvatar(), null))
+                .toList();
+    }
+
+    @Override
     public List<Long> findFollowingIds(long uid) {
         return followMapper.findFollowingIds(uid);
     }

@@ -8,6 +8,7 @@ import com.roambupt.api.model.vo.PostVO;
 import com.roambupt.api.model.vo.ResVo;
 import com.roambupt.api.model.dto.ProfileUpdateCommand;
 import com.roambupt.api.model.vo.UserProfileVO;
+import com.roambupt.api.model.vo.UserBriefVO;
 import com.roambupt.api.model.vo.UserVO;
 import com.roambupt.core.context.CurrentUserContext;
 import com.roambupt.service.post.service.PostReadService;
@@ -16,6 +17,8 @@ import com.roambupt.service.user.service.UserCommandService;
 import com.roambupt.service.user.service.UserProfileService;
 import com.roambupt.service.user.service.UserQueryService;
 import com.roambupt.web.global.OptionalAuth;
+
+import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -72,6 +75,28 @@ public class UserController {
                                            @RequestParam(defaultValue = "1") int page,
                                            @RequestParam(defaultValue = "10") int pageSize) {
         return ResVo.ok(postReadService.byUser(id, CurrentUserContext.uid(), page, pageSize));
+    }
+
+    @OptionalAuth
+    @GetMapping("/{id}/followers")
+    public ResVo<PageResult<UserBriefVO>> followers(@PathVariable long id,
+                                                    @RequestParam(defaultValue = "1") int page,
+                                                    @RequestParam(defaultValue = "20") int pageSize) {
+        List<Long> ids = followService.followerIds(id, page, pageSize);
+        PageResult<UserBriefVO> result = PageResult.of(followService.countFollowers(id), page, pageSize,
+                userQueryService.briefs(ids));
+        return ResVo.ok(result);
+    }
+
+    @OptionalAuth
+    @GetMapping("/{id}/following")
+    public ResVo<PageResult<UserBriefVO>> following(@PathVariable long id,
+                                                    @RequestParam(defaultValue = "1") int page,
+                                                    @RequestParam(defaultValue = "20") int pageSize) {
+        List<Long> ids = followService.followingIds(id, page, pageSize);
+        PageResult<UserBriefVO> result = PageResult.of(followService.countFollowing(id), page, pageSize,
+                userQueryService.briefs(ids));
+        return ResVo.ok(result);
     }
 
     @PostMapping("/{id}/follow")

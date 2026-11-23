@@ -129,8 +129,8 @@ watch(() => route.params.id, load)
             <p class="muted-text">@{{ profile.username }}<span v-if="profile.bio"> · {{ profile.bio }}</span></p>
             <div class="profile-counts">
               <span><b>{{ profile.postCount }}</b> 帖子</span>
-              <span><b>{{ profile.followerCount }}</b> 粉丝</span>
-              <span><b>{{ profile.followingCount }}</b> 关注</span>
+              <RouterLink :to="`/users/${profile.id}/followers`"><b>{{ profile.followerCount }}</b> 粉丝</RouterLink>
+              <RouterLink :to="`/users/${profile.id}/following`"><b>{{ profile.followingCount }}</b> 关注</RouterLink>
             </div>
           </div>
           <button v-if="isSelf" type="button" class="btn" @click="startEdit">编辑资料</button>

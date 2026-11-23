@@ -19,3 +19,11 @@ export function unfollowUser(id) {
 export function updateMe(payload) {
   return http.put('/users/me', payload, { silent: true })
 }
+
+export function getFollowers(id, params = {}) {
+  return http.get(`/users/${id}/followers`, { params })
+}
+
+export function getFollowing(id, params = {}) {
+  return http.get(`/users/${id}/following`, { params })
+}
