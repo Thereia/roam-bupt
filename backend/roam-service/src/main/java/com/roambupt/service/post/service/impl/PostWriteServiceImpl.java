@@ -103,6 +103,28 @@ public class PostWriteServiceImpl implements PostWriteService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public PostCreatedVO publishDraft(long postId, long uid) {
+        PostDO existing = postMapper.selectById(postId);
+        if (existing == null || "DELETED".equals(existing.getStatus())) {
+            throw new BusinessException(StatusEnum.NOT_FOUND, "帖子不存在");
+        }
+        if (!existing.getUserId().equals(uid)) {
+            throw new BusinessException(StatusEnum.FORBIDDEN, "只能发布自己的草稿");
+        }
+        if (!"DRAFT".equals(existing.getStatus())) {
+            throw new BusinessException(StatusEnum.PARAM_ERROR, "只有草稿可以发布");
+        }
+        String status = validator.statusForPublish();
+        postMapper.update(null, com.baomidou.mybatisplus.core.toolkit.Wrappers.<PostDO>lambdaUpdate()
+                .eq(PostDO::getId, postId)
+                .set(PostDO::getStatus, status)
+                .set(PostDO::getUpdatedTime, LocalDateTime.now()));
+        eventPublisher.publishEvent(new PostStatusChangedEvent(postId, status));
+        return new PostCreatedVO(postId, status);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(long postId, long uid, String role) {
         PostDO existing = postMapper.selectById(postId);
         if (existing == null || "DELETED".equals(existing.getStatus())) {

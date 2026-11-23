@@ -65,3 +65,12 @@ export function deletePost(id) {
 export function deleteComment(commentId) {
   return http.delete(`/comments/${commentId}`)
 }
+
+export function publishDraft(id) {
+  return http.put(`/posts/${id}/publish`, null, { silent: true })
+}
+
+export async function getUserDrafts(userId) {
+  const data = await http.get(`/users/${userId}/posts`, { params: { pageSize: 50 } })
+  return { ...data, list: (data.list || []).filter((post) => post.status === 'DRAFT') }
+}

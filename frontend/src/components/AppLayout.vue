@@ -49,6 +49,7 @@ watch(() => route.path, refreshUnread)
       </nav>
       <div class="topright">
         <template v-if="userStore.token">
+          <RouterLink v-if="isLoggedIn()" to="/drafts" class="link-button">草稿</RouterLink>
           <RouterLink v-if="isLoggedIn()" to="/collections" class="link-button">收藏</RouterLink>
           <RouterLink to="/notifications" class="link-button">
             通知<span v-if="notifyStore.unread" class="nav-badge">{{ notifyStore.unread }}</span>

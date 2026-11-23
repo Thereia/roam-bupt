@@ -136,6 +136,52 @@ class PostApiTest {
     }
 
     @Test
+    void 草稿_发布后上线() throws Exception {
+        String token = registerAndGetToken("p_draft1");
+        String body = objectMapper.writeValueAsString(Map.of(
+                "title", "草稿帖", "content", "先存着", "status", "DRAFT",
+                "topics", List.of(Map.of("topicId", PLACE_CANTEEN))));
+        String created = mockMvc.perform(post("/api/v1/posts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("DRAFT"))
+                .andReturn().getResponse().getContentAsString();
+        long postId = objectMapper.readTree(created).at("/data/id").asLong();
+
+        mockMvc.perform(put("/api/v1/posts/" + postId + "/publish")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ONLINE"));
+
+        mockMvc.perform(get("/api/v1/posts/" + postId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ONLINE"));
+    }
+
+    @Test
+    void 发布_非草稿_返回4001() throws Exception {
+        String token = registerAndGetToken("p_draft2");
+        long postId = createBodyAndPost(token, "已经是正式的帖子");
+
+        mockMvc.perform(put("/api/v1/posts/" + postId + "/publish")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(4001));
+    }
+
+    private long createBodyAndPost(String token, String title) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/posts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody(title, List.of(Map.of("topicId", PLACE_CANTEEN)))))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).at("/data/id").asLong();
+    }
+
+    @Test
     void 编辑_作者可以改标题和地点() throws Exception {
         String token = registerAndGetToken("p_edit1");
         long postId = createPostFor(token, "编辑前标题");

@@ -66,6 +66,15 @@ public class PostController {
         return ResVo.ok();
     }
 
+    @PutMapping("/{id}/publish")
+    public ResVo<PostCreatedVO> publishDraft(@PathVariable long id) {
+        Long uid = CurrentUserContext.uid();
+        if (uid == null) {
+            throw new BusinessException(StatusEnum.UNAUTHORIZED);
+        }
+        return ResVo.ok(postWriteService.publishDraft(id, uid));
+    }
+
     @OptionalAuth
     @GetMapping("/{id}")
     public ResVo<PostVO> detail(@PathVariable long id) {

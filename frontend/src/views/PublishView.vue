@@ -97,6 +97,33 @@ watch([title, content, selected], () => {
   if (error.value) error.value = ''
 })
 
+async function saveDraft() {
+  error.value = ''
+  if (!title.value.trim()) {
+    error.value = '草稿也要先写标题'
+    return
+  }
+  submitting.value = true
+  try {
+    const result = await createPost({
+      title: title.value.trim(),
+      content: content.value,
+      status: 'DRAFT',
+      topics: selected.value.map((item, index) => ({
+        topicId: item.id,
+        sortNo: item.type === 'PLACE' ? index : 0,
+      })),
+      media: images.value.map((item, index) => ({ type: 'IMAGE', url: item.url, sortNo: index })),
+    }, { silent: true })
+    router.push(`/drafts`)
+    return result
+  } catch (err) {
+    error.value = err.message || '存草稿失败'
+  } finally {
+    submitting.value = false
+  }
+}
+
 async function submit() {
   error.value = ''
   if (!title.value.trim()) {
@@ -178,6 +205,7 @@ async function submit() {
 
       <div class="form-foot">
         <span class="muted-text">提交后需审核，通过后所有人可见</span>
+        <button v-if="!editing" type="button" class="btn" :disabled="submitting" @click="saveDraft">存草稿</button>
         <button type="button" class="btn-primary" :disabled="submitting" @click="submit">
           {{ submitting ? '保存中…' : (editing ? '保存修改' : '发布') }}
         </button>

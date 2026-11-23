@@ -47,6 +47,12 @@ const routes = [
     meta: { title: '路线' },
   },
   {
+    path: '/drafts',
+    name: 'drafts',
+    component: () => import('../views/DraftsView.vue'),
+    meta: { title: '草稿箱', requiresAuth: true },
+  },
+  {
     path: '/collections',
     name: 'collections',
     component: () => import('../views/CollectionsView.vue'),

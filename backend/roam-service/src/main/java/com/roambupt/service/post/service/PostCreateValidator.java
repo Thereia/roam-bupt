@@ -76,6 +76,11 @@ public class PostCreateValidator {
                 topicIds, placeIds, media);
     }
 
+    /** 发布草稿时用的状态：与新建一致，由 auto-approve 决定。 */
+    public String statusForPublish() {
+        return postProperties.autoApprove() ? STATUS_ONLINE : STATUS_PENDING;
+    }
+
     private String resolveStatus(String requested) {
         if (STATUS_DRAFT.equalsIgnoreCase(requested)) {
             return STATUS_DRAFT;
