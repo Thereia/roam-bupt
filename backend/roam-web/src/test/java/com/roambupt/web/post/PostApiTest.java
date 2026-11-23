@@ -17,8 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -131,6 +133,70 @@ class PostApiTest {
         mockMvc.perform(get("/api/v1/posts/" + postId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.counts.view").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
+    }
+
+    @Test
+    void 编辑_作者可以改标题和地点() throws Exception {
+        String token = registerAndGetToken("p_edit1");
+        long postId = createPostFor(token, "编辑前标题");
+
+        mockMvc.perform(put("/api/v1/posts/" + postId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody("编辑后标题", List.of(Map.of("topicId", PLACE_CANTEEN)))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(postId));
+
+        mockMvc.perform(get("/api/v1/posts/" + postId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("编辑后标题"));
+    }
+
+    @Test
+    void 编辑_别人的帖子_返回403() throws Exception {
+        String author = registerAndGetToken("p_edit2a");
+        String other = registerAndGetToken("p_edit2b");
+        long postId = createPostFor(author, "别人的帖子");
+
+        mockMvc.perform(put("/api/v1/posts/" + postId)
+                        .header("Authorization", "Bearer " + other)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody("我来改", List.of(Map.of("topicId", PLACE_CANTEEN)))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void 删除_作者删除后详情404() throws Exception {
+        String token = registerAndGetToken("p_del1");
+        long postId = createPostFor(token, "要被删的帖子");
+
+        mockMvc.perform(delete("/api/v1/posts/" + postId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/posts/" + postId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void 删除_别人的帖子_返回403() throws Exception {
+        String author = registerAndGetToken("p_del2a");
+        String other = registerAndGetToken("p_del2b");
+        long postId = createPostFor(author, "不能删的帖子");
+
+        mockMvc.perform(delete("/api/v1/posts/" + postId)
+                        .header("Authorization", "Bearer " + other))
+                .andExpect(status().isForbidden());
+    }
+
+    private long createPostFor(String token, String title) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/posts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody(title, List.of(Map.of("topicId", PLACE_CANTEEN)))))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).at("/data/id").asLong();
     }
 
     @Test

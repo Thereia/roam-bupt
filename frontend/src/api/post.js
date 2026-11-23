@@ -53,3 +53,15 @@ export function getComments(postId, params = {}) {
   if (!USE_MOCK) return http.get(`/posts/${postId}/comments`, { params })
   return withMock(() => listComments(postId, params))
 }
+
+export function updatePost(id, payload, config = {}) {
+  return http.put(`/posts/${id}`, payload, config)
+}
+
+export function deletePost(id) {
+  return http.delete(`/posts/${id}`)
+}
+
+export function deleteComment(commentId) {
+  return http.delete(`/comments/${commentId}`)
+}

@@ -30,6 +30,42 @@ function scrollToComments() {
   document.querySelector('.comments')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+const canEdit = computed(() => {
+  const me = userStore.user
+  return !!(me && post.value?.author && me.id === post.value.author.id)
+})
+
+async function editPost() {
+  router.push({ path: '/publish', query: { edit: String(post.value.id) } })
+}
+
+async function removePost() {
+  if (!window.confirm('删除后不可恢复，确定删除这篇帖子？')) return
+  try {
+    await deletePost(post.value.id)
+    showNotice('帖子已删除')
+    router.push('/')
+  } catch (err) {
+    showNotice(err.message || '删除失败', 'error')
+  }
+}
+
+async function removeComment(comment) {
+  if (!window.confirm('确定删除这条评论？')) return
+  try {
+    await deleteComment(comment.id)
+    await loadComments()
+  } catch (err) {
+    showNotice(err.message || '删除失败', 'error')
+  }
+}
+
+function canRemoveComment(comment) {
+  const me = userStore.user
+  if (!me) return false
+  return me.id === comment.author.id || me.role === 'ADMIN'
+}
+
 async function sharePost() {
   const url = `${window.location.origin}/posts/${post.value.id}`
   try {
@@ -204,6 +240,11 @@ watch(() => route.params.id, load)
         这篇帖子还在审核中，通过后其他人才能看到，暂时不能点赞和评论。
       </p>
 
+      <div v-if="canEdit" class="author-actions">
+        <button type="button" class="btn" @click="editPost">编辑</button>
+        <button type="button" class="btn" @click="removePost">删除</button>
+      </div>
+
       <div v-if="post.status === 'ONLINE'" class="actions">
         <button type="button" :class="{ on: post.myLiked }" @click="toggleLike">
           {{ post.myLiked ? '已赞' : '点赞' }} {{ post.counts.like }}
@@ -237,7 +278,10 @@ watch(() => route.params.id, load)
         <div v-for="comment in comments" :key="comment.id" class="comment">
           <span class="avatar small">{{ comment.author.nickname.slice(0, 1) }}</span>
           <div class="comment-body">
-            <p class="who"><b>{{ comment.author.nickname }}</b> · {{ formatRelativeTime(comment.createdTime) }}</p>
+            <p class="who">
+              <b>{{ comment.author.nickname }}</b> · {{ formatRelativeTime(comment.createdTime) }}
+              <button v-if="canRemoveComment(comment)" type="button" class="link-button" @click="removeComment(comment)">删除</button>
+            </p>
             <p>{{ comment.content }}</p>
           </div>
         </div>

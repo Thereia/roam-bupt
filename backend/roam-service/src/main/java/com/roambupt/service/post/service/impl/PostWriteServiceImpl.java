@@ -3,6 +3,9 @@ package com.roambupt.service.post.service.impl;
 import com.roambupt.api.model.dto.MediaRef;
 import com.roambupt.api.model.dto.PostCreateCommand;
 import com.roambupt.api.model.event.PostCreatedEvent;
+import com.roambupt.api.model.event.PostStatusChangedEvent;
+import com.roambupt.api.model.enums.StatusEnum;
+import com.roambupt.api.model.exception.BusinessException;
 import com.roambupt.api.model.vo.PostCreatedVO;
 import com.roambupt.service.post.repository.entity.PostDO;
 import com.roambupt.service.post.repository.entity.PostMediaDO;
@@ -66,6 +69,53 @@ public class PostWriteServiceImpl implements PostWriteService {
         topicCommandService.addHeat(input.placeIds());
         publishAfterCommit(post.getId(), uid);
         return new PostCreatedVO(post.getId(), input.status());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public PostCreatedVO update(long postId, PostCreateCommand command, long uid) {
+        PostDO existing = postMapper.selectById(postId);
+        if (existing == null || "DELETED".equals(existing.getStatus())) {
+            throw new BusinessException(StatusEnum.NOT_FOUND, "帖子不存在");
+        }
+        if (!existing.getUserId().equals(uid)) {
+            throw new BusinessException(StatusEnum.FORBIDDEN, "只能编辑自己的帖子");
+        }
+        ValidatedPost input = validator.validate(command, uid);
+
+        postMapper.update(null, com.baomidou.mybatisplus.core.toolkit.Wrappers.<PostDO>lambdaUpdate()
+                .eq(PostDO::getId, postId)
+                .set(PostDO::getTitle, input.title())
+                .set(PostDO::getContent, input.content())
+                .set(PostDO::getStatus, input.status())
+                .set(PostDO::getUpdatedTime, LocalDateTime.now()));
+
+        postTopicMapper.delete(com.baomidou.mybatisplus.core.toolkit.Wrappers.<PostTopicDO>lambdaQuery()
+                .eq(PostTopicDO::getPostId, postId));
+        postMediaMapper.delete(com.baomidou.mybatisplus.core.toolkit.Wrappers.<PostMediaDO>lambdaQuery()
+                .eq(PostMediaDO::getPostId, postId));
+        bindTopics(postId, input);
+        bindMedia(postId, input);
+
+        eventPublisher.publishEvent(new PostStatusChangedEvent(postId, input.status()));
+        return new PostCreatedVO(postId, input.status());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(long postId, long uid, String role) {
+        PostDO existing = postMapper.selectById(postId);
+        if (existing == null || "DELETED".equals(existing.getStatus())) {
+            throw new BusinessException(StatusEnum.NOT_FOUND, "帖子不存在");
+        }
+        if (!existing.getUserId().equals(uid) && !"ADMIN".equals(role)) {
+            throw new BusinessException(StatusEnum.FORBIDDEN, "只能删除自己的帖子");
+        }
+        postMapper.update(null, com.baomidou.mybatisplus.core.toolkit.Wrappers.<PostDO>lambdaUpdate()
+                .eq(PostDO::getId, postId)
+                .set(PostDO::getStatus, "DELETED")
+                .set(PostDO::getUpdatedTime, LocalDateTime.now()));
+        eventPublisher.publishEvent(new PostStatusChangedEvent(postId, "DELETED"));
     }
 
     private PostDO insertPost(ValidatedPost input, long uid) {

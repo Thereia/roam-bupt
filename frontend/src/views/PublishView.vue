@@ -1,11 +1,15 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { createPost } from '../api/post'
+import { useRoute, useRouter } from 'vue-router'
+import { createPost, getPost, updatePost } from '../api/post'
 import { getTopicSuggest, getTopics } from '../api/topic'
 import { uploadImage } from '../api/file'
 
 const router = useRouter()
+const route = useRoute()
+
+const editId = ref(typeof route.query.edit === 'string' ? route.query.edit : '')
+const editing = ref(!!editId.value)
 
 const title = ref('')
 const content = ref('')
@@ -26,6 +30,17 @@ onMounted(async () => {
     categories.value = page.list
   } catch {
     categories.value = []
+  }
+  if (editing.value) {
+    try {
+      const post = await getPost(editId.value)
+      title.value = post.title
+      content.value = post.content
+      selected.value = (post.topics || []).map((t) => ({ ...t }))
+      images.value = (post.media || []).map((m) => ({ url: m.url }))
+    } catch (err) {
+      error.value = err.message || '加载原帖失败'
+    }
   }
 })
 
@@ -98,15 +113,21 @@ async function submit() {
   }
   submitting.value = true
   try {
-    const result = await createPost({
+    const payload = {
       title: title.value.trim(),
       content: content.value,
-      topics: selected.value.map((item, index) => ({ topicId: item.id, sortNo: index })),
+      topics: selected.value.map((item, index) => ({
+        topicId: item.id,
+        sortNo: item.type === 'PLACE' ? index : 0,
+      })),
       media: images.value.map((item, index) => ({ type: 'IMAGE', url: item.url, sortNo: index })),
-    }, { silent: true })
+    }
+    const result = editing.value
+      ? await updatePost(editId.value, payload, { silent: true })
+      : await createPost(payload, { silent: true })
     router.push(`/posts/${result.id}`)
   } catch (err) {
-    error.value = err.message || '发布失败'
+    error.value = err.message || (editing.value ? '保存失败' : '发布失败')
   } finally {
     submitting.value = false
   }
@@ -116,7 +137,7 @@ async function submit() {
 <template>
   <div class="page page-one">
     <div class="card form">
-      <h1 class="form-title">写点什么</h1>
+      <h1 class="form-title">{{ editing ? '编辑帖子' : '写点什么' }}</h1>
 
       <label>标题</label>
       <input v-model="title" maxlength="100" placeholder="一句话说清这帖讲什么" />
@@ -158,7 +179,7 @@ async function submit() {
       <div class="form-foot">
         <span class="muted-text">提交后需审核，通过后所有人可见</span>
         <button type="button" class="btn-primary" :disabled="submitting" @click="submit">
-          {{ submitting ? '发布中…' : '发布' }}
+          {{ submitting ? '保存中…' : (editing ? '保存修改' : '发布') }}
         </button>
       </div>
     </div>

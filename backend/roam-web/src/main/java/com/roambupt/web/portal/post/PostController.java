@@ -7,6 +7,7 @@ import com.roambupt.api.model.exception.BusinessException;
 import com.roambupt.api.model.vo.PageResult;
 import com.roambupt.api.model.vo.PostCreatedVO;
 import com.roambupt.api.model.vo.PostVO;
+import com.roambupt.api.model.vo.ReqInfo;
 import com.roambupt.api.model.vo.ResVo;
 import com.roambupt.core.context.CurrentUserContext;
 import com.roambupt.service.post.service.PostReadService;
@@ -15,7 +16,9 @@ import com.roambupt.web.global.OptionalAuth;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,6 +44,26 @@ public class PostController {
             throw new BusinessException(StatusEnum.UNAUTHORIZED);
         }
         return ResVo.ok(postWriteService.create(command, uid));
+    }
+
+    @PutMapping("/{id}")
+    public ResVo<PostCreatedVO> update(@PathVariable long id,
+                                       @Valid @RequestBody PostCreateCommand command) {
+        ReqInfo info = CurrentUserContext.get();
+        if (info == null || info.uid() == null) {
+            throw new BusinessException(StatusEnum.UNAUTHORIZED);
+        }
+        return ResVo.ok(postWriteService.update(id, command, info.uid()));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResVo<Void> delete(@PathVariable long id) {
+        ReqInfo info = CurrentUserContext.get();
+        if (info == null || info.uid() == null) {
+            throw new BusinessException(StatusEnum.UNAUTHORIZED);
+        }
+        postWriteService.delete(id, info.uid(), info.role());
+        return ResVo.ok();
     }
 
     @OptionalAuth
