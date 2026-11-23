@@ -19,6 +19,7 @@ import java.util.Map;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -87,6 +88,44 @@ class UserApiTest {
                 .andExpect(jsonPath("$.data.postCount").value(2))
                 .andExpect(jsonPath("$.data.followerCount").value(0))
                 .andExpect(jsonPath("$.data.isFollowed").doesNotExist());
+    }
+
+    @Test
+    void 修改昵称_成功_主页同步更新() throws Exception {
+        Account account = register("up_edit1");
+        record Body(String nickname, String avatar, String bio) {
+        }
+        String body = objectMapper.writeValueAsString(new Body("新的昵称", null, "这人很懒"));
+        mockMvc.perform(put("/api/v1/users/me")
+                        .header("Authorization", "Bearer " + account.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.nickname").value("新的昵称"));
+
+        mockMvc.perform(get("/api/v1/users/" + account.id()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.nickname").value("新的昵称"))
+                .andExpect(jsonPath("$.data.bio").value("这人很懒"));
+    }
+
+    @Test
+    void 修改昵称_空_返回4001() throws Exception {
+        Account account = register("up_edit2");
+        mockMvc.perform(put("/api/v1/users/me")
+                        .header("Authorization", "Bearer " + account.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("nickname", " "))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(4001));
+    }
+
+    @Test
+    void 修改昵称_未登录_返回401() throws Exception {
+        mockMvc.perform(put("/api/v1/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("nickname", "x"))))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

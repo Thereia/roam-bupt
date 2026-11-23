@@ -1809,3 +1809,36 @@ ol {
   gap: 8px;
   margin-top: 12px;
 }
+
+/* ---------- 头像与资料编辑 ---------- */
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.avatar.big {
+  overflow: hidden;
+}
+
+.profile-edit {
+  margin-top: 16px;
+}
+
+.profile-edit textarea {
+  width: 100%;
+}
+
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}

@@ -11,4 +11,7 @@ public interface UserCommandService {
     long createAccount(String username, String encodedPassword, String nickname);
 
     void updateLastLoginTime(long uid);
+
+    /** 修改昵称 / 头像 / 简介。 */
+    void updateProfile(long uid, com.roambupt.api.model.dto.ProfileUpdateCommand command);
 }

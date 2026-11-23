@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { followUser, getUserPosts, getUserProfile, unfollowUser } from '../api/user'
+import { followUser, getUserPosts, getUserProfile, unfollowUser, updateMe } from '../api/user'
+import { uploadImage } from '../api/file'
+import { showNotice } from '../store/notice'
 import PostCard from '../components/PostCard.vue'
 import StateBlock from '../components/StateBlock.vue'
-import { isLoggedIn, userStore } from '../store/user'
+import { isLoggedIn, updateStoredUser, userStore } from '../store/user'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +19,54 @@ const following = ref(false)
 const busy = ref(false)
 
 const isSelf = computed(() => userStore.user && profile.value && userStore.user.id === profile.value.id)
+
+const editing = ref(false)
+const saving = ref(false)
+const uploading = ref(false)
+const form = ref({ nickname: '', bio: '', avatar: '' })
+
+function startEdit() {
+  form.value = {
+    nickname: profile.value.nickname || '',
+    bio: profile.value.bio || '',
+    avatar: profile.value.avatar || '',
+  }
+  editing.value = true
+}
+
+async function onAvatarChange(event) {
+  const file = event.target.files && event.target.files[0]
+  if (!file) return
+  uploading.value = true
+  try {
+    const result = await uploadImage(file)
+    form.value.avatar = result.url
+  } catch (err) {
+    showNotice(err.message || '上传失败', 'error')
+  } finally {
+    uploading.value = false
+  }
+}
+
+async function saveProfile() {
+  if (saving.value) return
+  saving.value = true
+  try {
+    const updated = await updateMe({
+      nickname: form.value.nickname,
+      bio: form.value.bio,
+      avatar: form.value.avatar || null,
+    })
+    profile.value = { ...profile.value, nickname: updated.nickname, bio: updated.bio, avatar: updated.avatar }
+    updateStoredUser({ nickname: updated.nickname, avatar: updated.avatar, bio: updated.bio })
+    editing.value = false
+    showNotice('资料已更新')
+  } catch (err) {
+    showNotice(err.message || '保存失败', 'error')
+  } finally {
+    saving.value = false
+  }
+}
 
 async function load() {
   loading.value = true
@@ -70,7 +120,10 @@ watch(() => route.params.id, load)
 
       <template v-else>
         <div class="card profile-head">
-          <span class="avatar big">{{ (profile.nickname || '?').slice(0, 1) }}</span>
+          <span class="avatar big">
+            <img v-if="profile.avatar" :src="profile.avatar" :alt="profile.nickname" class="avatar-img" />
+            <template v-else>{{ (profile.nickname || '?').slice(0, 1) }}</template>
+          </span>
           <div class="profile-meta">
             <h1 class="profile-name">{{ profile.nickname }}</h1>
             <p class="muted-text">@{{ profile.username }}<span v-if="profile.bio"> · {{ profile.bio }}</span></p>
@@ -80,8 +133,9 @@ watch(() => route.params.id, load)
               <span><b>{{ profile.followingCount }}</b> 关注</span>
             </div>
           </div>
+          <button v-if="isSelf" type="button" class="btn" @click="startEdit">编辑资料</button>
           <button
-            v-if="!isSelf"
+            v-else
             type="button"
             class="follow-button"
             :class="{ on: following }"
@@ -90,6 +144,29 @@ watch(() => route.params.id, load)
           >
             {{ following ? '已关注' : '关注' }}
           </button>
+        </div>
+
+        <div v-if="editing" class="card profile-edit">
+          <h2 class="section-title">编辑资料</h2>
+          <label>昵称</label>
+          <input v-model="form.nickname" maxlength="32" />
+          <label>简介</label>
+          <textarea v-model="form.bio" maxlength="120" rows="2" placeholder="一句话介绍自己"></textarea>
+          <label>头像</label>
+          <div class="avatar-row">
+            <span class="avatar big">
+              <img v-if="form.avatar" :src="form.avatar" alt="头像预览" class="avatar-img" />
+              <template v-else>{{ (form.nickname || '?').slice(0, 1) }}</template>
+            </span>
+            <input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploading" @change="onAvatarChange" />
+            <span v-if="uploading" class="muted-text">上传中…</span>
+          </div>
+          <div class="edit-actions">
+            <button type="button" class="btn primary" :disabled="saving" @click="saveProfile">
+              {{ saving ? '保存中…' : '保存' }}
+            </button>
+            <button type="button" class="btn" @click="editing = false">取消</button>
+          </div>
         </div>
 
         <div class="card">

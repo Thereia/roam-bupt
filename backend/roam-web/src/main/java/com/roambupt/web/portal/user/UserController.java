@@ -6,10 +6,13 @@ import com.roambupt.api.model.vo.FollowResultVO;
 import com.roambupt.api.model.vo.PageResult;
 import com.roambupt.api.model.vo.PostVO;
 import com.roambupt.api.model.vo.ResVo;
+import com.roambupt.api.model.dto.ProfileUpdateCommand;
 import com.roambupt.api.model.vo.UserProfileVO;
+import com.roambupt.api.model.vo.UserVO;
 import com.roambupt.core.context.CurrentUserContext;
 import com.roambupt.service.post.service.PostReadService;
 import com.roambupt.service.user.service.FollowService;
+import com.roambupt.service.user.service.UserCommandService;
 import com.roambupt.service.user.service.UserProfileService;
 import com.roambupt.service.user.service.UserQueryService;
 import com.roambupt.web.global.OptionalAuth;
@@ -17,6 +20,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,15 +35,29 @@ public class UserController {
     private final UserQueryService userQueryService;
     private final FollowService followService;
     private final PostReadService postReadService;
+    private final UserCommandService userCommandService;
 
     public UserController(UserProfileService userProfileService,
                           UserQueryService userQueryService,
                           FollowService followService,
-                          PostReadService postReadService) {
+                          PostReadService postReadService,
+                          UserCommandService userCommandService) {
         this.userProfileService = userProfileService;
         this.userQueryService = userQueryService;
         this.followService = followService;
         this.postReadService = postReadService;
+        this.userCommandService = userCommandService;
+    }
+
+    @PutMapping("/me")
+    public ResVo<UserVO> updateMe(@RequestBody ProfileUpdateCommand command) {
+        Long uid = CurrentUserContext.uid();
+        if (uid == null) {
+            throw new BusinessException(StatusEnum.UNAUTHORIZED);
+        }
+        userCommandService.updateProfile(uid, command);
+        return ResVo.ok(userQueryService.getById(uid)
+                .orElseThrow(() -> new BusinessException(StatusEnum.NOT_FOUND, "用户不存在")));
     }
 
     @OptionalAuth

@@ -15,3 +15,7 @@ export function followUser(id) {
 export function unfollowUser(id) {
   return http.delete(`/users/${id}/follow`)
 }
+
+export function updateMe(payload) {
+  return http.put('/users/me', payload, { silent: true })
+}

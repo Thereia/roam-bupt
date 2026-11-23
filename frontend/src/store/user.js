@@ -34,3 +34,10 @@ export function clearSession() {
 export function isLoggedIn() {
   return Boolean(userStore.token)
 }
+
+/** 资料修改后同步当前登录用户，避免刷新前后不一致。 */
+export function updateStoredUser(patch) {
+  if (!userStore.user) return
+  userStore.user = { ...userStore.user, ...patch }
+  localStorage.setItem(USER_KEY, JSON.stringify(userStore.user))
+}

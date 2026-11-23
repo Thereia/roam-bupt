@@ -1,5 +1,8 @@
 package com.roambupt.service.user.service.impl;
 
+import com.roambupt.api.model.dto.ProfileUpdateCommand;
+import com.roambupt.api.model.enums.StatusEnum;
+import com.roambupt.api.model.exception.BusinessException;
 import com.roambupt.service.user.repository.entity.UserDO;
 import com.roambupt.service.user.repository.mapper.UserMapper;
 import com.roambupt.service.user.service.UserCommandService;
@@ -15,6 +18,8 @@ import java.time.LocalDateTime;
 public class UserCommandServiceImpl implements UserCommandService {
 
     private static final String DEFAULT_ROLE = "USER";
+    private static final int NICKNAME_MAX = 32;
+    private static final int BIO_MAX = 120;
     private static final int STATUS_NORMAL = 1;
 
     private final UserMapper userMapper;
@@ -36,6 +41,33 @@ public class UserCommandServiceImpl implements UserCommandService {
         user.setUpdatedTime(LocalDateTime.now());
         userMapper.insert(user);
         return user.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateProfile(long uid, ProfileUpdateCommand command) {
+        String nickname = command.nickname() == null ? "" : command.nickname().trim();
+        if (nickname.isEmpty() || nickname.length() > NICKNAME_MAX) {
+            throw new BusinessException(StatusEnum.PARAM_ERROR, "昵称需要 1 到 32 个字");
+        }
+        String bio = command.bio() == null ? null : command.bio().trim();
+        if (bio != null && bio.length() > BIO_MAX) {
+            throw new BusinessException(StatusEnum.PARAM_ERROR, "简介最多 120 字");
+        }
+        String avatar = command.avatar();
+        if (avatar != null && !avatar.isBlank() && !avatar.startsWith("/files/")) {
+            throw new BusinessException(StatusEnum.PARAM_ERROR, "头像地址不合法");
+        }
+
+        UserDO user = userMapper.selectById(uid);
+        if (user == null) {
+            throw new BusinessException(StatusEnum.NOT_FOUND, "用户不存在");
+        }
+        user.setNickname(nickname);
+        user.setAvatar(avatar == null || avatar.isBlank() ? null : avatar);
+        user.setBio(bio == null || bio.isEmpty() ? null : bio);
+        user.setUpdatedTime(LocalDateTime.now());
+        userMapper.updateById(user);
     }
 
     @Override
