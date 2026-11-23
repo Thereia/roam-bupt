@@ -56,7 +56,12 @@ const facts = computed(() => {
   if (topic.value?.nodeId) rows.push(['路线', '支持'])
   return rows
 })
-const score = computed(() => Number(topic.value?.rating?.displayAvg || 0).toFixed(1))
+// 优先用评分接口的最新值，避免打完分顶部不变
+const score = computed(() => {
+  const value = rating.value?.average ?? topic.value?.rating?.displayAvg ?? 0
+  return Number(value).toFixed(1)
+})
+const scoreCount = computed(() => rating.value?.count ?? topic.value?.rating?.count ?? 0)
 
 async function withdraw() {
   if (ratingBusy.value) return
@@ -118,7 +123,7 @@ watch(() => route.params.id, load)
         </div>
       </div>
       <div class="topicbar">
-        <div class="score">{{ score }}<small>{{ topic.rating.count }} 人评分</small></div>
+        <div class="score">{{ score }}<small>{{ scoreCount }} 人评分</small></div>
         <span class="divider"></span>
         <div class="facts">
           <span><b>{{ topic.postCount }}</b> 条内容</span>
