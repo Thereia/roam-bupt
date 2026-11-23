@@ -111,6 +111,29 @@ class PostApiTest {
     }
 
     @Test
+    void 路径参数不是数字_返回400而不是500() throws Exception {
+        mockMvc.perform(get("/api/v1/posts/abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(4001));
+    }
+
+    @Test
+    void 详情每次访问_浏览量加一() throws Exception {
+        String token = registerAndGetToken("p_view1");
+        String created = mockMvc.perform(post("/api/v1/posts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody("浏览量测试帖", List.of(Map.of("topicId", PLACE_CANTEEN)))))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long postId = objectMapper.readTree(created).at("/data/id").asLong();
+        mockMvc.perform(get("/api/v1/posts/" + postId)).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/posts/" + postId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.counts.view").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
+    }
+
+    @Test
     void 发帖_未登录_返回401() throws Exception {
         mockMvc.perform(post("/api/v1/posts")
                         .contentType(MediaType.APPLICATION_JSON)

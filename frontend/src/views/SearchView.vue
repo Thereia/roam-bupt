@@ -1,9 +1,13 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { search } from '../api/search'
 import PostCard from '../components/PostCard.vue'
 
-const keyword = ref('')
+const route = useRoute()
+const router = useRouter()
+
+const keyword = ref(typeof route.query.q === 'string' ? route.query.q : '')
 const results = ref([])
 const total = ref(0)
 const loading = ref(false)
@@ -17,6 +21,7 @@ async function submit() {
   error.value = ''
   searched.value = true
   try {
+    router.replace({ path: '/search', query: { q } })
     const page = await search({ q, pageSize: 10 })
     results.value = page.list
     total.value = page.total
@@ -28,6 +33,10 @@ async function submit() {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  if (keyword.value.trim()) submit()
+})
 </script>
 
 <template>

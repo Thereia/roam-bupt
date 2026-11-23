@@ -37,7 +37,7 @@ import java.util.Set;
 @Service
 public class SpaceServiceImpl implements SpaceService {
 
-    private static final int MAX_STOPS = 6;
+    private static final int MAX_STOPS = 9;
     private static final int DEFAULT_ALTERNATIVES = 3;
 
     private final RouteGraphProvider graphProvider;
@@ -129,7 +129,7 @@ public class SpaceServiceImpl implements SpaceService {
             throw new BusinessException(StatusEnum.PARAM_ERROR, "至少需要两个地点");
         }
         if (requested.size() > MAX_STOPS) {
-            throw new BusinessException(StatusEnum.PARAM_ERROR, "最多 6 个地点");
+            throw new BusinessException(StatusEnum.PARAM_ERROR, "最多 9 个地点");
         }
         List<RouteStop> stops = new ArrayList<>();
         for (RouteStopRequest item : requested) {

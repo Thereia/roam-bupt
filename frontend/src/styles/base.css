@@ -1719,3 +1719,14 @@ ol {
   font-size: var(--fs-sm);
   color: var(--muted);
 }
+
+/* ---------- 审核提示 ---------- */
+
+.review-hint {
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  background: #fbf7ec;
+  border-left: 2px solid #d9b96a;
+}

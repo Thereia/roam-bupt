@@ -142,6 +142,32 @@ class AdminApiTest {
     }
 
     @Test
+    void 草稿_可以审核上线() throws Exception {
+        Account admin = registerAdmin("adm_admin7");
+        Account author = register("adm_author7");
+        String body = objectMapper.writeValueAsString(Map.of(
+                "title", "草稿帖", "content", "草稿内容", "status", "DRAFT",
+                "topics", List.of(Map.of("topicId", PLACE_ID))));
+        String response = mockMvc.perform(post("/api/v1/posts")
+                        .header("Authorization", "Bearer " + author.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long postId = objectMapper.readTree(response).at("/data/id").asLong();
+
+        mockMvc.perform(put("/api/v1/admin/posts/" + postId + "/status")
+                        .header("Authorization", "Bearer " + admin.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("status", "ONLINE"))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/posts/" + postId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ONLINE"));
+    }
+
+    @Test
     void 封禁_旧token失效_401() throws Exception {
         Account admin = registerAdmin("adm_admin4");
         Account victim = register("adm_victim4");

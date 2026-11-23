@@ -24,6 +24,7 @@ public class PostAdminServiceImpl implements PostAdminService {
 
     private static final int MAX_PAGE_SIZE = 50;
     private static final Map<String, Set<String>> ALLOWED = Map.of(
+            "DRAFT", Set.of("PENDING", "ONLINE", "DELETED"),
             "PENDING", Set.of("ONLINE", "DELETED"),
             "ONLINE", Set.of("OFFLINE", "DELETED"),
             "OFFLINE", Set.of("ONLINE", "DELETED"),

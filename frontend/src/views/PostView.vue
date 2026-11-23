@@ -186,7 +186,11 @@ watch(() => route.params.id, load)
         <TopicChip v-for="topic in post.topics" :key="topic.id" :topic="topic" />
       </div>
 
-      <div class="actions">
+      <p v-if="post.status && post.status !== 'ONLINE'" class="review-hint">
+        这篇帖子还在审核中，通过后其他人才能看到，暂时不能点赞和评论。
+      </p>
+
+      <div v-if="post.status === 'ONLINE'" class="actions">
         <button type="button" :class="{ on: post.myLiked }" @click="toggleLike">
           {{ post.myLiked ? '已赞' : '点赞' }} {{ post.counts.like }}
         </button>
@@ -200,7 +204,7 @@ watch(() => route.params.id, load)
       <section class="comments">
         <h2 class="comments-title">评论</h2>
 
-        <form class="comment-form" @submit.prevent="submitComment">
+        <form v-if="post.status === 'ONLINE'" class="comment-form" @submit.prevent="submitComment">
           <textarea
             v-model="commentText"
             maxlength="1000"

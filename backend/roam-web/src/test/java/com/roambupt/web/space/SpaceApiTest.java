@@ -117,10 +117,11 @@ class SpaceApiTest {
     }
 
     @Test
-    void 路线_超过6个地点_返回4001() throws Exception {
+    void 路线_超过9个地点_返回4001() throws Exception {
         mockMvc.perform(post("/api/v1/nav/route")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body(TEACHING, CANTEEN, TEACHING, CANTEEN, TEACHING, CANTEEN, TEACHING)))
+                        .content(body(TEACHING, CANTEEN, TEACHING, CANTEEN, TEACHING, CANTEEN,
+                                TEACHING, CANTEEN, TEACHING, CANTEEN)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(4001));
     }
