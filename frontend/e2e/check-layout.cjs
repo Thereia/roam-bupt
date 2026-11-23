@@ -1,7 +1,7 @@
 /**
  * 布局回归检查：图片不能撑破容器、页面不能横向溢出。
  *
- * 用法：node frontend/e2e/check-layout.js [baseUrl]
+ * 用法：node frontend/e2e/check-layout.cjs [baseUrl]
  * 默认 http://localhost:5191（本地 dev）。需要本地装 playwright。
  *
  * 退出码非 0 表示发现布局问题；这是交差前的必跑项（见 AGENTS.md）。

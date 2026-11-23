@@ -241,7 +241,7 @@ async function dragBy(page, from, dx, dy) {
     })
   const centerBefore = await centerProbe()
   const beforeZoom = await readState(page)
-  check('1× 时「−」不可用', await page.locator('[data-zoom="out"]').isDisabled())
+  check('初始「−」可用（能缩到全图）', !(await page.locator('[data-zoom="out"]').isDisabled()))
   await page.locator('[data-zoom="in"]').click()
   await page.locator('[data-zoom="in"]').click()
   const centerAfter = await centerProbe()

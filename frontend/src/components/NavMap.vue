@@ -4,8 +4,13 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 // 底图坐标系：SVG viewBox 固定 748×1089，节点用 0–1 比例坐标
 const MAP_W = 748
 const MAP_H = 1089
-const MIN_ZOOM = 1
 const MAX_ZOOM = 2.5
+// 全图模式：把整张底图缩到框里（可能小于 1×）
+const fitZoom = computed(() => {
+  if (!size.w || !size.h || !baseScale.value) return 1
+  return Math.min(size.w / (MAP_W * baseScale.value), size.h / (MAP_H * baseScale.value))
+})
+const MIN_ZOOM = computed(() => Math.min(1, fitZoom.value))
 // 按下后移动超过这个距离算拖动，不再当成点选
 const DRAG_THRESHOLD = 5
 
@@ -22,7 +27,7 @@ const emit = defineEmits(['pick'])
 
 const frame = ref(null)
 const size = reactive({ w: 0, h: 0 })
-const zoom = ref(MIN_ZOOM)
+const zoom = ref(1)
 const offset = reactive({ x: 0, y: 0 })
 const dragging = ref(false)
 const hoveredId = ref(null)
@@ -49,7 +54,8 @@ const moverStyle = computed(() => ({
 }))
 
 const canZoomIn = computed(() => zoom.value < MAX_ZOOM - 0.001)
-const canZoomOut = computed(() => zoom.value > MIN_ZOOM + 0.001)
+const canZoomOut = computed(() => zoom.value > MIN_ZOOM.value + 0.001)
+const atFit = computed(() => Math.abs(zoom.value - fitZoom.value) < 0.01)
 
 const nodeById = computed(() => new Map(props.nodes.map((node) => [node.id, node])))
 
@@ -90,10 +96,11 @@ const labels = computed(() =>
 )
 
 function clampOffset() {
-  const minX = Math.min(0, size.w - contentW.value)
-  const minY = Math.min(0, size.h - contentH.value)
-  offset.x = Math.min(0, Math.max(minX, offset.x))
-  offset.y = Math.min(0, Math.max(minY, offset.y))
+  // 内容比框小时居中，比框大时不允许露出底色
+  const slackX = size.w - contentW.value
+  const slackY = size.h - contentH.value
+  offset.x = slackX >= 0 ? slackX / 2 : Math.min(0, Math.max(slackX, offset.x))
+  offset.y = slackY >= 0 ? slackY / 2 : Math.min(0, Math.max(slackY, offset.y))
 }
 
 function centerOffset() {
@@ -104,7 +111,7 @@ function centerOffset() {
 
 // 缩放围绕框中心：屏幕中心对着的那个地图点保持不动
 function applyZoom(next) {
-  const target = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(next * 1000) / 1000))
+  const target = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM.value, Math.round(next * 1000) / 1000))
   if (!size.w || !size.h || target === zoom.value) return
   const centerMapX = (size.w / 2 - offset.x) / (baseScale.value * zoom.value)
   const centerMapY = (size.h / 2 - offset.y) / (baseScale.value * zoom.value)
@@ -119,7 +126,15 @@ function zoomIn() {
 }
 
 function zoomOut() {
-  applyZoom(zoom.value - 0.25)
+  applyZoom(Math.max(MIN_ZOOM.value, zoom.value - 0.25))
+}
+
+function fitAll() {
+  if (!size.w || !size.h) return
+  zoom.value = fitZoom.value
+  offset.x = (size.w - contentW.value) / 2
+  offset.y = (size.h - contentH.value) / 2
+  clampOffset()
 }
 
 function observeFrame() {
@@ -326,6 +341,7 @@ onBeforeUnmount(() => {
     <div class="map-zoom">
       <button type="button" class="map-zoom-btn" data-zoom="in" :disabled="!canZoomIn" title="放大" @click="zoomIn">+</button>
       <button type="button" class="map-zoom-btn" data-zoom="out" :disabled="!canZoomOut" title="缩小" @click="zoomOut">−</button>
+      <button type="button" class="map-zoom-btn map-fit-btn" data-zoom="fit" :disabled="atFit" title="看全图" @click="fitAll">全图</button>
     </div>
   </div>
 </template>
