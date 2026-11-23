@@ -2,7 +2,8 @@
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /src
 COPY . .
-RUN mvn -q -B -DskipTests -pl roam-web -am package
+# .m2 用 BuildKit 缓存挂载：源码改了也不用重新下载依赖
+RUN --mount=type=cache,target=/root/.m2 mvn -q -B -DskipTests -pl roam-web -am package
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
