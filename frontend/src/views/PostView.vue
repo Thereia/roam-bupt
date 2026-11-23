@@ -7,6 +7,7 @@ import {
 } from '../api/post'
 import StateBlock from '../components/StateBlock.vue'
 import TopicChip from '../components/TopicChip.vue'
+import ImageLightbox from '../components/ImageLightbox.vue'
 import { isLoggedIn, userStore } from '../store/user'
 import { showNotice } from '../store/notice'
 import { copyText } from '../utils/clipboard'
@@ -27,6 +28,13 @@ const commentError = ref('')
 const loading = ref(true)
 const error = ref('')
 const missing = ref(false)
+const galleryIndex = ref(-1)
+
+const galleryImages = computed(() => (post.value?.media || []).map((image) => image.url))
+
+function openGallery(index) {
+  galleryIndex.value = index
+}
 
 function scrollToComments() {
   document.querySelector('.comments')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -151,6 +159,7 @@ async function toggleCollect() {
 
 async function load() {
   const requestedId = route.params.id
+  galleryIndex.value = -1
   loading.value = true
   error.value = ''
   missing.value = false
@@ -228,16 +237,16 @@ watch(() => route.params.id, load)
       </template>
 
       <div v-if="post.media?.length" class="post-gallery">
-        <a
-          v-for="image in post.media"
-          :key="image.url"
-          :href="image.url"
-          target="_blank"
-          rel="noopener"
+        <button
+          v-for="(image, index) in post.media"
+          :key="`${image.url}-${index}`"
+          type="button"
           class="gallery-item"
+          :aria-label="`查看第 ${index + 1} 张图`"
+          @click="openGallery(index)"
         >
-          <img :src="image.url" :alt="post.title" loading="lazy" />
-        </a>
+          <img :src="image.url" :alt="`${post.title} 配图 ${index + 1}`" loading="lazy" />
+        </button>
       </div>
 
       <div class="chips">
@@ -321,4 +330,11 @@ watch(() => route.params.id, load)
       </section>
     </aside>
   </div>
+
+  <ImageLightbox
+    v-if="galleryIndex >= 0 && post"
+    :images="galleryImages"
+    :index="galleryIndex"
+    @close="galleryIndex = -1"
+  />
 </template>
