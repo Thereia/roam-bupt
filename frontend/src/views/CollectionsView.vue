@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { getMyCollections } from '../api/post'
+import { getMyCollections, uncollectPost } from '../api/post'
 import PostCard from '../components/PostCard.vue'
 
 const posts = ref([])
@@ -33,6 +33,16 @@ function next() {
   if (page.value * pageSize < total.value) load(page.value + 1)
 }
 
+async function remove(post) {
+  try {
+    await uncollectPost(post.id)
+    posts.value = posts.value.filter((item) => item.id !== post.id)
+    total.value = Math.max(0, total.value - 1)
+  } catch (err) {
+    error.value = err.message || '取消收藏失败'
+  }
+}
+
 onMounted(() => load(1))
 </script>
 
@@ -49,7 +59,10 @@ onMounted(() => load(1))
       <p v-else-if="!posts.length" class="muted-text">还没有收藏的帖子，点帖子里的「收藏」就会出现在这里。</p>
 
       <div v-else>
-        <PostCard v-for="post in posts" :key="post.id" :post="post" variant="home" />
+        <div v-for="post in posts" :key="post.id" class="collected-item">
+          <PostCard :post="post" variant="home" />
+          <button type="button" class="link-button" @click="remove(post)">取消收藏</button>
+        </div>
       </div>
 
       <div v-if="total > pageSize" class="notify-pager">

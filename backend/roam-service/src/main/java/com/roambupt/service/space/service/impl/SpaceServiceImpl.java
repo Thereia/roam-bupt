@@ -38,6 +38,9 @@ import java.util.Set;
 public class SpaceServiceImpl implements SpaceService {
 
     private static final int MAX_STOPS = 9;
+    /** 同起终点 60 秒内复用结果：避免拥挤度每次都变导致同一查询出不同方案。 */
+    private static final long CACHE_TTL_MS = 60_000;
+    private final java.util.Map<String, CachedPlans> planCache = new java.util.concurrent.ConcurrentHashMap<>();
     private static final int DEFAULT_ALTERNATIVES = 3;
 
     private final RouteGraphProvider graphProvider;
@@ -90,6 +93,14 @@ public class SpaceServiceImpl implements SpaceService {
         TravelMode mode = parseMode(query.mode());
         List<RouteStop> stops = resolveStops(query.stops());
 
+        String cacheKey = mode + ":" + limit + ":" + stops.stream()
+                .map(stop -> String.valueOf(stop.nodeId()))
+                .reduce("", (a, b) -> a + "-" + b);
+        CachedPlans cached = planCache.get(cacheKey);
+        if (cached != null && cached.expireAt() > System.currentTimeMillis()) {
+            return cached.plans();
+        }
+
         RouteGraph graph = graphProvider.graph();
         if (graph.names().isEmpty()) {
             throw new BusinessException(StatusEnum.SERVICE_UNAVAILABLE, "路网数据未就绪");
@@ -104,7 +115,15 @@ public class SpaceServiceImpl implements SpaceService {
             return List.of();
         }
         trafficRecorder.record(plans.get(0).edges().stream().map(edge -> edge.edgeId()).toList());
-        return plans.stream().map(plan -> toVO(plan, graph, stops, factors)).toList();
+        List<RoutePlanVO> vos = plans.stream().map(plan -> toVO(plan, graph, stops, factors)).toList();
+        if (planCache.size() > 500) {
+            planCache.clear();
+        }
+        planCache.put(cacheKey, new CachedPlans(System.currentTimeMillis() + CACHE_TTL_MS, vos));
+        return vos;
+    }
+
+    private record CachedPlans(long expireAt, List<RoutePlanVO> plans) {
     }
 
     private List<Long> allEdgeIds(RouteGraph graph) {

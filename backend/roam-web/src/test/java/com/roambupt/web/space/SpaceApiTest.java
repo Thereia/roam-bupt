@@ -127,6 +127,26 @@ class SpaceApiTest {
     }
 
     @Test
+    void 两次相同请求_结果一致() throws Exception {
+        String first = mockMvc.perform(post("/api/v1/nav/route")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(TEACHING, CANTEEN)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String second = mockMvc.perform(post("/api/v1/nav/route")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body(TEACHING, CANTEEN)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        var a = objectMapper.readTree(first).at("/data");
+        var b = objectMapper.readTree(second).at("/data");
+        org.assertj.core.api.Assertions.assertThat(a.get("totalDistanceMeters").asInt())
+                .isEqualTo(b.get("totalDistanceMeters").asInt());
+        org.assertj.core.api.Assertions.assertThat(a.get("totalTimeSeconds").asInt())
+                .isEqualTo(b.get("totalTimeSeconds").asInt());
+    }
+
+    @Test
     void 多方案_返回按耗时排序的列表() throws Exception {
         mockMvc.perform(post("/api/v1/nav/routes")
                         .contentType(MediaType.APPLICATION_JSON)

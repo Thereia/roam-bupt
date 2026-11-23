@@ -171,7 +171,7 @@ watch(() => route.params.id, load)
           <span class="name">{{ post.author.nickname }}</span>
           <span class="t">{{ formatDayTime(post.createdTime) }} · 浏览 {{ formatCount(post.counts.view) }}</span>
         </div>
-        <button type="button" class="follow" disabled title="暂未开放">关注</button>
+        <RouterLink v-if="post.author" :to="`/users/${post.author.id}`" class="follow">查看主页</RouterLink>
       </div>
 
       <template v-for="(paragraph, index) in paragraphs" :key="index">

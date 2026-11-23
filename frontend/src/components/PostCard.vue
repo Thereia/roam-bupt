@@ -39,7 +39,7 @@ const chips = computed(() =>
       </template>
     </div>
     <p class="excerpt">{{ post.excerpt }}</p>
-    <div v-if="hasImage" class="thumb">图片</div>
+    <div v-if="hasImage" class="thumb"><img :src="post.media[0].url" :alt="post.title" /></div>
     <div class="chips">
       <TopicChip v-for="topic in chips" :key="topic.id" :topic="topic" />
     </div>
