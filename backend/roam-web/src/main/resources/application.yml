@@ -16,6 +16,20 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:liquibase/master.xml
+  rabbitmq:
+    host: ${ROAM_RABBIT_HOST:192.168.153.129}
+    port: ${ROAM_RABBIT_PORT:5672}
+    username: ${ROAM_RABBIT_USER:admin}
+    password: ${ROAM_RABBIT_PASSWORD:admin}
+    virtual-host: ${ROAM_RABBIT_VHOST:/}
+    listener:
+      simple:
+        # 消费失败重试 3 次，仍失败就拒绝，由队列的死信参数送进 DLQ
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 500ms
+        default-requeue-rejected: false
 
 management:
   endpoints:
@@ -40,6 +54,16 @@ roam:
       - /api/v1/auth/register
       - /api/v1/auth/login
       - /actuator/**
+  notify:
+    mq:
+      # 默认关：本地没 RabbitMQ 也能跑；生产由 compose 打开
+      enabled: ${ROAM_NOTIFY_MQ_ENABLED:false}
+      exchange: roam.notify.exchange
+      queue: roam.notify.queue
+      routing-key: roam.notify.created
+      dlx: roam.notify.dlx
+      dead-queue: roam.notify.dead.queue
+      dead-routing-key: roam.notify.dead
   security:
     # 部署在可信代理（nginx 等）后面时才开；开了以后只信任 trusted-proxies 里的来源
     trust-forwarded-for: ${ROAM_TRUST_XFF:false}

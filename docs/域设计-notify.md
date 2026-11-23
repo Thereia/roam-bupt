@@ -95,3 +95,13 @@ notification(
 - **给**：前端通知列表与未读数；不反向修改任何业务域。
 - **幂等**：唯一键 `(user, type, source_id, actor)`，重复投递静默丢弃。
 - **明确例外**：这里用 `@EventListener` 而不是 `AFTER_COMMIT`，因为通知是同库插入；换 MQ 时必须改。
+
+## MQ 异步投递（2026-11-23）
+
+通知默认仍是「同一事务同步写库」；打开 `roam.notify.mq.enabled=true` 后改走 RabbitMQ：
+
+- **发布**：`NotificationListener`（`@EventListener`）→ `NotifyDispatcher` → `RabbitNotifyPublisher`；
+  发布器在事务内会注册 `afterCommit` 再发送，**回滚不发消息**；
+- **拓扑**：`roam.notify.exchange`（direct）→ `roam.notify.queue`；队列带死信参数，失败重试 3 次后进 `roam.notify.dlx` → `roam.notify.dead.queue`；
+- **消费**：`RabbitNotifyConsumer` 调 `NotificationService.send`，幂等靠 `notification` 表唯一键 `uk_notify(user_id, type, source_id, actor_id)`，重复投递捕获 `DuplicateKeyException` 当成功；
+- **降级**：没有 MQ 发布器（开关关闭）时 `NotifyDispatcher` 直接同步写库，本地不开 RabbitMQ 也能跑。

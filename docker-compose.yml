@@ -53,6 +53,24 @@ services:
       timeout: 5s
       retries: 30
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      TZ: Asia/Shanghai
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-roam}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-roam_mq_2026}
+    # VM 上 taco 已占用 5672/15672，这里换一组宿主机端口
+    ports:
+      - "25672:5672"
+      - "25673:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   backend:
     build:
       context: ./backend
@@ -75,6 +93,11 @@ services:
       ROAM_REDIS_PASSWORD: ${REDIS_PASSWORD:-123456}
       ROAM_ES_HOST: elasticsearch
       ROAM_ES_PORT: "9200"
+      ROAM_RABBIT_HOST: rabbitmq
+      ROAM_RABBIT_PORT: "5672"
+      ROAM_RABBIT_USER: ${RABBITMQ_USER:-roam}
+      ROAM_RABBIT_PASSWORD: ${RABBITMQ_PASSWORD:-roam_mq_2026}
+      ROAM_NOTIFY_MQ_ENABLED: "true"
       ROAM_JWT_SECRET: ${ROAM_JWT_SECRET:?请在 .env 里设置 ROAM_JWT_SECRET（至少 32 字节）}
       ROAM_TRUST_XFF: "true"
       ROAM_WRITE_PER_MINUTE: ${ROAM_WRITE_PER_MINUTE:-30}
@@ -101,6 +124,7 @@ services:
       - "8081:80"
 
 volumes:
+  rabbitmq-data:
   mysql-data:
   redis-data:
   es-data:
