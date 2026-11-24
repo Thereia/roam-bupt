@@ -35,7 +35,9 @@ roam:
   search:
     enabled: ${ROAM_SEARCH_ENABLED:true}
     host: ${ROAM_ES_HOST:192.168.153.129}
-    port: ${ROAM_ES_PORT:9200}
-    index: ${ROAM_ES_INDEX:roam_post_v1}
+    # VM 上项目自己的 ES 发布在 19200（taco 那套 9200 已退役）
+    port: ${ROAM_ES_PORT:19200}
+    # 本地开发单独一个索引，避免和 VM 部署的文档混在一起
+    index: ${ROAM_ES_INDEX:roam_post_local}
     connect-timeout-ms: 1000
     socket-timeout-ms: 2000
