@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 public class RatingServiceImpl implements RatingService {
 
     /** 先验条数与先验均值：1 条 5 星不能排到 100 条 4.2 星前面。 */
-    private static final int PRIOR_COUNT = 10;
-    private static final double PRIOR_MEAN = 3.5;
 
     private static final int MAX_REVIEW_LENGTH = 200;
     private static final int MAX_IMAGES = 3;
@@ -119,7 +117,7 @@ public class RatingServiceImpl implements RatingService {
                     .eq(TopicRatingDO::getTopicId, topicId));
             myScore = mine == null ? null : mine.getScore();
         }
-        return new RatingSummaryVO(topicId, count, bayesian(count, sum), myScore, distribution);
+        return new RatingSummaryVO(topicId, count, rawAverage(count, sum), myScore, distribution);
     }
 
     @Override
@@ -166,7 +164,7 @@ public class RatingServiceImpl implements RatingService {
     public RatingVO ratingOf(long topicId) {
         long count = ratingMapper.countByTopic(topicId);
         long sum = ratingMapper.sumByTopic(topicId);
-        double avg = bayesian(count, sum);
+        double avg = rawAverage(count, sum);
         return new RatingVO(avg, Math.round(avg * 10) / 10.0, count);
     }
 
@@ -177,7 +175,7 @@ public class RatingServiceImpl implements RatingService {
             return result;
         }
         for (TopicRatingMapper.TopicStatRow row : ratingMapper.statsByTopics(topicIds)) {
-            double avg = bayesian(row.getC(), row.getS());
+            double avg = rawAverage(row.getC(), row.getS());
             result.put(row.getTopicId(), new RatingVO(avg, Math.round(avg * 10) / 10.0, row.getC()));
         }
         return result;
@@ -232,8 +230,9 @@ public class RatingServiceImpl implements RatingService {
         return images;
     }
 
-    private double bayesian(long count, long sum) {
-        return (PRIOR_COUNT * PRIOR_MEAN + sum) / (PRIOR_COUNT + count);
+    /** 展示用真实均分：没人打分就是 0，不再用 3.5 的先验分伪装。 */
+    private double rawAverage(long count, long sum) {
+        return count <= 0 ? 0d : (double) sum / count;
     }
 
     private void requirePlace(long topicId) {

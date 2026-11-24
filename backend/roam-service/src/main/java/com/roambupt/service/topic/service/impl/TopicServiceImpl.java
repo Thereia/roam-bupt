@@ -129,6 +129,17 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public Set<Long> findEnabledIds(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Set.of();
+        }
+        return topicMapper.selectList(Wrappers.<TopicDO>lambdaQuery()
+                        .in(TopicDO::getId, ids)
+                        .eq(TopicDO::getEnabled, 1))
+                .stream().map(TopicDO::getId).collect(Collectors.toSet());
+    }
+
+    @Override
     public Set<Long> findEnabledPlaceIds(Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return Set.of();

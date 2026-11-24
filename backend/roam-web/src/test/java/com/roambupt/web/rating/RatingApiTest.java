@@ -62,18 +62,18 @@ class RatingApiTest {
     }
 
     @Test
-    void 匿名看评分_零条时返回先验均分() throws Exception {
+    void 匿名看评分_零条时均分为0() throws Exception {
         mockMvc.perform(get("/api/v1/topics/" + PLACE + "/ratings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.summary.count").value(0))
-                .andExpect(jsonPath("$.data.summary.average").value(3.5))
+                .andExpect(jsonPath("$.data.summary.average").value(0.0))
                 .andExpect(jsonPath("$.data.summary.myScore").doesNotExist())
                 .andExpect(jsonPath("$.data.reviews.total").value(0))
                 .andExpect(jsonPath("$.data.reviews.list").isEmpty());
     }
 
     @Test
-    void 打分_首次_均分按贝叶斯平滑() throws Exception {
+    void 打分_首次_均分就是该分数() throws Exception {
         String token = register("rt_user1");
         mockMvc.perform(put("/api/v1/topics/" + PLACE + "/ratings")
                         .header("Authorization", "Bearer " + token)
@@ -82,8 +82,7 @@ class RatingApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.count").value(1))
                 .andExpect(jsonPath("$.data.myScore").value(5))
-                // (10*3.5 + 5) / 11 = 3.636…
-                .andExpect(jsonPath("$.data.average").value(org.hamcrest.Matchers.closeTo(3.636, 0.01)));
+                .andExpect(jsonPath("$.data.average").value(5.0));
     }
 
     @Test
@@ -101,8 +100,7 @@ class RatingApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.count").value(1))
                 .andExpect(jsonPath("$.data.myScore").value(1))
-                // (35 + 1) / 11 = 3.272…
-                .andExpect(jsonPath("$.data.average").value(org.hamcrest.Matchers.closeTo(3.272, 0.01)));
+                .andExpect(jsonPath("$.data.average").value(1.0));
     }
 
     @Test

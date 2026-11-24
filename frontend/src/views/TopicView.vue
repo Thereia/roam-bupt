@@ -239,7 +239,10 @@ watch(() => route.params.id, load)
         </div>
       </div>
       <div class="topicbar">
-        <div class="score">{{ score }}<small>{{ scoreCount }} 人评分</small></div>
+        <div class="score">
+          <template v-if="scoreCount > 0">{{ score }}<small>{{ scoreCount }} 人评分</small></template>
+          <template v-else><small>暂无评分</small></template>
+        </div>
         <span class="divider"></span>
         <div class="facts">
           <span><b>{{ topic.postCount }}</b> 条内容</span>

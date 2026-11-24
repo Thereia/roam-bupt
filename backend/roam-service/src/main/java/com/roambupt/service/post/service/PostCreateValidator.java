@@ -57,14 +57,17 @@ public class PostCreateValidator {
         require(content.length() <= MAX_CONTENT_CHARS, "正文最多 20000 字");
 
         List<TopicRef> refs = command.topics() == null ? List.of() : command.topics();
-        require(!refs.isEmpty() && refs.size() <= MAX_TOPICS, "主题数量需在 1-9 之间");
+        // 地点和分类都可以，只要求至少挂一个主题；有没有地点只影响路线能力
+        require(!refs.isEmpty() && refs.size() <= MAX_TOPICS, "至少挂一个主题（地点或分类）");
 
         List<Long> topicIds = refs.stream().map(TopicRef::topicId).toList();
         require(topicIds.stream().noneMatch(Objects::isNull), "主题 id 不能为空");
         require(new HashSet<>(topicIds).size() == topicIds.size(), "同一个主题不能重复挂载");
 
+        // 主题必须是存在且启用的（地点或分类），否则会挂出“没有主题”的帖子
+        require(topicService.findEnabledIds(topicIds).size() == topicIds.size(), "存在不可用的主题");
+
         Set<Long> placeIds = topicService.findEnabledPlaceIds(topicIds);
-        require(!placeIds.isEmpty(), "至少挂一个地点");
 
         List<MediaRef> media = command.media() == null ? List.of() : command.media();
         require(media.size() <= MAX_MEDIA, "媒体最多 9 个");

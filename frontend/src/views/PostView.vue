@@ -391,18 +391,26 @@ watch(() => route.params.id, load)
     </main>
 
     <aside class="side">
-      <section v-if="places.length" class="card">
-        <h3>这篇帖子串了 {{ places.length }} 个地点</h3>
-        <ul class="route-line">
+      <section v-if="post" class="card">
+        <h3>{{ places.length ? `这篇帖子串了 ${places.length} 个地点` : '这篇帖子没有挂地点' }}</h3>
+        <ul v-if="places.length" class="route-line">
           <li v-for="(place, index) in places" :key="place.id">
             <b>{{ place.name }}</b>{{ stopLabel(index) }}
           </li>
         </ul>
-        <button v-if="places.length > 1" type="button" class="btn primary block" @click="goRoute">
+        <button
+          type="button"
+          class="btn primary block"
+          :disabled="places.length < 2"
+          :title="places.length < 2 ? '至少需要两个地点才能规划路线' : '跳到路线页，按最短距离出方案'"
+          @click="goRoute"
+        >
           按这个顺序走
         </button>
-        <p v-if="places.length > 1" class="muted-text">会跳到路线页，按最短距离给你出方案。</p>
-        <p v-else class="muted-text">这篇帖子只串了 1 个地点，选两个以上才能规划路线。</p>
+        <p class="muted-text">
+          <template v-if="places.length < 2">这篇帖子地点不足两个，暂时不能规划路线。</template>
+          <template v-else>会跳到路线页，按最短距离给你出方案。</template>
+        </p>
       </section>
     </aside>
   </div>

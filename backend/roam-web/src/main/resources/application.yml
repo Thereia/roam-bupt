@@ -18,9 +18,10 @@ spring:
     change-log: classpath:liquibase/master.xml
   rabbitmq:
     host: ${ROAM_RABBIT_HOST:192.168.153.129}
-    port: ${ROAM_RABBIT_PORT:5672}
-    username: ${ROAM_RABBIT_USER:admin}
-    password: ${ROAM_RABBIT_PASSWORD:admin}
+    # 本机开发连 VM 上项目自己的 rabbitmq（发布在 25672）；生产由 compose 环境变量覆盖
+    port: ${ROAM_RABBIT_PORT:25672}
+    username: ${ROAM_RABBIT_USER:roam}
+    password: ${ROAM_RABBIT_PASSWORD:roam_mq_2026}
     # 发布确认 + mandatory：消息没到交换机/队列时要能落库重投
     publisher-confirm-type: correlated
     publisher-returns: true

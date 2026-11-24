@@ -92,7 +92,7 @@ class RatingReviewApiTest {
         mockMvc.perform(get("/api/v1/topics/" + PLACE + "/ratings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.summary.count").value(1))
-                .andExpect(jsonPath("$.data.summary.average").value(closeTo(3.636, 0.01)))
+                .andExpect(jsonPath("$.data.summary.average").value(closeTo(5.0, 0.01)))
                 .andExpect(jsonPath("$.data.summary.myScore").value(nullValue()))
                 .andExpect(jsonPath("$.data.reviews.total").value(1))
                 .andExpect(jsonPath("$.data.reviews.list", hasSize(1)))
@@ -169,12 +169,12 @@ class RatingReviewApiTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.count").value(0))
-                .andExpect(jsonPath("$.data.average").value(closeTo(3.5, 0.001)));
+                .andExpect(jsonPath("$.data.average").value(closeTo(0.0, 0.001)));
 
         mockMvc.perform(get("/api/v1/topics/" + PLACE + "/ratings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.summary.count").value(0))
-                .andExpect(jsonPath("$.data.summary.average").value(closeTo(3.5, 0.001)))
+                .andExpect(jsonPath("$.data.summary.average").value(closeTo(0.0, 0.001)))
                 .andExpect(jsonPath("$.data.reviews.total").value(0))
                 .andExpect(jsonPath("$.data.reviews.list", hasSize(0)));
     }

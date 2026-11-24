@@ -102,12 +102,22 @@ class PostApiTest {
     }
 
     @Test
-    void 发帖_只挂分类_返回4001() throws Exception {
+    void 发帖_只挂分类_允许且没有地点() throws Exception {
         String token = registerAndGetToken("poster_cat");
-        mockMvc.perform(post("/api/v1/posts")
+        String response = mockMvc.perform(post("/api/v1/posts")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody("只有分类", List.of(Map.of("topicId", CATEGORY_SELF_STUDY)))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ONLINE"))
+                .andReturn().getResponse().getContentAsString();
+        long postId = objectMapper.readTree(response).at("/data/id").asLong();
+
+        // 只有分类标签：详情正常，路线接口因为没有地点而拒绝
+        mockMvc.perform(get("/api/v1/posts/" + postId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.topics[0].type").value("CATEGORY"));
+        mockMvc.perform(get("/api/v1/posts/" + postId + "/route"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(4001));
     }

@@ -134,8 +134,8 @@ async function submit() {
     error.value = '正文不能为空'
     return
   }
-  if (!selected.value.some((item) => item.type === 'PLACE')) {
-    error.value = '至少挂一个地点'
+  if (!selected.value.length) {
+    error.value = '至少选一个地点或分类'
     return
   }
   submitting.value = true
@@ -184,7 +184,7 @@ async function submit() {
         </label>
       </div>
 
-      <label>挂在哪里（地点决定路线顺序，分类只做归类）</label>
+      <label>挂在哪里（选地点或分类都行；地点会决定路线顺序）</label>
       <input v-model="keyword" placeholder="搜地点，比如「教三」「图书馆」" @input="onKeywordInput" />
       <div v-if="suggestions.length" class="suggest-list">
         <button v-for="item in suggestions" :key="item.id" type="button" class="suggest-item" @click="pick(item)">
@@ -199,7 +199,7 @@ async function submit() {
         </span>
       </div>
 
-      <div class="form-hint">地点主题的顺序就是路线顺序；分类主题不参与排序。</div>
+      <div class="form-hint">地点会参与路线排序，分类只做归类；不选地点也能发，只是没有路线。</div>
 
       <p v-if="error" class="form-error">{{ error }}</p>
 

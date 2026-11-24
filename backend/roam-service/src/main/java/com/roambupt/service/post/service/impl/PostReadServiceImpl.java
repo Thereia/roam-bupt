@@ -108,9 +108,11 @@ public class PostReadServiceImpl implements PostReadService {
         int size = Math.min(Math.max(1, query.pageSize()), MAX_PAGE_SIZE);
         int offset = (page - 1) * size;
 
-        List<PostDO> posts = "hot".equals(feed)
-                ? postMapper.pageOnlineHot(offset, size)
-                : postMapper.pageOnline(offset, size);
+        List<PostDO> posts = switch (feed) {
+            case "recommend" -> postMapper.pageOnlineRecommended(offset, size);
+            case "hot" -> postMapper.pageOnlineHot(offset, size);
+            default -> postMapper.pageOnline(offset, size);
+        };
         long total = postMapper.countOnline();
         List<Long> ids = posts.stream().map(PostDO::getId).toList();
         Map<Long, Long> commentCounts = commentCountProvider.countByPosts(ids);

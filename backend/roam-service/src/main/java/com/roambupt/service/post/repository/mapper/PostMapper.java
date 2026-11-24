@@ -29,6 +29,19 @@ public interface PostMapper extends BaseMapper<PostDO> {
     @Select("SELECT * FROM post WHERE status = 'ONLINE' ORDER BY heat DESC, created_time DESC LIMIT #{offset}, #{size}")
     List<PostDO> pageOnlineHot(@Param("offset") int offset, @Param("size") int size);
 
+    /**
+     * 推荐流：互动越多越靠前（评论 3 分、点赞 2 分、收藏 2 分、heat 1 分），同分按时间倒序。
+     * 与「最新」不同，避免两个 tab 内容一模一样。
+     */
+    @Select("SELECT p.* FROM post p "
+            + "LEFT JOIN (SELECT post_id, COUNT(*) c FROM comment WHERE deleted = 0 GROUP BY post_id) cm ON cm.post_id = p.id "
+            + "LEFT JOIN (SELECT post_id, COUNT(*) c FROM user_foot WHERE action = 'LIKE' GROUP BY post_id) lk ON lk.post_id = p.id "
+            + "LEFT JOIN (SELECT post_id, COUNT(*) c FROM user_foot WHERE action = 'COLLECT' GROUP BY post_id) cl ON cl.post_id = p.id "
+            + "WHERE p.status = 'ONLINE' "
+            + "ORDER BY (COALESCE(cm.c,0)*3 + COALESCE(lk.c,0)*2 + COALESCE(cl.c,0)*2 + p.heat) DESC, "
+            + "p.created_time DESC LIMIT #{offset}, #{size}")
+    List<PostDO> pageOnlineRecommended(@Param("offset") int offset, @Param("size") int size);
+
     @Select("SELECT p.* FROM post p JOIN post_topic pt ON pt.post_id = p.id "
             + "WHERE pt.topic_id = #{topicId} AND p.status = 'ONLINE' "
             + "ORDER BY p.heat DESC, p.created_time DESC LIMIT #{offset}, #{size}")

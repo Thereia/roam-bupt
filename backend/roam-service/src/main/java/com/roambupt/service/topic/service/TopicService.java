@@ -22,6 +22,9 @@ public interface TopicService {
     /** 过滤出「存在、可见、且是地点」的主题 id。 */
     Set<Long> findEnabledPlaceIds(Collection<Long> ids);
 
+    /** 已启用的主题 id（地点或分类都算），用于校验挂载合法性。 */
+    Set<Long> findEnabledIds(Collection<Long> ids);
+
     /** 按分类统计可见地点数量，供首页左栏使用。 */
     List<CategoryCountVO> stats();
 

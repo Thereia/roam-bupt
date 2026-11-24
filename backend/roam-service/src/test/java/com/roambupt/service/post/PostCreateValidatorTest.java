@@ -38,6 +38,12 @@ class PostCreateValidatorTest {
     void setUp() {
         topicService = mock(TopicService.class);
         when(topicService.findEnabledPlaceIds(any())).thenReturn(Set.of(PLACE_ID));
+        // 只返回“输入里真实存在”的 id，模拟数据库按 id 过滤
+        when(topicService.findEnabledIds(any())).thenAnswer(inv -> {
+            java.util.Collection<Long> ids = inv.getArgument(0);
+            return ids.stream().filter(id -> id == PLACE_ID || id == CATEGORY_ID)
+                    .collect(java.util.stream.Collectors.toSet());
+        });
         validator = new PostCreateValidator(topicService, new PostProperties(true),
                 new UploadProperties("./uploads", "/files/", 5), text -> false);
     }
@@ -47,14 +53,23 @@ class PostCreateValidatorTest {
     }
 
     @Test
-    void 校验_只挂分类_抛4001() {
+    void 校验_只挂分类_允许但地点为空() {
         when(topicService.findEnabledPlaceIds(any())).thenReturn(Set.of());
         PostCreateCommand cmd = command("标题", "正文", List.of(new TopicRef(CATEGORY_ID, 0)));
 
+        ValidatedPost result = validator.validate(cmd, 1L);
+
+        assertThat(result.topicIds()).containsExactly(CATEGORY_ID);
+        assertThat(result.placeIds()).isEmpty();
+    }
+
+    @Test
+    void 校验_主题不存在_抛4001() {
+        PostCreateCommand cmd = command("标题", "正文", List.of(new TopicRef(999999L, 0)));
+
         assertThatThrownBy(() -> validator.validate(cmd, 1L))
                 .isInstanceOf(BusinessException.class)
-                .extracting(e -> ((BusinessException) e).getCode())
-                .isEqualTo(StatusEnum.PARAM_ERROR.getCode());
+                .hasMessage("存在不可用的主题");
     }
 
     @Test
@@ -74,7 +89,7 @@ class PostCreateValidatorTest {
 
         assertThatThrownBy(() -> validator.validate(cmd, 1L))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("主题数量需在 1-9 之间");
+                .hasMessage("至少挂一个主题（地点或分类）");
     }
 
     @Test
