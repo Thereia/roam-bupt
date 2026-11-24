@@ -38,7 +38,8 @@ services:
       retries: 20
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.4
+    # kNN 检索需要 8.x（7.17 没有 knn 查询）
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     environment:
       discovery.type: single-node
       xpack.security.enabled: "false"
@@ -91,8 +92,9 @@ services:
       ROAM_REDIS_HOST: redis
       ROAM_REDIS_PORT: "6379"
       ROAM_REDIS_PASSWORD: ${REDIS_PASSWORD:-123456}
-      ROAM_ES_HOST: elasticsearch
-      ROAM_ES_PORT: "9200"
+      # 允许指向外部 ES（例如 VM 上复用同机 8.15 集群时用 .env 覆盖）
+      ROAM_ES_HOST: ${ROAM_ES_HOST:-elasticsearch}
+      ROAM_ES_PORT: ${ROAM_ES_PORT:-9200}
       ROAM_RABBIT_HOST: rabbitmq
       ROAM_RABBIT_PORT: "5672"
       ROAM_RABBIT_USER: ${RABBITMQ_USER:-roam}
