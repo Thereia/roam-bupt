@@ -67,6 +67,12 @@ public class TopicController {
     }
 
     @OptionalAuth
+    @GetMapping("/stats/posts")
+    public ResVo<com.roambupt.api.model.vo.PostStatsVO> postStats() {
+        return ResVo.ok(topicService.postStats());
+    }
+
+    @OptionalAuth
     @GetMapping("/stats")
     public ResVo<java.util.List<CategoryCountVO>> stats() {
         return ResVo.ok(topicService.stats());

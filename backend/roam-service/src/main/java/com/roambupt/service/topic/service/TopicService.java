@@ -28,6 +28,9 @@ public interface TopicService {
     /** 按分类统计可见地点数量，供首页左栏使用。 */
     List<CategoryCountVO> stats();
 
+    /** 侧栏「逛什么」：在线帖总数 + 各分类标签下的帖数。 */
+    com.roambupt.api.model.vo.PostStatsVO postStats();
+
     /** 是否是已启用、可评分的地点（分类不可评分）。 */
     boolean isEnabledPlace(long topicId);
 

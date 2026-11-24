@@ -84,6 +84,15 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public com.roambupt.api.model.vo.PostStatsVO postStats() {
+        List<CategoryCountVO> categories = topicMapper.countPostsByCategory().stream()
+                .map(row -> new CategoryCountVO((String) row.get("name"),
+                        ((Number) row.get("cnt")).longValue()))
+                .toList();
+        return new com.roambupt.api.model.vo.PostStatsVO(topicMapper.countOnlinePosts(), categories);
+    }
+
+    @Override
     public List<CategoryCountVO> stats() {
         List<TopicDO> places = topicMapper.selectList(Wrappers.<TopicDO>lambdaQuery()
                 .eq(TopicDO::getEnabled, 1)

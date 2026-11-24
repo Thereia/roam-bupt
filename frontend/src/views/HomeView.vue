@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPosts } from '../api/post'
-import { getTopicStats, getTopics } from '../api/topic'
+import { getPostStats, getTopicStats, getTopics } from '../api/topic'
 import PostCard from '../components/PostCard.vue'
 import StateBlock from '../components/StateBlock.vue'
 import { isLoggedIn } from '../store/user'
@@ -32,6 +32,8 @@ const topicId = computed(() => {
 })
 const topicName = computed(() => String(route.query.name || ''))
 const categoryCounts = ref({})
+const categoryPostCounts = ref({})
+const allPostTotal = ref(0)
 const categories = ref([])
 const places = ref([])
 const loading = ref(true)
@@ -91,6 +93,11 @@ async function loadTopics() {
     categories.value = categoryPage.list
     places.value = placePage.list
     categoryCounts.value = Object.fromEntries((stats || []).map((item) => [item.category, item.count]))
+    const postStats = await getPostStats()
+    allPostTotal.value = postStats?.total ?? 0
+    categoryPostCounts.value = Object.fromEntries(
+      (postStats?.categories || []).map((item) => [item.category, item.count]),
+    )
   } catch {
     // 侧栏失败不挡信息流，请求层已经统一提示
   }
@@ -138,13 +145,13 @@ onBeforeUnmount(() => observer?.disconnect())
     <aside class="rail">
       <h3>逛什么</h3>
       <ul>
-        <li class="on">
-          <RouterLink to="/topics"><span>全部</span><span class="n">{{ placeTotal }}</span></RouterLink>
+        <li :class="{ on: !topicId }">
+          <RouterLink to="/"><span>全部</span><span class="n">{{ allPostTotal }}</span></RouterLink>
         </li>
-        <li v-for="category in categories" :key="category.id">
+        <li v-for="category in categories" :key="category.id" :class="{ on: topicId === category.id }">
           <RouterLink :to="{ path: '/', query: { topicId: category.id, name: category.name } }">
             <span>{{ category.name }}</span>
-            <span class="n">{{ categoryCounts[category.name] ?? category.postCount }}</span>
+            <span class="n">{{ categoryPostCounts[category.name] ?? 0 }}</span>
           </RouterLink>
         </li>
       </ul>

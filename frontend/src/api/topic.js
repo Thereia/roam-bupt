@@ -18,6 +18,11 @@ export function getTopicStats() {
   return withMock(() => [])
 }
 
+export function getPostStats() {
+  if (!USE_MOCK) return http.get('/topics/stats/posts')
+  return withMock(() => ({ total: 0, categories: [] }))
+}
+
 export function getTopic(id) {
   if (!USE_MOCK) return http.get(`/topics/${id}`)
   return withMock(() => getTopicDetail(id))
