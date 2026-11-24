@@ -88,11 +88,19 @@ class RateLimitApiTest {
     @Test
     void 读操作不受写限流影响() throws Exception {
         String token = register("rl_user2");
+        // 自己造一条，别依赖本地库里的种子 id
+        String created = mockMvc.perform(post("/api/v1/posts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(postBody(9)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long postId = objectMapper.readTree(created).at("/data/id").asLong();
         for (int i = 0; i < 8; i++) {
             mockMvc.perform(get("/api/v1/posts").param("pageSize", "1"))
                     .andExpect(status().isOk());
         }
-        mockMvc.perform(get("/api/v1/posts/" + 35))
+        mockMvc.perform(get("/api/v1/posts/" + postId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
         // token 只是为了证明登录态不影响读
