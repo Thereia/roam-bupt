@@ -14,6 +14,8 @@ import urllib.request
 API = os.environ.get("ROAM_API_BASE", "http://127.0.0.1:8080/api/v1")
 IMG_DIR = os.environ.get("ROAM_SEED_IMG_DIR", "")
 USERS = ["seed_chen", "seed_zhou", "seed_tang", "seed_lin"]
+ADMIN_USER = os.environ.get("ROAM_ADMIN_USER", "")
+ADMIN_PASS = os.environ.get("ROAM_ADMIN_PASS", "secret123")
 
 def load_topics():
     """从接口取真实 id，避免硬编码 id 对不上导致挂空主题。"""
@@ -86,6 +88,13 @@ def login():
     return tokens
 
 
+def login_admin():
+    if not ADMIN_USER:
+        return None
+    st, body = call("/auth/login", {"username": ADMIN_USER, "password": ADMIN_PASS})
+    return body["data"]["token"] if st == 200 else None
+
+
 def upload_image(token, name):
     path = os.path.join(IMG_DIR, name)
     if not os.path.exists(path):
@@ -111,6 +120,8 @@ def main(count=40):
         print("登录失败，确认本地后端在 8080")
         return
     names = list(tokens)
+    admin = login_admin()
+    print("admin:", bool(admin))
     rnd = random.Random(20261124)
     images = []
     if IMG_DIR:
@@ -140,7 +151,11 @@ def main(count=40):
             payload["media"] = [{"type": "IMAGE", "url": images[i % len(images)], "sortNo": 0}]
         st, body = call("/posts", payload, tokens[author])
         if st == 200:
-            posts.append(body["data"]["id"])
+            pid = body["data"]["id"]
+            # 生产环境新帖是 PENDING，演示数据用管理员直接放行
+            if admin:
+                call(f"/admin/posts/{pid}/status", {"status": "ONLINE"}, admin, method="PUT")
+            posts.append(pid)
     print("posts created:", len(posts))
 
     # 评论（顶层 + 回复）
