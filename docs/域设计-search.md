@@ -120,10 +120,14 @@ CI 里只跑兜底路径（`roam.search.enabled=false`），ES 路径靠本地�
 
 - **向量化**：智谱 `embedding-3`，1024 维；只在 `roam.search.vector.enabled=true` 且配置了 `ROAM_EMBEDDING_API_KEY` 时启用；
 - **索引**：`embedding` 字段为 `dense_vector`（dims=1024、cosine）；建帖/编辑时把「标题 + 正文」向量化一并写入；向量化失败只记 warn，BM25 照常可用；
-- **检索**：
-  - 关键词命中时：BM25 取候选，向量只在这个候选集内做 RRF 重排（`score = Σ 1/(k+rank)`，k=60），不把整库都当结果；
-  - 关键词零命中时：向量兜底，按相似度取前 12 条，避免整页空白；
+- **检索**（分页口径照 taco）：
+  - 两路都从第 1 名取到“本页末尾”：`need = min(fusionWindow, offset+size)`，窗口默认 500；
+  - 融合用加权 RRF：关键词 1.0、语义 0.7（`semantic-weight`，靠评测定，不拍脑袋）；
+  - 关键词命中时语义只做候选集内重排，避免整库灌入结果；关键词零命中时语义兜底取前 12 条；
+  - `total` 用关键词腿的真实命中数，不是融合列表长度；
+  - 翻页超出融合窗口时退化成纯 BM25 的同 offset 页，不返回空页；
   - ES 异常、向量服务异常：逐级降级到 BM25 → MySQL `LIKE`；
-- **上限**：单路召回窗口 50 条，融合后分页在这个窗口内；语料上万时需要改成 ES 侧 RRF retriever 或分片融合。
+- **平台约束**：ES 8.15 的 RRF retriever 需要 license 覆盖，本机集群返回 403，所以走应用层融合；
+  将来 license 可用或语料再上一个量级，可切到引擎层 RRF（一个请求内两路 retriever）。
 
 配置项（`roam.search.vector`）：`enabled`、`endpoint`、`api-key`、`model`、`dims`、`timeout-ms`、`top-k`。

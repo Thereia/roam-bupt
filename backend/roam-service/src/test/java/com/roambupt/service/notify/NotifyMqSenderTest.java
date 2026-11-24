@@ -8,6 +8,7 @@ import com.roambupt.service.notify.mq.NotifyOutboxService;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -23,7 +24,7 @@ class NotifyMqSenderTest {
     private final NotifyOutboxService outboxService = mock(NotifyOutboxService.class);
     private final NotifyMqProperties properties = new NotifyMqProperties();
     private final NotifyMqSender sender =
-            new NotifyMqSender(rabbitTemplate, outboxService, new ObjectMapper(), properties);
+            new NotifyMqSender(rabbitTemplate, outboxService, new ObjectMapper(), properties, new SimpleMeterRegistry());
     private final NotifyMessage message = new NotifyMessage(
             2L, 3L, "COMMENT", "COMMENT", 9L, 7L, "评论了你的帖子");
 

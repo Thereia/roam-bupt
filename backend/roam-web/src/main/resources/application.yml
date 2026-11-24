@@ -75,6 +75,11 @@ roam:
       dims: 1024
       timeout-ms: 8000
       top-k: 50
+      # 融合窗口：两路各取到"本页末尾"（照 taco，上限 500）；深翻页退化成纯 BM25
+      fusion-window: ${ROAM_SEARCH_FUSION_WINDOW:500}
+      # 语义那一路的打折系数，字面命中优先
+      semantic-weight: ${ROAM_SEARCH_SEMANTIC_WEIGHT:0.7}
+      semantic-fallback: 12
   security:
     # 部署在可信代理（nginx 等）后面时才开；开了以后只信任 trusted-proxies 里的来源
     trust-forwarded-for: ${ROAM_TRUST_XFF:false}

@@ -2,6 +2,8 @@ package com.roambupt.service.notify.mq;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.roambupt.service.notify.config.NotifyMqProperties;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
@@ -37,16 +39,21 @@ public class NotifyMqSender {
     private final NotifyOutboxService outboxService;
     private final ObjectMapper objectMapper;
     private final NotifyMqProperties properties;
+    private final Counter acked;
+    private final Counter failedCounter;
     private final Map<String, Pending> pending = new ConcurrentHashMap<>();
 
     public NotifyMqSender(RabbitTemplate rabbitTemplate,
                           NotifyOutboxService outboxService,
                           ObjectMapper objectMapper,
-                          NotifyMqProperties properties) {
+                          NotifyMqProperties properties,
+                          MeterRegistry meterRegistry) {
         this.rabbitTemplate = rabbitTemplate;
         this.outboxService = outboxService;
         this.objectMapper = objectMapper;
         this.properties = properties;
+        this.acked = Counter.builder("notify.mq.acked").register(meterRegistry);
+        this.failedCounter = Counter.builder("notify.mq.failed").register(meterRegistry);
     }
 
     @PostConstruct
@@ -61,6 +68,7 @@ public class NotifyMqSender {
                 return;
             }
             if (ack) {
+                acked.increment();
                 if (item.outboxId() != null) {
                     outboxService.markSentById(item.outboxId());
                 }
@@ -131,6 +139,7 @@ public class NotifyMqSender {
     }
 
     private void failed(Pending item) {
+        failedCounter.increment();
         if (item.outboxId() != null) {
             outboxService.markFailedById(item.outboxId());
         } else {

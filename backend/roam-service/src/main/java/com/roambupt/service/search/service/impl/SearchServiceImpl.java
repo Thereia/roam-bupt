@@ -19,10 +19,15 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * 搜索实现：ES 语义 + 关键词双路召回，RRF 融合；ES 异常或不可用时降级 MySQL。
+ * 搜索实现：BM25 + 向量两路召回，应用层加权 RRF 融合；ES 异常或不可用时降级 MySQL。
+ *
+ * <p>分页口径照 taco：两路都从第 1 名取到"本页末尾"（{@code min(window, offset+size)}），
+ * 融合后切片，避免逐页取导致同一文档跨页名次漂移；total 用关键词腿的真实命中数。</p>
  */
 @Service
 public class SearchServiceImpl implements SearchService {
@@ -30,11 +35,7 @@ public class SearchServiceImpl implements SearchService {
     private static final Logger log = LoggerFactory.getLogger(SearchServiceImpl.class);
     private static final int MAX_PAGE_SIZE = 50;
     private static final int MAX_KEYWORD_LENGTH = 50;
-    /** 单路最多取多少条参与融合；融合在内存里做，超出部分不分页。 */
-    private static final int FUSION_WINDOW = 50;
     private static final int RRF_K = 60;
-    /** 语义兜底最多返回多少条。 */
-    private static final int SEMANTIC_FALLBACK = 12;
 
     private final SearchProperties properties;
     private final EsSearchGateway esSearchGateway;
@@ -86,19 +87,22 @@ public class SearchServiceImpl implements SearchService {
     /** 两路召回 + RRF；两路都空返回 null，交给 MySQL 兜底。 */
     private PageResult<PostVO> hybridSearch(String keyword, Long topicId, int page, int size,
                                             int offset, Long viewerUid) throws Exception {
-        List<Long> keywordIds = new ArrayList<>();
-        EsSearchGateway.SearchHits bm25 =
-                esSearchGateway.search(keyword, topicId, 0, FUSION_WINDOW);
-        if (bm25 != null) {
-            keywordIds = bm25.ids();
-        }
+        SearchProperties.Vector vectorConfig = properties.vector();
+        int window = vectorConfig == null ? 50 : Math.max(1, vectorConfig.fusionWindow());
+        int need = Math.min(window, offset + size);
 
-        List<Long> vectorIds = new ArrayList<>();
+        EsSearchGateway.SearchHits bm25 = esSearchGateway.search(keyword, topicId, 0, need);
+        List<Long> keywordIds = bm25 == null ? List.of() : bm25.ids();
+        long keywordTotal = bm25 == null ? 0 : bm25.total();
+
+        int semanticCap = vectorConfig == null ? 12 : Math.max(1, vectorConfig.semanticFallback());
+        List<Long> vectorIds = List.of();
         EmbeddingClient embeddingClient = embeddingClientProvider.getIfAvailable();
         if (embeddingClient != null) {
             try {
                 float[] vector = embeddingClient.embed(keyword);
-                vectorIds = esSearchGateway.knnSearch(vector, topicId, FUSION_WINDOW);
+                // 即使第一页也要取够兜底条数，否则 total 会随页数变化
+                vectorIds = esSearchGateway.knnSearch(vector, topicId, Math.max(need, semanticCap));
             } catch (Exception e) {
                 log.warn("search.vector.fallback keyword={} reason={}", keyword, e.getMessage());
             }
@@ -107,19 +111,40 @@ public class SearchServiceImpl implements SearchService {
         if (keywordIds.isEmpty() && vectorIds.isEmpty()) {
             return null;
         }
-        List<Long> fused;
+
         if (keywordIds.isEmpty()) {
-            // 关键词完全没命中：向量兜底，取最相近的一批，不把整库都倒出来
-            fused = vectorIds.subList(0, Math.min(SEMANTIC_FALLBACK, vectorIds.size()));
-        } else {
-            // 有关键词命中：向量只在这个候选集内做重排，不把整库都算成结果
-            java.util.Set<Long> candidates = new java.util.HashSet<>(keywordIds);
-            List<Long> rerank = vectorIds.stream().filter(candidates::contains).toList();
-            fused = RrfFusion.fuse(keywordIds, rerank, RRF_K);
+            List<Long> fallback = vectorIds.subList(0, Math.min(semanticCap, vectorIds.size()));
+            int from = Math.min(offset, fallback.size());
+            int to = Math.min(offset + size, fallback.size());
+            return PageResult.of(fallback.size(), page, size,
+                    postReadService.byIds(fallback.subList(from, to), viewerUid));
         }
+
+        // 有关键词命中：语义只做重排，不把整库灌进结果
+        Set<Long> candidates = new HashSet<>(keywordIds);
+        List<Long> rerankable = new ArrayList<>();
+        for (Long id : vectorIds) {
+            if (candidates.contains(id)) {
+                rerankable.add(id);
+            }
+        }
+        double semanticWeight = vectorConfig == null ? 0.7 : vectorConfig.semanticWeight();
+        List<Long> fused = RrfFusion.fuse(RRF_K, new double[]{1.0, semanticWeight}, keywordIds, rerankable);
+
+        if (offset >= fused.size()) {
+            // 深翻页超出融合窗口：退化成纯 BM25 的对应页，而不是空页
+            if (keywordTotal <= offset) {
+                return PageResult.of(keywordTotal, page, size, List.of());
+            }
+            EsSearchGateway.SearchHits deep = esSearchGateway.search(keyword, topicId, offset, size);
+            int deepTo = deep == null ? 0 : Math.min(size, deep.ids().size());
+            List<Long> deepIds = deep == null ? List.of() : deep.ids().subList(0, deepTo);
+            return PageResult.of(keywordTotal, page, size, postReadService.byIds(deepIds, viewerUid));
+        }
+
         int from = Math.min(offset, fused.size());
         int to = Math.min(offset + size, fused.size());
-        List<Long> pageIds = fused.subList(from, to);
-        return PageResult.of(fused.size(), page, size, postReadService.byIds(pageIds, viewerUid));
+        return PageResult.of(keywordTotal, page, size,
+                postReadService.byIds(fused.subList(from, to), viewerUid));
     }
 }

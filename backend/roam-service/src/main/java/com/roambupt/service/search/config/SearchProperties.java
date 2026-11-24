@@ -13,6 +13,7 @@ public record SearchProperties(boolean enabled, String host, int port, String in
 
     /** 向量召回配置。 */
     public record Vector(boolean enabled, String endpoint, String apiKey, String model,
-                         int dims, int timeoutMs, int topK) {
+                         int dims, int timeoutMs, int topK, int fusionWindow, double semanticWeight,
+                         int semanticFallback) {
     }
 }

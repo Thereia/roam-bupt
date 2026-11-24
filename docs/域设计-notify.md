@@ -109,4 +109,8 @@ notification(
 - **拓扑**：`roam.notify.exchange`（direct）→ `roam.notify.queue`；队列带死信参数，失败重试 3 次后进 `roam.notify.dlx` → `roam.notify.dead.queue`；
 - **消费**：`RabbitNotifyConsumer` 调 `NotificationService.send`，幂等靠 `notification` 表唯一键 `uk_notify`（`send` 内部吞掉重复键）；
   手动 ACK：成功 `basicAck`，异常 `basicNack(requeue=false)` 进死信，不在监听线程里 sleep 重试；
+- **死信自动补偿**：`RabbitNotifyDeadConsumer` 消费死信队列，按 `x-death` 轮次重投回主队列；
+  超过 3 次丢弃并告警，避免坏消息循环；
+- **指标**：Micrometer counter —— `notify.mq.acked`、`notify.mq.failed`、`notify.dlq.replayed`、`notify.dlq.dropped`（走 `/actuator`）；
+- **清理**：每天 03:30 删除 7 天前 `SENT` 的 outbox 行，`DEAD` 保留人工排查；
 - **降级**：没有 MQ 发布器（开关关闭）时 `NotifyDispatcher` 直接同步写库，本地不开 RabbitMQ 也能跑。

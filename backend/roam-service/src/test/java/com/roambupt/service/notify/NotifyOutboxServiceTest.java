@@ -63,6 +63,17 @@ class NotifyOutboxServiceTest {
     }
 
     @Test
+    void 清理已发送历史_按天数删() {
+        org.mockito.Mockito.when(mapper.deleteSentBefore(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(3);
+
+        int deleted = service.cleanupSent(7);
+
+        assertThat(deleted).isEqualTo(3);
+        verify(mapper).deleteSentBefore(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
     void 反序列化_还原消息() throws Exception {
         String payload = new ObjectMapper().writeValueAsString(message);
         NotifyMessage parsed = service.deserialize(payload);

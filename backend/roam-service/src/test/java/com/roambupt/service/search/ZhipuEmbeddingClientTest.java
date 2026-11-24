@@ -43,7 +43,7 @@ class ZhipuEmbeddingClientTest {
 
     private ZhipuEmbeddingClient client() {
         SearchProperties.Vector vector = new SearchProperties.Vector(
-                true, endpoint, "test-key", "embedding-3", 3, 3000, 10);
+                true, endpoint, "test-key", "embedding-3", 3, 3000, 10, 500, 0.7, 12);
         SearchProperties properties = new SearchProperties(
                 true, "localhost", 9200, "idx", 1000, 2000, vector);
         return new ZhipuEmbeddingClient(properties, new ObjectMapper());

@@ -99,6 +99,11 @@ public class NotifyOutboxService {
         }
     }
 
+    /** 清理 7 天前已发送的行；DEAD 保留人工排查。 */
+    public int cleanupSent(int keepDays) {
+        return outboxMapper.deleteSentBefore(LocalDateTime.now().minusDays(Math.max(1, keepDays)));
+    }
+
     public NotifyMessage deserialize(String payload) throws Exception {
         return objectMapper.readValue(payload, NotifyMessage.class);
     }
