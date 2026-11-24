@@ -2089,3 +2089,27 @@ ol {
   background: #f3e2a7;
   border-radius: 2px;
 }
+
+/* 信息流的标签过滤条与加载更多 */
+.topic-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  color: #4a5a52;
+  background: #eef4ef;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.link-btn {
+  padding: 0;
+  color: #2f6b4f;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+}
+.feed-sentinel { height: 1px; }

@@ -18,6 +18,17 @@ public interface PostMapper extends BaseMapper<PostDO> {
     @Select("SELECT COUNT(*) FROM post WHERE status = 'ONLINE'")
     long countOnline();
 
+    /** 某个主题下的推荐流：互动越多越靠前。 */
+    @Select("SELECT p.* FROM post p JOIN post_topic pt ON pt.post_id = p.id "
+            + "LEFT JOIN (SELECT post_id, COUNT(*) c FROM comment WHERE deleted = 0 GROUP BY post_id) cm ON cm.post_id = p.id "
+            + "LEFT JOIN (SELECT post_id, COUNT(*) c FROM user_foot WHERE action = 'LIKE' GROUP BY post_id) lk ON lk.post_id = p.id "
+            + "LEFT JOIN (SELECT post_id, COUNT(*) c FROM user_foot WHERE action = 'COLLECT' GROUP BY post_id) cl ON cl.post_id = p.id "
+            + "WHERE pt.topic_id = #{topicId} AND p.status = 'ONLINE' "
+            + "ORDER BY (COALESCE(cm.c,0)*3 + COALESCE(lk.c,0)*2 + COALESCE(cl.c,0)*2 + p.heat) DESC, "
+            + "p.created_time DESC LIMIT #{offset}, #{size}")
+    List<PostDO> pageByTopicRecommended(@Param("topicId") long topicId,
+                                        @Param("offset") int offset, @Param("size") int size);
+
     @Select("SELECT p.* FROM post p JOIN post_topic pt ON pt.post_id = p.id "
             + "WHERE pt.topic_id = #{topicId} AND p.status = 'ONLINE' "
             + "ORDER BY p.created_time DESC LIMIT #{offset}, #{size}")

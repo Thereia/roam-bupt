@@ -92,12 +92,12 @@ onMounted(async () => {
   <div class="page page-one">
     <div class="card">
       <div class="topics-head">
-        <h1 class="section-title">地点</h1>
+        <h1 class="section-title">主题</h1>
         <form class="topics-search" @submit.prevent="submitSearch">
-          <input v-model="keyword" type="search" placeholder="搜地点，比如「教三」「食堂」" maxlength="30" />
+          <input v-model="keyword" type="search" placeholder="搜主题，比如「食堂」「自习」" maxlength="30" />
           <button type="submit">搜索</button>
         </form>
-        <span class="muted-text">共 {{ total }} 个地点</span>
+        <span class="muted-text">共 {{ total }} 个主题</span>
       </div>
 
       <div class="topics-filters">
@@ -115,7 +115,7 @@ onMounted(async () => {
 
       <p v-if="loading" class="muted-text">正在加载…</p>
       <p v-else-if="error" class="form-error">{{ error }}</p>
-      <p v-else-if="!places.length" class="muted-text">没有匹配的地点。</p>
+      <p v-else-if="!places.length" class="muted-text">没有匹配的主题。</p>
 
       <div v-else class="place-grid">
         <button v-for="place in places" :key="place.id" type="button" class="place-card" @click="openPlace(place.id)">

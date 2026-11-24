@@ -1,5 +1,6 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { getPosts } from '../api/post'
 import { getTopicStats, getTopics } from '../api/topic'
 import PostCard from '../components/PostCard.vue'
@@ -12,33 +13,72 @@ const feeds = [
   { key: 'following', label: '关注' },
 ]
 
+const route = useRoute()
+const router = useRouter()
+
 const feed = ref('recommend')
 const posts = ref([])
 const postTotal = ref(0)
+const page = ref(1)
+const pageSize = 10
+const loadingMore = ref(false)
+const done = ref(false)
+const sentinel = ref(null)
+let observer = null
+
+const topicId = computed(() => {
+  const value = Number(route.query.topicId)
+  return Number.isFinite(value) && value > 0 ? value : null
+})
+const topicName = computed(() => String(route.query.name || ''))
 const categoryCounts = ref({})
 const categories = ref([])
 const places = ref([])
 const loading = ref(true)
 const error = ref('')
 
-async function loadPosts() {
-  loading.value = true
+async function loadPosts({ reset = false } = {}) {
+  if (reset) {
+    page.value = 1
+    posts.value = []
+    done.value = false
+  }
+  loading.value = page.value === 1
   error.value = ''
   // 关注流要登录，游客直接给登录入口，不发请求
   if (feed.value === 'following' && !isLoggedIn()) {
     posts.value = []
     loading.value = false
+    done.value = true
     return
   }
   try {
-    const data = await getPosts({ feed: feed.value, pageSize: 10 })
-    posts.value = data.list
+    const data = await getPosts({
+      feed: feed.value,
+      topicId: topicId.value ?? undefined,
+      page: page.value,
+      pageSize,
+    })
+    posts.value = page.value === 1 ? data.list : [...posts.value, ...data.list]
     postTotal.value = data.total
+    done.value = data.list.length === 0 || posts.value.length >= data.total
   } catch (err) {
     error.value = err.message || '加载失败'
   } finally {
     loading.value = false
   }
+}
+
+async function loadMore() {
+  if (loadingMore.value || done.value || loading.value) return
+  loadingMore.value = true
+  page.value += 1
+  await loadPosts()
+  loadingMore.value = false
+}
+
+function clearTopic() {
+  router.replace({ path: '/', query: {} })
 }
 
 async function loadTopics() {
@@ -59,8 +99,10 @@ async function loadTopics() {
 function switchFeed(key) {
   if (feed.value === key) return
   feed.value = key
-  loadPosts()
+  loadPosts({ reset: true })
 }
+
+watch(topicId, () => loadPosts({ reset: true }))
 
 const placeTotal = computed(() =>
   Object.values(categoryCounts.value).reduce((sum, value) => sum + value, 0),
@@ -68,10 +110,27 @@ const placeTotal = computed(() =>
 
 const hottest = computed(() => [...places.value].sort((a, b) => b.heat - a.heat).slice(0, 4))
 
-onMounted(() => {
-  loadPosts()
-  loadTopics()
+function initObserver() {
+  if (!observer) {
+    observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) loadMore()
+    }, { rootMargin: '240px' })
+  }
+  if (sentinel.value) observer.observe(sentinel.value)
+}
+
+// sentinel 在列表渲染后才出现，出现时再挂观察
+watch(sentinel, (el) => {
+  if (el) initObserver()
 })
+
+onMounted(async () => {
+  await loadPosts({ reset: true })
+  loadTopics()
+  initObserver()
+})
+
+onBeforeUnmount(() => observer?.disconnect())
 </script>
 
 <template>
@@ -83,7 +142,7 @@ onMounted(() => {
           <RouterLink to="/topics"><span>全部</span><span class="n">{{ placeTotal }}</span></RouterLink>
         </li>
         <li v-for="category in categories" :key="category.id">
-          <RouterLink :to="{ path: '/topics', query: { category: category.name } }">
+          <RouterLink :to="{ path: '/', query: { topicId: category.id, name: category.name } }">
             <span>{{ category.name }}</span>
             <span class="n">{{ categoryCounts[category.name] ?? category.postCount }}</span>
           </RouterLink>
@@ -115,7 +174,17 @@ onMounted(() => {
         :text="feed === 'following' ? '还没有关注的人发帖。' : '这里还没有帖子。'"
       />
       <div v-else>
+        <div v-if="topicId" class="topic-filter">
+          <span>标签：<b>{{ topicName || `#${topicId}` }}</b> · {{ postTotal }} 条</span>
+          <button type="button" class="link-btn" @click="clearTopic">清除</button>
+        </div>
         <PostCard v-for="post in posts" :key="post.id" :post="post" variant="home" />
+        <p v-if="loadingMore" class="muted-text">正在加载更多…</p>
+        <p v-else-if="!done" class="muted-text">下滑自动加载，或点
+          <button type="button" class="link-btn" @click="loadMore">加载更多</button>
+        </p>
+        <p v-else class="muted-text">没有更多了（共 {{ postTotal }} 条）</p>
+        <div ref="sentinel" class="feed-sentinel"></div>
       </div>
     </main>
 

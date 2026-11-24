@@ -123,6 +123,31 @@ class PostApiTest {
     }
 
     @Test
+    void 信息流按主题过滤_只返回该主题下的帖子() throws Exception {
+        String token = registerAndGetToken("poster_topic_filter");
+        createBodyAndPost(token, "食堂相关");
+        mockMvc.perform(post("/api/v1/posts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createBody("纯分类帖", List.of(Map.of("topicId", CATEGORY_SELF_STUDY)))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/posts").param("feed", "latest")
+                        .param("topicId", String.valueOf(PLACE_CANTEEN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.list[*].title", org.hamcrest.Matchers.hasItem("食堂相关")))
+                .andExpect(jsonPath("$.data.list[*].title", org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.hasItem("纯分类帖"))));
+    }
+
+    @Test
+    void 信息流_主题不存在_返回4001() throws Exception {
+        mockMvc.perform(get("/api/v1/posts").param("feed", "latest").param("topicId", "999999"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(4001));
+    }
+
+    @Test
     void 路径参数不是数字_返回400而不是500() throws Exception {
         mockMvc.perform(get("/api/v1/posts/abc"))
                 .andExpect(status().isBadRequest())

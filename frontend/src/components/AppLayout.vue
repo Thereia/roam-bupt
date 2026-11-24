@@ -41,7 +41,7 @@ watch(() => route.path, refreshUnread)
       <RouterLink to="/" class="wordmark">roam<span class="accent">.bupt</span></RouterLink>
       <nav class="site-tabs">
         <RouterLink to="/" :class="{ on: activeSection === 'home' }">首页</RouterLink>
-        <RouterLink to="/topics" :class="{ on: activeSection === 'topics' }">地点</RouterLink>
+        <RouterLink to="/topics" :class="{ on: activeSection === 'topics' }">主题</RouterLink>
         <RouterLink to="/nav" :class="{ on: activeSection === 'nav' }">路线</RouterLink>
         <RouterLink to="/search" :class="{ on: activeSection === 'search' }">搜索</RouterLink>
         <RouterLink to="/publish" :class="{ on: activeSection === 'publish' }">发布</RouterLink>

@@ -108,12 +108,27 @@ public class PostReadServiceImpl implements PostReadService {
         int size = Math.min(Math.max(1, query.pageSize()), MAX_PAGE_SIZE);
         int offset = (page - 1) * size;
 
-        List<PostDO> posts = switch (feed) {
-            case "recommend" -> postMapper.pageOnlineRecommended(offset, size);
-            case "hot" -> postMapper.pageOnlineHot(offset, size);
-            default -> postMapper.pageOnline(offset, size);
-        };
-        long total = postMapper.countOnline();
+        Long topicId = query.topicId();
+        if (topicId != null && topicService.findEnabledIds(List.of(topicId)).isEmpty()) {
+            throw new BusinessException(StatusEnum.PARAM_ERROR, "主题不存在或已停用");
+        }
+        List<PostDO> posts;
+        long total;
+        if (topicId != null) {
+            posts = switch (feed) {
+                case "recommend" -> postMapper.pageByTopicRecommended(topicId, offset, size);
+                case "hot" -> postMapper.pageByTopicHot(topicId, offset, size);
+                default -> postMapper.pageByTopic(topicId, offset, size);
+            };
+            total = postMapper.countByTopic(topicId);
+        } else {
+            posts = switch (feed) {
+                case "recommend" -> postMapper.pageOnlineRecommended(offset, size);
+                case "hot" -> postMapper.pageOnlineHot(offset, size);
+                default -> postMapper.pageOnline(offset, size);
+            };
+            total = postMapper.countOnline();
+        }
         List<Long> ids = posts.stream().map(PostDO::getId).toList();
         Map<Long, Long> commentCounts = commentCountProvider.countByPosts(ids);
         var summary = interactionCountProvider.summarize(ids, viewerUid);
