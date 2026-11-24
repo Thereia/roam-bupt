@@ -36,6 +36,6 @@ roam:
     enabled: ${ROAM_SEARCH_ENABLED:true}
     host: ${ROAM_ES_HOST:192.168.153.129}
     port: ${ROAM_ES_PORT:9200}
-    index: roam_post_v1
+    index: ${ROAM_ES_INDEX:roam_post_v1}
     connect-timeout-ms: 1000
     socket-timeout-ms: 2000

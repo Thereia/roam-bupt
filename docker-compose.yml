@@ -95,6 +95,8 @@ services:
       # 允许指向外部 ES（例如 VM 上复用同机 8.15 集群时用 .env 覆盖）
       ROAM_ES_HOST: ${ROAM_ES_HOST:-elasticsearch}
       ROAM_ES_PORT: ${ROAM_ES_PORT:-9200}
+      # 索引名按环境隔离：VM 复用同机 ES 时避免把两边的文档混在一个索引里
+      ROAM_ES_INDEX: ${ROAM_ES_INDEX:-roam_post_v1}
       ROAM_RABBIT_HOST: rabbitmq
       ROAM_RABBIT_PORT: "5672"
       ROAM_RABBIT_USER: ${RABBITMQ_USER:-roam}
